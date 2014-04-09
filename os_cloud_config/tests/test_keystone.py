@@ -44,17 +44,18 @@ class KeystoneTest(base.TestCase):
             project=self.client.projects.find.return_value)
 
     def test_initialize_for_swift(self):
-        self._patch_client()
+        self._patch_client(name='_create_client')
 
-        keystone.initialize_for_swift('192.0.0.3', 'mytoken')
+        keystone.initialize_for_swift('http://192.0.0.3:5000/', 'admin', '')
 
         self.client.roles.create.assert_has_calls(
             [mock.call('swiftoperator'), mock.call('ResellerAdmin')])
 
     def test_initialize_for_heat(self):
-        self._patch_client()
+        self._patch_client(name='_create_client')
 
-        keystone.initialize_for_heat('192.0.0.3', 'mytoken', 'heatadminpasswd')
+        keystone.initialize_for_heat('http://192.0.0.3:5000/', 'admin', '',
+                                     'heatadminpasswd')
 
         self.client.domains.create.assert_called_once_with(
             'heat', description='Owns users and projects created by heat')
@@ -77,14 +78,14 @@ class KeystoneTest(base.TestCase):
         client.assert_called_once_with(endpoint='http://192.0.0.3:35357/v3',
                                        token='mytoken')
 
-    def _patch_client(self):
+    def _patch_client(self, name='_create_admin_client'):
         self.client = mock.MagicMock()
-        self.create_admin_client_patcher = mock.patch(
-            'os_cloud_config.keystone._create_admin_client')
-        create_admin_client = self.create_admin_client_patcher.start()
+        self.create_client_patcher = mock.patch(
+            'os_cloud_config.keystone.' + name)
+        create_client = self.create_client_patcher.start()
         self.addCleanup(self._patch_client_cleanup)
-        create_admin_client.return_value = self.client
+        create_client.return_value = self.client
 
     def _patch_client_cleanup(self):
-        self.create_admin_client_patcher.stop()
+        self.create_client_patcher.stop()
         self.client = None
