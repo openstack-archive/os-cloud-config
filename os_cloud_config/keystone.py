@@ -35,13 +35,14 @@ def initialize(host, admin_token, admin_email, admin_password):
     _create_admin_user(keystone, admin_email, admin_password)
 
 
-def initialize_for_swift(host, admin_token):
+def initialize_for_swift(auth_url, username, password):
     """Create roles in Keystone for use with Swift.
 
-    :param host: ip/hostname of node where Keystone is running
-    :param admin_token: admin token to use with Keystone's admin endpoint
+    :param auth_url: URI pointing to a running Keystone
+    :param username: Username to authenticate to Keystone with
+    :param password: Password to authenticate to Keystone with
     """
-    keystone = _create_admin_client(host, admin_token)
+    keystone = _create_client(auth_url, username, password)
 
     LOG.debug('Creating swiftoperator role.')
     keystone.roles.create('swiftoperator')
@@ -49,14 +50,15 @@ def initialize_for_swift(host, admin_token):
     keystone.roles.create('ResellerAdmin')
 
 
-def initialize_for_heat(host, admin_token, domain_admin_password):
+def initialize_for_heat(auth_url, username, password, domain_admin_password):
     """Create Heat domain and an admin user for it.
 
-    :param host: ip/hostname of node where Keystone is running
-    :param admin_token: admin token to use with Keystone's admin endpoint
+    :param auth_url: URI pointing to a running Keystone
+    :param username: Username to authenticate to Keystone with
+    :param password: Password to authenticate to Keystone with
     :param domain_admin_password: heat domain admin's password to be set
     """
-    keystone = _create_admin_client(host, admin_token)
+    keystone = _create_client(auth_url, username, password)
     admin_role = keystone.roles.find(name='admin')
 
     LOG.debug('Creating heat domain.')
@@ -85,6 +87,17 @@ def _create_admin_client(host, admin_token):
     """
     admin_url = "http://%s:35357/v3" % host
     return ksclient.Client(endpoint=admin_url, token=admin_token)
+
+
+def _create_client(auth_url, username, password):
+    """Create Keystone client for a given URL, username and password.
+
+    :param auth_url: URI pointing to a running Keystone
+    :param username: Username to authenticate to Keystone with
+    :param password: Password to authenticate to Keystone with
+    """
+    return ksclient.Client(endpoint=auth_url, username=username,
+                           password=password)
 
 
 def _create_roles(keystone):
