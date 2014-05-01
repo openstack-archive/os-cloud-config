@@ -44,6 +44,13 @@ class KeystoneTest(base.TestCase):
             self.client.roles.find.return_value,
             self.client.tenants.find.return_value)
 
+        self.client.services.create.assert_called_once_with(
+            'keystone', 'identity', description='Keystone Identity Service')
+        self.client.endpoints.create.assert_called_once_with(
+            'regionOne', self.client.services.create.return_value.id,
+            'http://192.0.0.3:5000/v2.0', 'http://192.0.0.3:35357/v2.0',
+            'http://192.0.0.3:5000/v2.0')
+
     def test_initialize_for_swift(self):
         self._patch_client()
 

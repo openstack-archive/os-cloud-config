@@ -33,6 +33,7 @@ def initialize(host, admin_token, admin_email, admin_password):
     _create_roles(keystone)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
+    _create_endpoint(keystone, host)
 
 
 def initialize_for_swift(host, admin_token):
@@ -105,6 +106,21 @@ def _create_tenants(keystone):
     keystone.tenants.create('admin', None)
     LOG.debug('Creating service tenant.')
     keystone.tenants.create('service', None)
+
+
+def _create_endpoint(keystone, host):
+    """Create keystone endpoint in Keystone.
+
+    :param keystone: keystone v2 client
+    :param host: ip/hostname of node where Keystone is running
+    """
+    LOG.debug('Create keystone public endpoint')
+    service = keystone.services.create('keystone', 'identity',
+                                       description='Keystone Identity Service')
+    keystone.endpoints.create('regionOne', service.id,
+                              'http://%s:5000/v2.0' % host,
+                              'http://%s:35357/v2.0' % host,
+                              'http://%s:5000/v2.0' % host)
 
 
 def _create_admin_user(keystone, admin_email, admin_password):
