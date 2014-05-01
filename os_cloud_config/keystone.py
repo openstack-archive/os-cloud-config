@@ -19,13 +19,16 @@ import keystoneclient.v2_0.client as ksclient
 LOG = logging.getLogger(__name__)
 
 
-def initialize(host, admin_token, admin_email, admin_password):
+def initialize(host, admin_token, admin_email, admin_password,
+               region='regionOne', ssl=None):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
     :param admin_token: admin token to use with Keystone's admin endpoint
     :param admin_email: admin user's e-mail address to be set
     :param admin_password: admin user's password to be set
+    :param region: region to create the endpoint in
+    :param ssl: ip/hostname to use as the ssl endpoint, if required
     """
 
     keystone = _create_admin_client(host, admin_token)
@@ -33,6 +36,7 @@ def initialize(host, admin_token, admin_email, admin_password):
     _create_roles(keystone)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
+    _create_endpoint(keystone, host, region, ssl)
 
 
 def initialize_for_swift(host, admin_token):
@@ -105,6 +109,25 @@ def _create_tenants(keystone):
     keystone.tenants.create('admin', None)
     LOG.debug('Creating service tenant.')
     keystone.tenants.create('service', None)
+
+
+def _create_endpoint(keystone, host, region, ssl):
+    """Create keystone endpoint in Keystone.
+
+    :param keystone: keystone v2 client
+    :param host: ip/hostname of node where Keystone is running
+    :param region: region to create the endpoint in
+    :param ssl: ip/hostname to use as the ssl endpoint, if required
+    """
+    LOG.debug('Create keystone public endpoint')
+    service = keystone.services.create('keystone', 'identity',
+                                       description='Keystone Identity Service')
+    public_url = 'http://%s:5000/v2.0' % host
+    if ssl:
+        public_url = 'https://%s:13000/v2.0' % ssl
+    keystone.endpoints.create(region, service.id, public_url,
+                              'http://%s:35357/v2.0' % host,
+                              'http://%s:5000/v2.0' % host)
 
 
 def _create_admin_user(keystone, admin_email, admin_password):

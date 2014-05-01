@@ -20,6 +20,16 @@ from os_cloud_config.tests import base
 
 class KeystoneTest(base.TestCase):
 
+    def assert_endpoint(self, host, region='regionOne', public_endpoint=None):
+        self.client.services.create.assert_called_once_with(
+            'keystone', 'identity', description='Keystone Identity Service')
+        if public_endpoint is None:
+            public_endpoint = 'http://%s:5000/v2.0' % host
+        self.client.endpoints.create.assert_called_once_with(
+            region, self.client.services.create.return_value.id,
+            public_endpoint, 'http://%s:35357/v2.0' % host,
+            'http://192.0.0.3:5000/v2.0')
+
     def test_initialize(self):
         self._patch_client()
 
@@ -43,6 +53,8 @@ class KeystoneTest(base.TestCase):
             self.client.users.create.return_value,
             self.client.roles.find.return_value,
             self.client.tenants.find.return_value)
+
+        self.assert_endpoint('192.0.0.3')
 
     def test_initialize_for_swift(self):
         self._patch_client()
@@ -69,6 +81,20 @@ class KeystoneTest(base.TestCase):
             self.client.roles.find.return_value,
             user=self.client.users.create.return_value,
             domain=self.client.domains.create.return_value)
+
+    def test_create_endpoint_ssl(self):
+        self._patch_client()
+
+        keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
+                                  'keystone.example.com')
+        public_endpoint = 'https://keystone.example.com:13000/v2.0'
+        self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
+
+    def test_create_endpoint_region(self):
+        self._patch_client()
+
+        keystone._create_endpoint(self.client, '192.0.0.3', 'regionTwo', None)
+        self.assert_endpoint('192.0.0.3', region='regionTwo')
 
     @mock.patch('os_cloud_config.keystone.ksclient.Client')
     def test_create_admin_client(self, client):
