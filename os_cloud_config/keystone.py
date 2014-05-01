@@ -13,6 +13,7 @@
 # under the License.
 
 import logging
+import subprocess
 
 import keystoneclient.v2_0.client as ksclient
 
@@ -20,7 +21,7 @@ LOG = logging.getLogger(__name__)
 
 
 def initialize(host, admin_token, admin_email, admin_password,
-               region='regionOne', ssl=None):
+               region='regionOne', ssl=None, user='root'):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -29,6 +30,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param admin_password: admin user's password to be set
     :param region: region to create the endpoint in
     :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param user: user to use to connect to the node where Keystone is running
     """
 
     keystone = _create_admin_client(host, admin_token)
@@ -37,6 +39,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
     _create_endpoint(keystone, host, region, ssl)
+    _perform_pki_initialization(host, user)
 
 
 def initialize_for_swift(host, admin_token):
@@ -128,6 +131,19 @@ def _create_endpoint(keystone, host, region, ssl):
     keystone.endpoints.create(region, service.id, public_url,
                               'http://%s:35357/v2.0' % host,
                               'http://%s:5000/v2.0' % host)
+
+
+def _perform_pki_initialization(host, user):
+    """Perform PKI initialization on a host for Keystone.
+
+    :param host: ip/hostname of node where Keystone is running
+    """
+    subprocess.check_call(["ssh", "-o" "StrictHostKeyChecking=no", "-t",
+                           "-l", user, host, "sudo", "keystone-manage",
+                           "pki_setup", "--keystone-user",
+                           "$(getent passwd | grep '^keystone' | cut -d: -f1)",
+                           "--keystone-group",
+                           "$(getent group | grep '^keystone' | cut -d: -f1)"])
 
 
 def _create_admin_user(keystone, admin_email, admin_password):
