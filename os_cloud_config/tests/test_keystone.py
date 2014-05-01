@@ -20,7 +20,8 @@ from os_cloud_config.tests import base
 
 class KeystoneTest(base.TestCase):
 
-    def test_initialize(self):
+    @mock.patch('subprocess.check_call')
+    def test_initialize(self, check_call_mock):
         self._patch_client()
 
         keystone.initialize(
@@ -50,6 +51,13 @@ class KeystoneTest(base.TestCase):
             'regionOne', self.client.services.create.return_value.id,
             'http://192.0.0.3:5000/v2.0', 'http://192.0.0.3:35357/v2.0',
             'http://192.0.0.3:5000/v2.0')
+
+        check_call_mock.assert_called_once_with(
+            ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "192.0.0.3", "sudo",
+             "keystone-manage", "pki_setup", "--keystone-user",
+             "$(getent passwd | grep keystone | cut -d: -f1)",
+             "--keystone-group",
+             "$(getent passwd | grep keystone | cut -d: -f1)"])
 
     def test_initialize_for_swift(self):
         self._patch_client()
