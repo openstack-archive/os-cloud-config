@@ -13,6 +13,7 @@
 # under the License.
 
 import logging
+import subprocess
 
 import keystoneclient.v2_0.client as ksclient
 
@@ -37,6 +38,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
     _create_endpoint(keystone, host, region, ssl)
+    _perform_pki_initialization(host)
 
 
 def initialize_for_swift(host, admin_token):
@@ -128,6 +130,19 @@ def _create_endpoint(keystone, host, region, ssl):
     keystone.endpoints.create(region, service.id, public_url,
                               'http://%s:35357/v2.0' % host,
                               'http://%s:5000/v2.0' % host)
+
+
+def _perform_pki_initialization(host):
+    """Perform PKI initialization on a host for Keystone.
+
+    :param host: ip/hostname of node where Keystone is running
+    """
+    subprocess.check_call(["ssh", "-o" "StrictHostKeyChecking=no", "-t",
+                           host, "sudo", "keystone-manage", "pki_setup",
+                           "--keystone-user",
+                           "$(getent passwd | grep keystone | cut -d: -f1)",
+                           "--keystone-group",
+                           "$(getent passwd | grep keystone | cut -d: -f1)"])
 
 
 def _create_admin_user(keystone, admin_email, admin_password):
