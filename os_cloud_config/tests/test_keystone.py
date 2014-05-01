@@ -30,7 +30,8 @@ class KeystoneTest(base.TestCase):
             public_endpoint, 'http://%s:35357/v2.0' % host,
             'http://192.0.0.3:5000/v2.0')
 
-    def test_initialize(self):
+    @mock.patch('subprocess.check_call')
+    def test_initialize(self, check_call_mock):
         self._patch_client()
 
         keystone.initialize(
@@ -55,6 +56,13 @@ class KeystoneTest(base.TestCase):
             self.client.tenants.find.return_value)
 
         self.assert_endpoint('192.0.0.3')
+
+        check_call_mock.assert_called_once_with(
+            ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "192.0.0.3", "sudo",
+             "keystone-manage", "pki_setup", "--keystone-user",
+             "$(getent passwd | grep keystone | cut -d: -f1)",
+             "--keystone-group",
+             "$(getent passwd | grep keystone | cut -d: -f1)"])
 
     def test_initialize_for_swift(self):
         self._patch_client()
