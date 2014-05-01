@@ -29,19 +29,20 @@ class KeystoneTest(base.TestCase):
         self.client.roles.create.assert_has_calls(
             [mock.call('admin'), mock.call('Member')])
 
-        self.client.projects.create.assert_has_calls(
+        self.client.tenants.create.assert_has_calls(
             [mock.call('admin', None), mock.call('service', None)])
 
-        self.client.projects.find.assert_called_once_with(name='admin')
+        self.client.tenants.find.assert_called_once_with(name='admin')
+        self.client.roles.find.assert_called_once_with(name='admin')
         self.client.users.create.assert_called_once_with(
             'admin', email='admin@example.org', password='adminpasswd',
-            project=self.client.projects.find.return_value)
+            tenant_id=self.client.tenants.find.return_value.id)
 
         self.client.roles.find.assert_called_once_with(name='admin')
-        self.client.roles.grant.assert_called_once_with(
+        self.client.roles.add_user_role.assert_called_once_with(
+            self.client.users.create.return_value,
             self.client.roles.find.return_value,
-            user=self.client.users.create.return_value,
-            project=self.client.projects.find.return_value)
+            self.client.tenants.find.return_value)
 
     def test_initialize_for_swift(self):
         self._patch_client()
@@ -57,10 +58,10 @@ class KeystoneTest(base.TestCase):
         keystone.initialize_for_heat('192.0.0.3', 'mytoken', 'heatadminpasswd')
 
         self.client.domains.create.assert_called_once_with(
-            'heat', description='Owns users and projects created by heat')
+            'heat', description='Owns users and tenants created by heat')
         self.client.users.create.assert_called_once_with(
             'heat_domain_admin',
-            description='Manages users and projects created by heat',
+            description='Manages users and tenants created by heat',
             domain=self.client.domains.create.return_value,
             password='heatadminpasswd')
         self.client.roles.find.assert_called_once_with(name='admin')
@@ -74,7 +75,7 @@ class KeystoneTest(base.TestCase):
         self.assertEqual(
             client.return_value,
             keystone._create_admin_client('192.0.0.3', 'mytoken'))
-        client.assert_called_once_with(endpoint='http://192.0.0.3:35357/v3',
+        client.assert_called_once_with(endpoint='http://192.0.0.3:35357/v2.0',
                                        token='mytoken')
 
     def _patch_client(self):

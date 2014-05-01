@@ -14,7 +14,7 @@
 
 import logging
 
-import keystoneclient.v3.client as ksclient
+import keystoneclient.v2_0.client as ksclient
 
 LOG = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def initialize(host, admin_token, admin_email, admin_password):
     keystone = _create_admin_client(host, admin_token)
 
     _create_roles(keystone)
-    _create_projects(keystone)
+    _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
 
 
@@ -62,35 +62,33 @@ def initialize_for_heat(host, admin_token, domain_admin_password):
     LOG.debug('Creating heat domain.')
     heat_domain = keystone.domains.create(
         'heat',
-        description='Owns users and projects created by heat'
+        description='Owns users and tenants created by heat'
     )
     LOG.debug('Creating heat_domain_admin user.')
     heat_admin = keystone.users.create(
         'heat_domain_admin',
-        description='Manages users and projects created by heat',
+        description='Manages users and tenants created by heat',
         domain=heat_domain,
         password=domain_admin_password,
     )
     LOG.debug('Granting admin role to heat_domain_admin user on heat domain.')
-    keystone.roles.grant(admin_role,
-                         user=heat_admin,
-                         domain=heat_domain)
+    keystone.roles.grant(admin_role, user=heat_admin, domain=heat_domain)
 
 
 def _create_admin_client(host, admin_token):
-    """Create Keystone v3 client for admin endpoint.
+    """Create Keystone v2 client for admin endpoint.
 
     :param host: ip/hostname of node where Keystone is running
     :param admin_token: admin token to use with Keystone's admin endpoint
     """
-    admin_url = "http://%s:35357/v3" % host
+    admin_url = "http://%s:35357/v2.0" % host
     return ksclient.Client(endpoint=admin_url, token=admin_token)
 
 
 def _create_roles(keystone):
     """Create initial roles in Keystone.
 
-    :param keystone: keystone v3 client
+    :param keystone: keystone v2 client
     """
     LOG.debug('Creating admin role.')
     keystone.roles.create('admin')
@@ -98,33 +96,30 @@ def _create_roles(keystone):
     keystone.roles.create('Member')
 
 
-def _create_projects(keystone):
-    """Create initial projects in Keystone.
+def _create_tenants(keystone):
+    """Create initial tenants in Keystone.
 
-    :param keystone: keystone v3 client
+    :param keystone: keystone v2 client
     """
-    LOG.debug('Creating admin project.')
-    keystone.projects.create('admin', None)
-    LOG.debug('Creating service project.')
-    keystone.projects.create('service', None)
+    LOG.debug('Creating admin tenant.')
+    keystone.tenants.create('admin', None)
+    LOG.debug('Creating service tenant.')
+    keystone.tenants.create('service', None)
 
 
 def _create_admin_user(keystone, admin_email, admin_password):
     """Create admin user in Keystone.
 
-    :param keystone: keystone v3 client
+    :param keystone: keystone v2 client
     :param admin_email: admin user's e-mail address to be set
     :param admin_password: admin user's password to be set
     """
-    admin_project = keystone.projects.find(name='admin')
+    admin_tenant = keystone.tenants.find(name='admin')
     admin_role = keystone.roles.find(name='admin')
 
     LOG.debug('Creating admin user.')
-    admin_user = keystone.users.create('admin',
-                                       email=admin_email,
+    admin_user = keystone.users.create('admin', email=admin_email,
                                        password=admin_password,
-                                       project=admin_project)
-    LOG.debug('Granting admin role to admin user on admin project.')
-    keystone.roles.grant(admin_role,
-                         user=admin_user,
-                         project=admin_project)
+                                       tenant_id=admin_tenant.id)
+    LOG.debug('Granting admin role to admin user on admin tenant.')
+    keystone.roles.add_user_role(admin_user, admin_role, admin_tenant)
