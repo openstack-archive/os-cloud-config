@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Workflow+1: lifeless <robertc@robertcollins.net>
+Code-Review+2: Imre Farkas <ifarkas@redhat.com>
+Code-Review+1: Petr Blaho <pblaho@redhat.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 06 May 2014 02:07:27 +0000
+Reviewed-on: https://review.openstack.org/91519
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
