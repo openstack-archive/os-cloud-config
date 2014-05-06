@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import keystoneclient.v2_0.client as ksclient
 import mock
 
 from os_cloud_config import keystone
@@ -104,6 +105,40 @@ class KeystoneTest(base.TestCase):
 
         keystone._create_endpoint(self.client, '192.0.0.3', 'regionTwo', None)
         self.assert_endpoint('192.0.0.3', region='regionTwo')
+
+    def test_setup_endpoints(self):
+        self._patch_client()
+
+        self.client.users.find.side_effect = ksclient.exceptions.NotFound()
+
+        keystone.setup_endpoints(
+            '192.0.0.3', 'mytoken',
+            {'nova': {'password': 'pass', 'type': 'compute',
+                      'ssl_port': 1234}},
+            '192.0.0.4', 'region')
+
+        self.client.users.find.assert_called_once_with(name='nova')
+        self.client.tenants.find.assert_called_once_with(name='service')
+        self.client.roles.find.assert_called_once_with(name='admin')
+
+        self.client.users.create.assert_called_once_with(
+            'nova', 'pass',
+            tenant_id=self.client.tenants.find.return_value.id,
+            email='email=nobody@example.com')
+
+        self.client.roles.add_user_role.assert_called_once_with(
+            self.client.users.create.return_value,
+            self.client.roles.find.return_value,
+            self.client.tenants.find.return_value)
+
+        self.client.services.create.assert_called_once_with(
+            'nova', 'compute', description='Nova Compute Service')
+        self.client.endpoints.create.assert_called_once_with(
+            'region',
+            self.client.services.create.return_value.id,
+            'https://192.0.0.4:1234/v2/$(tenant_id)s',
+            'http://192.0.0.3:8774/v2/$(tenant_id)s',
+            'http://192.0.0.3:8774/v2/$(tenant_id)s')
 
     @mock.patch('os_cloud_config.keystone.ksclient.Client')
     def test_create_admin_client(self, client):
