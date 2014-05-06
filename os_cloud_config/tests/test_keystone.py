@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import keystoneclient.v2_0.client as ksclient
 import mock
 
 from keystoneclient.openstack.common.apiclient import exceptions
@@ -130,6 +131,39 @@ class KeystoneTest(base.TestCase):
         sleep.assert_has_calls([mock.call(10), mock.call(10)])
         self.client.roles.create.assert_has_calls(
             [mock.call('admin'), mock.call('Member')])
+
+    def test_setup_endpoints(self):
+        self.client = mock.MagicMock()
+        self.client.users.find.side_effect = ksclient.exceptions.NotFound()
+
+        keystone.setup_endpoints(
+            {'nova': {'password': 'pass', 'type': 'compute',
+                      'ssl_port': 1234}},
+            public_host='192.0.0.4', region='region', client=self.client,
+            os_auth_url='https://192.0.0.3')
+
+        self.client.users.find.assert_called_once_with(name='nova')
+        self.client.tenants.find.assert_called_once_with(name='service')
+        self.client.roles.find.assert_called_once_with(name='admin')
+
+        self.client.users.create.assert_called_once_with(
+            'nova', 'pass',
+            tenant_id=self.client.tenants.find.return_value.id,
+            email='email=nobody@example.com')
+
+        self.client.roles.add_user_role.assert_called_once_with(
+            self.client.users.create.return_value,
+            self.client.roles.find.return_value,
+            self.client.tenants.find.return_value)
+
+        self.client.services.create.assert_called_once_with(
+            'nova', 'compute', description='Nova Compute Service')
+        self.client.endpoints.create.assert_called_once_with(
+            'region',
+            self.client.services.create.return_value.id,
+            'https://192.0.0.4:1234/v2/$(tenant_id)s',
+            'http://192.0.0.3:8774/v2/$(tenant_id)s',
+            'http://192.0.0.3:8774/v2/$(tenant_id)s')
 
     @mock.patch('os_cloud_config.keystone.ksclient.Client')
     def test_create_admin_client(self, client):
