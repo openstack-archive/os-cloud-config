@@ -13,6 +13,7 @@
 # under the License.
 
 import logging
+from six.moves.urllib.parse import urlparse
 import subprocess
 import time
 
@@ -20,6 +21,85 @@ from keystoneclient.openstack.common.apiclient import exceptions
 import keystoneclient.v2_0.client as ksclient
 
 LOG = logging.getLogger(__name__)
+
+SERVICES = {
+    'heat': {
+        'description': 'Heat Service',
+        'type': 'orchestration',
+        'path': '/v1/%(tenant_id)s',
+        'port': 8004,
+    },
+    'neutron': {
+        'description': 'Neutron Service',
+        'type': 'network',
+        'port': 9696,
+        'ssl_port': 13696,
+    },
+    'glance': {
+        'description': 'Glance Image Service',
+        'type': 'image',
+        'port': 9292,
+        'ssl_port': 13292,
+    },
+    'ec2': {
+        'description': 'EC2 Compatibility Layer',
+        'type': 'ec2',
+        'path': '/services/Cloud',
+        'admin_path': '/services/Admin',
+        'port': 8773,
+        'ssl_port': 13773,
+    },
+    'nova': {
+        'description': 'Nova Compute Service',
+        'type': 'compute',
+        'path': '/v2/$(tenant_id)s',
+        'port': 8774,
+        'ssl_port': 13774,
+    },
+    'novav3': {
+        'description': 'Nova Compute Service v3',
+        'type': 'computev3',
+        'path': '/v3',
+        'port': 8774,
+        'name': 'nova',
+        'ssl_port': 13774,
+    },
+    'ceilometer': {
+        'description': 'Ceilometer Service',
+        'type': 'metering',
+        'port': 8777,
+    },
+    'cinder': {
+        'description': 'Cinder Volume Service',
+        'type': 'volume',
+        'path': '/v1/%(tenant_id)s',
+        'port': 8776,
+        'ssl_port': 13776,
+    },
+    'swift': {
+        'description': 'Swift Object Storage Service',
+        'type': 'object-store',
+        'port': 8080,
+        'ssl_port': 13080,
+    },
+    'horizon': {
+        'description': 'OpenStack Dashboard',
+        'type': 'dashboard',
+        'nouser': True,
+        'path': '/',
+        'admin_path': '/admin'
+    },
+    'ironic': {
+        'description': 'Ironic Service',
+        'type': 'baremetal',
+        'port': 6385
+    },
+    'tuskar': {
+        'description': 'Tuskar Service',
+        'type': 'management',
+        'port': 8585
+    }
+}
 
 
 def initialize(host, admin_token, admin_email, admin_password,
@@ -84,6 +164,112 @@ def initialize_for_heat(host, admin_token, domain_admin_password):
     )
     LOG.debug('Granting admin role to heat_domain_admin user on heat domain.')
     keystone.roles.grant(admin_role, user=heat_admin, domain=heat_domain)
+
+
+def setup_endpoints(endpoints, public_host=None, region=None, client=None,
+                    os_username=None, os_password=None, os_tenant_name=None,
+                    os_auth_url=None):
+    """Create services endpoints in Keystone.
+
+    :param endpoints: dict containing endpoints data
+    :param public_host: ip/hostname used for public endpoint URI
+    :param region: endpoint location
+    """
+
+    common_data = {
+        'internal_host': urlparse(os_auth_url).hostname,
+        'public_host': public_host
+    }
+
+    if not client:
+        client = ksclient.Client(username=os_username,
+                                 password=os_password,
+                                 tenant_name=os_tenant_name,
+                                 auth_url=os_auth_url)
+
+    LOG.debug('Creating service endpoints.')
+    for service, data in endpoints.items():
+        conf = SERVICES[service].copy()
+        conf.update(common_data)
+        conf.update(data)
+        _register_endpoint(client, service, conf, public_host, region)
+
+
+def _register_endpoint(keystone, service, data, public_host=None, region=None):
+    """Create single service endpoint in Keystone.
+
+    :param keystone: keystone v2 client
+    :param service: name of service
+    :param data: dict containing endpoint configuration
+    :param public_host: ip/hostname used for public endpoint URI
+    :param region: endpoint location
+    """
+    path = data.get('path', '/')
+    internal_host = data.get('internal_host')
+    port = data.get('port')
+    internal_uri = 'http://{host}:{port}{path}'.format(
+        host=internal_host, port=port, path=path)
+
+    public_host = data.get('public_host')
+    if public_host:
+        public_port = data.get('ssl_port', port)
+        public_protocol = 'https'
+    else:
+        public_protocol = 'http'
+        public_port = port
+
+    public_uri = '{protocol}://{host}:{port}{path}'.format(
+        protocol=public_protocol,
+        host=public_host or internal_host,
+        port=public_port,
+        path=path)
+
+    admin_uri = 'http://{host}:{port}{path}'.format(
+        host=internal_host,
+        port=data.get('admin_port', port),
+        path=data.get('admin_path', path))
+
+    name = data.get('name', service)
+    if not data.get('nouser'):
+        _create_user_for_service(keystone, name, data.get('password', None))
+
+    LOG.debug('Creating service for %s.', data.get('type'))
+    kservice = keystone.services.create(name, data.get('type'),
+                                        description=data.get('description'))
+
+    LOG.debug('Creating endpoint for service %s.', service)
+    keystone.endpoints.create(region or 'regionOne', kservice.id,
+                              public_uri, admin_uri, internal_uri)
+
+
+def _create_user_for_service(keystone, name, password):
+    """Create service specific user in Keystone.
+
+    :param keystone: keystone v2 client
+    :param name: user's name to be set
+    :param password: user's password to be set
+    """
+    try:
+        keystone.users.find(name=name)
+        LOG.info('User %s already exists', name)
+    except ksclient.exceptions.NotFound:
+        LOG.debug('Creating user %s.', name)
+        service_tenant = keystone.tenants.find(name='service')
+        user = keystone.users.create(name,
+                                     password,
+                                     tenant_id=service_tenant.id,
+                                     email='email=nobody@example.com')
+
+        admin_role = keystone.roles.find(name='admin')
+        keystone.roles.add_user_role(user, admin_role, service_tenant)
+        # Add the admin tenant role for ceilometer user to enable polling
+        # services
+        # This is marked as a security hole and should be fixed in
+        # bug: #1358237. Right now this remains the only way, documented
+        # also by Ceilometer.
+        if name == 'ceilometer':
+            admin_tenant = keystone.tenants.find(name='admin')
+            keystone.roles.add_user_role(user, admin_role, admin_tenant)
 
 
 def _create_admin_client(host, admin_token):
