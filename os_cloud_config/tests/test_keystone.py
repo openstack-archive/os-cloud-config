@@ -14,6 +14,7 @@
 
 import mock
 
+from keystoneclient.openstack.common.apiclient import exceptions
 from os_cloud_config import keystone
 from os_cloud_config.tests import base
 
@@ -104,6 +105,18 @@ class KeystoneTest(base.TestCase):
 
         keystone._create_endpoint(self.client, '192.0.0.3', 'regionTwo', None)
         self.assert_endpoint('192.0.0.3', region='regionTwo')
+
+    @mock.patch('time.sleep')
+    def test_create_roles_retry(self, sleep):
+        self._patch_client()
+        side_effect = (exceptions.ConnectionRefused,
+                       exceptions.ServiceUnavailable, mock.DEFAULT,
+                       mock.DEFAULT)
+        self.client.roles.create.side_effect = side_effect
+        keystone._create_roles(self.client)
+        sleep.assert_has_calls([mock.call(10), mock.call(10)])
+        self.client.roles.create.assert_has_calls(
+            [mock.call('admin'), mock.call('Member')])
 
     @mock.patch('os_cloud_config.keystone.ksclient.Client')
     def test_create_admin_client(self, client):

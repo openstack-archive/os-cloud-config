@@ -13,6 +13,11 @@ normal authentication by creating the admin and service tenants, the admin
 and Member roles, the admin user, configure certificates and finally
 registers the initial identity endpoint.
 
+ .. note::
+
+    init-keystone will wait up to 10 minutes for a Keystone service to be
+    running on the specified host.
+
 For example::
 
     init-keystone -o 192.0.2.1 -t unset -e admin@example.com -p unset -u root

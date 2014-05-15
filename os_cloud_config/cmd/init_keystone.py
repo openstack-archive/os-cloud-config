@@ -27,6 +27,9 @@ def parse_args():
     roles, the admin user, configure certificates and finally register the
     initial identity endpoint, after which Keystone may be used with normal
     authentication.
+
+    This command will wait up to 10 minutes for a Keystone service to be
+    running on the specified host.
     """)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
