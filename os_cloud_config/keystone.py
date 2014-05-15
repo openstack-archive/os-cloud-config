@@ -14,7 +14,9 @@
 
 import logging
 import subprocess
+import time
 
+from keystoneclient.openstack.common.apiclient import exceptions
 import keystoneclient.v2_0.client as ksclient
 
 LOG = logging.getLogger(__name__)
@@ -97,8 +99,14 @@ def _create_roles(keystone):
 
     :param keystone: keystone v2 client
     """
-    LOG.debug('Creating admin role.')
-    keystone.roles.create('admin')
+    for count in range(12):
+        try:
+            LOG.debug('Creating admin role, try %d.' % count)
+            keystone.roles.create('admin')
+            break
+        except (exceptions.ConnectionRefused, exceptions.ServiceUnavailable):
+            LOG.debug('Unable to create, sleeping for 5 seconds.')
+            time.sleep(5)
     LOG.debug('Creating Member role.')
     keystone.roles.create('Member')
 
