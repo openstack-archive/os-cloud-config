@@ -31,6 +31,8 @@ def parse_args():
     "pm_password" describing power management details.
 
     Ironic will be used if the Ironic service is registered with Keystone.
+
+    This program will wait up to 10 minutes for Ironic to register a node.
     """)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
