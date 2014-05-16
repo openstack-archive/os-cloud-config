@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import subprocess
+
+from ironicclient import client as ironicclient
 
 
 def _get_id_line(lines, id_description, position=3):
@@ -35,7 +38,7 @@ def _check_output(command):
         return output
 
 
-def register_nova_bm_node(service_host, node):
+def register_nova_bm_node(service_host, node, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
     out = _check_output(["nova", "baremetal-node-create",
@@ -49,45 +52,51 @@ def register_nova_bm_node(service_host, node):
         subprocess.check_call(["nova", "baremetal-interface-add", bm_id, mac])
 
 
-def register_ironic_node(service_host, node):
-    out = _check_output(["ironic", "node-create", "-d", node["pm_type"]])
-    node_id = _get_id_line(out, "uuid")
-    node_properties = ["properties/cpus=%s" % node["cpu"],
-                       "properties/memory_mb=%s" % node["memory"],
-                       "properties/local_gb=%s" % node["disk"],
-                       "properties/cpu_arch=%s" % node["arch"]]
+def register_ironic_node(service_host, node, client=None):
+    properties = {"cpus": node["cpu"],
+                  "memory_mb": node["memory"],
+                  "local_gb": node["disk"],
+                  "cpu_arch": node["arch"]}
     if "ipmi" in node["pm_type"]:
-        pm_password = node["pm_password"]
-        ipmi_properties = ["driver_info/ipmi_address=%s" % node["pm_addr"],
-                           "driver_info/ipmi_username=%s" % node["pm_user"],
-                           "driver_info/ipmi_password=%s" % pm_password]
-        node_properties.extend(ipmi_properties)
+        driver_info = {"ipmi_address": node["pm_addr"],
+                       "ipmi_username": node["pm_user"],
+                       "ipmi_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_ssh":
-        ssh = ("driver_info/ssh_key_filename=/mnt/state/var/lib/ironic/"
-               "virtual-power-key")
-        ssh_properties = ["driver_info/ssh_address=%s" % node["pm_addr"],
-                          "driver_info/ssh_username=%s" % node["pm_user"],
-                          ssh, "driver_info/ssh_virt_type=virsh"]
-        node_properties.extend(ssh_properties)
+        ssh_key_filename = "/mnt/state/var/lib/ironic/virtual-power-key"
+        driver_info = {"ssh_address": node["pm_addr"],
+                       "ssh_username": node["pm_user"],
+                       "ssh_key_filename": ssh_key_filename,
+                       "ssh_virt_type": "virsh"}
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
-    subprocess.check_call(["ironic", "node-update", node_id, "add"]
-                          + node_properties)
-    # Ironic should do this directly, see bug 1315225.
-    subprocess.check_call(["ironic", "node-set-power-state", node_id, "off"])
+    ironic_node = client.node.create(driver=node["pm_type"],
+                                     driver_info=driver_info,
+                                     properties=properties)
+
     for mac in node["mac"]:
-        subprocess.check_call(["ironic", "port-create", "-a", mac, "-n",
-                              node_id])
+        client.port.create(address=mac, node_uuid=ironic_node.uuid)
+    # Ironic should do this directly, see bug 1315225.
+    client.node.set_power_state(ironic_node.uuid, 'off')
 
 
-def register_all_nodes(service_host, nodes_list):
+def _get_ironic_client():
+    kwargs = {'os_username': os.environ['OS_USERNAME'],
+              'os_password': os.environ['OS_PASSWORD'],
+              'os_auth_url': os.environ['OS_AUTH_URL'],
+              'os_tenant_name': os.environ['OS_TENANT_NAME']}
+    return ironicclient.get_client(1, **kwargs)
+
+
+def register_all_nodes(service_host, nodes_list, client=None):
     if using_ironic():
+        if client is None:
+            client = _get_ironic_client()
         register_func = register_ironic_node
     else:
         register_func = register_nova_bm_node
     for node in nodes_list:
-        register_func(service_host, node)
+        register_func(service_host, node, client=client)
 
 
 # TODO(StevenK): Perhaps this should spin over the first node until it is
