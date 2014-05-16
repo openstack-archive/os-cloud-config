@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import subprocess
+import time
+
+from ironicclient import client
 
 
 def _get_id_line(lines, id_description, position=3):
@@ -50,8 +54,17 @@ def register_nova_bm_node(service_host, node):
 
 
 def register_ironic_node(service_host, node):
-    out = _check_output(["ironic", "node-create", "-d", node["pm_type"]])
-    node_id = _get_id_line(out, "uuid")
+    kwargs = {'os_username': os.environ['OS_USERNAME'],
+              'os_password': os.environ['OS_PASSWORD'],
+              'os_auth_url': os.environ['OS_AUTH_URL'],
+              'os_tenant_name': os.environ['OS_TENANT_NAME']}
+    ironic = client.get_client(1, **kwargs)
+    for count in range(12):
+        try:
+            node = ironic.node.create(pm_type=node["pm_type"])
+            break
+        except Exception:  # FIXME
+            time.sleep(5)
     node_properties = ["properties/cpus=%s" % node["cpu"],
                        "properties/memory_mb=%s" % node["memory"],
                        "properties/local_gb=%s" % node["disk"],
@@ -72,13 +85,11 @@ def register_ironic_node(service_host, node):
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
-    subprocess.check_call(["ironic", "node-update", node_id, "add"]
-                          + node_properties)
+    ironic.node.update(node.id, node_properties)
     # Ironic should do this directly, see bug 1315225.
-    subprocess.check_call(["ironic", "node-set-power-state", node_id, "off"])
+    ironic.node.set_power_state(node.id, 'off')
     for mac in node["mac"]:
-        subprocess.check_call(["ironic", "port-create", "-a", mac, "-n",
-                              node_id])
+        ironic.port.create(mac=mac, node_id=node.id)
 
 
 def register_all_nodes(service_host, nodes_list):
@@ -101,14 +112,9 @@ def check_nova_bm_service():
     subprocess.check_call(["nova", "baremetal-node-delete", node_id])
 
 
-# TODO(StevenK): Perhaps this should spin over the first node until it is
-# registered successfully for a minute or so, replacing this function.
 def check_ironic_service():
-    subprocess.check_call(["wait_for", "60", "10", "ironic", "chassis-create",
-                          "-d", "devtest_canary"])
-    out = subprocess.check_output(["ironic", "chassis-list"])
-    chassis_id = _get_id_line(out, "devtest_canary", position=1)
-    subprocess.check_call(["ironic", "chassis-delete", chassis_id])
+    # No-op, because registering a node will spin until it is registered.
+    pass
 
 
 def check_service():
