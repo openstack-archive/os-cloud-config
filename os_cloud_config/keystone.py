@@ -38,7 +38,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_roles(keystone)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
-    _create_endpoint(keystone, host, region, ssl)
+    _create_keystone_endpoint(keystone, host, region, ssl)
     _perform_pki_initialization(host, user)
 
 
@@ -114,7 +114,7 @@ def _create_tenants(keystone):
     keystone.tenants.create('service', None)
 
 
-def _create_endpoint(keystone, host, region, ssl):
+def _create_keystone_endpoint(keystone, host, region, ssl):
     """Create keystone endpoint in Keystone.
 
     :param keystone: keystone v2 client
@@ -123,11 +123,17 @@ def _create_endpoint(keystone, host, region, ssl):
     :param ssl: ip/hostname to use as the ssl endpoint, if required
     """
     LOG.debug('Create keystone public endpoint')
-    service = keystone.services.create('keystone', 'identity',
-                                       description='Keystone Identity Service')
     public_url = 'http://%s:5000/v2.0' % host
     if ssl:
         public_url = 'https://%s:13000/v2.0' % ssl
+    _create_endpoint('keystone', public_url, host, region)
+
+
+def _create_endpoint(name, public_url, host, region):
+    if name == 'keystone':
+        pass  # This needs a rethink
+    service = keystone.services.create(name, 'identity',
+                                       description='Keystone Identity Service')
     keystone.endpoints.create(region, service.id, public_url,
                               'http://%s:35357/v2.0' % host,
                               'http://%s:5000/v2.0' % host)
