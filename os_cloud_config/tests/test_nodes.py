@@ -18,6 +18,7 @@ import collections
 import mock
 
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+from novaclient.openstack.common.apiclient import exceptions as novaexc
 from os_cloud_config import nodes
 from os_cloud_config.tests import base
 
@@ -33,16 +34,41 @@ class NodesTest(base.TestCase):
         self.assertEqual("/dev/null\n",
                          nodes._check_output(["ls", "/dev/null"]))
 
-    @mock.patch('os_cloud_config.nodes._check_output')
+    @mock.patch('os.environ')
+    @mock.patch('novaclient.v1_1.client.Client')
+    def test_get_nova_bm_client(self, client_mock, environ):
+        nodes._get_nova_bm_client()
+        client_mock.assert_called_once_with(environ["OS_USERNAME"],
+                                            environ["OS_PASSWORD"],
+                                            environ["OS_AUTH_URL"],
+                                            environ["OS_TENANT_NAME"],
+                                            extensions=[mock.ANY])
+
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
-    def test_register_all_nodes_nova_bm(self, ironic_mock, check_mock):
+    def test_register_all_nodes_nova_bm(self, ironic_mock):
         node_list = [self._get_node(), self._get_node()]
-        nodes.register_all_nodes('servicehost', node_list)
+        node_list[0]["mac"].append("bbb")
+        client = mock.MagicMock()
+        nodes.register_all_nodes('servicehost', node_list, client=client)
         nova_bm_call = mock.call(
-            ["nova", "baremetal-node-create", "--pm_address=foo.bar",
-             "--pm_user=test", "--pm_password=random", "servicehost", "1",
-             "2048", "30", "aaa"])
-        check_mock.has_calls([nova_bm_call, nova_bm_call])
+            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
+            pm_user="test", pm_password="random")
+        client.baremetal.create.has_calls([nova_bm_call, nova_bm_call])
+        client.baremetal.add_interface.assert_called_once_with(mock.ANY, "bbb")
+
+    @mock.patch('time.sleep')
+    def test_register_nova_bm_node_retry(self, sleep):
+        client = mock.MagicMock()
+        side_effect = (novaexc.ConnectionRefused,
+                       novaexc.ServiceUnavailable, mock.DEFAULT)
+        client.baremetal.create.side_effect = side_effect
+        nodes.register_nova_bm_node('servicehost',
+                                    self._get_node(), client=client)
+        sleep.assert_has_calls([mock.call(10), mock.call(10)])
+        nova_bm_call = mock.call(
+            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
+            pm_user="test", pm_password="random")
+        client.has_calls([nova_bm_call])
 
     @mock.patch('os.environ')
     @mock.patch('ironicclient.client.get_client')

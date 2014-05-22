@@ -32,7 +32,8 @@ def parse_args():
 
     Ironic will be used if the Ironic service is registered with Keystone.
 
-    This program will wait up to 10 minutes for Ironic to register a node.
+    This program will wait up to 10 minutes for the baremetal service to
+    register a node.
     """)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -51,6 +52,5 @@ def main():
     with open(args.nodes, 'r') as node_file:
         nodes_list = simplejson.load(node_file)
 
-    nodes.check_service()
     # TODO(StevenK): Filter out registered nodes.
     nodes.register_all_nodes(args.service_host, nodes_list)
