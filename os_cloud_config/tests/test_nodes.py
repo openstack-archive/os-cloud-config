@@ -30,10 +30,6 @@ class NodesTest(base.TestCase):
                 'mac': ['aaa'], 'pm_addr': 'foo.bar', 'pm_user': 'test',
                 'pm_password': 'random', 'pm_type': 'pxe_ssh'}
 
-    def test_check_output(self):
-        self.assertEqual("/dev/null\n",
-                         nodes._check_output(["ls", "/dev/null"]))
-
     @mock.patch('os.environ')
     @mock.patch('novaclient.v1_1.client.Client')
     def test_get_nova_bm_client(self, client_mock, environ):
@@ -125,3 +121,20 @@ class NodesTest(base.TestCase):
                                 driver_info=mock.ANY,
                                 properties=mock.ANY)
         ironic.node.create.assert_has_calls(node_create)
+
+    @mock.patch('os.environ')
+    @mock.patch('keystoneclient.v2_0.client.Client')
+    def test_get_keystone_client(self, client_mock, environ):
+        nodes._get_keystone_client()
+        client_mock.assert_called_once_with(
+            username=environ["OS_USERNAME"],
+            password=environ["OS_PASSWORD"],
+            auth_url=environ["OS_AUTH_URL"],
+            tenant_name=environ["OS_TENANT_NAME"])
+
+    def test_using_ironic(self):
+        keystone = mock.MagicMock()
+        service = collections.namedtuple('servicelist', ['name'])
+        keystone.services.list.return_value = [service('compute')]
+        nodes.using_ironic(keystone=keystone)
+        self.assertEqual(1, keystone.services.list.call_count)
