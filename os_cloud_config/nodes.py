@@ -19,6 +19,9 @@ import time
 
 from ironicclient import client as ironicclient
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+from novaclient.extension import Extension
+from novaclient.v1_1 import client as novav11client
+from novaclient.v1_1.contrib import baremetal
 
 
 def _get_id_line(lines, id_description, position=3):
@@ -43,15 +46,14 @@ def _check_output(command):
 def register_nova_bm_node(service_host, node, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
-    out = _check_output(["nova", "baremetal-node-create",
-                         "--pm_address=%s" % node["pm_addr"],
-                         "--pm_user=%s" % node["pm_user"],
-                         "--pm_password=%s" % node["pm_password"],
-                         service_host, node["cpu"], node["memory"],
-                         node["disk"], node["mac"][0]])
-    bm_id = _get_id_line(out, " id ")
+    bm_node = client.baremetal.create(service_host, node["cpu"],
+                                      node["memory"], node["disk"],
+                                      node["mac"][0],
+                                      pm_address=node["pm_addr"],
+                                      pm_user=node["pm_user"],
+                                      pm_password=node["pm_password"])
     for mac in node["mac"][1:]:
-        subprocess.check_call(["nova", "baremetal-interface-add", bm_id, mac])
+        client.baremetal.add_interface(bm_node, mac)
 
 
 def register_ironic_node(service_host, node, client=None):
@@ -87,6 +89,15 @@ def register_ironic_node(service_host, node, client=None):
     client.node.set_power_state(ironic_node.uuid, 'off')
 
 
+def _get_nova_bm_client():
+    baremetal_extension = Extension('baremetal', baremetal)
+    return novav11client.Client(os.environ["OS_USERNAME"],
+                                os.environ["OS_PASSWORD"],
+                                os.environ["OS_TENANT_NAME"],
+                                os.environ["OS_AUTH_URL"],
+                                extensions=[baremetal_extension])
+
+
 def _get_ironic_client():
     kwargs = {'os_username': os.environ['OS_USERNAME'],
               'os_password': os.environ['OS_PASSWORD'],
@@ -101,6 +112,8 @@ def register_all_nodes(service_host, nodes_list, client=None):
             client = _get_ironic_client()
         register_func = register_ironic_node
     else:
+        if client is None:
+            client = _get_nova_bm_client()
         register_func = register_nova_bm_node
     for node in nodes_list:
         register_func(service_host, node, client=client)
