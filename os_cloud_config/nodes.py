@@ -14,28 +14,15 @@
 # limitations under the License.
 
 import os
-import subprocess
 import time
 
 from ironicclient import client as ironicclient
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+from keystoneclient.v2_0 import client as ksclient
 from novaclient.extension import Extension
 from novaclient.openstack.common.apiclient import exceptions as novaexc
 from novaclient.v1_1 import client as novav11client
 from novaclient.v1_1.contrib import baremetal
-
-
-def _check_output(command):
-    # subprocess.check_output only exists in Python 2.7+.
-    if hasattr(subprocess, 'check_output'):
-        return subprocess.check_output(command)
-    else:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE)
-        output, err = process.communicate()
-        return_code = process.poll()
-        if return_code:
-            raise subprocess.CalledProcessError
-        return output
 
 
 def register_nova_bm_node(service_host, node, client=None):
@@ -106,8 +93,16 @@ def _get_ironic_client():
     return ironicclient.get_client(1, **kwargs)
 
 
+def _get_keystone_client():
+    kwargs = {'username': os.environ["OS_USERNAME"],
+              'password': os.environ["OS_PASSWORD"],
+              'tenant_name': os.environ["OS_TENANT_NAME"],
+              'auth_url': os.environ["OS_AUTH_URL"]}
+    return ksclient.Client(**kwargs)
+
+
 def register_all_nodes(service_host, nodes_list, client=None):
-    if using_ironic():
+    if using_ironic(keystone=None):
         if client is None:
             client = _get_ironic_client()
         register_func = register_ironic_node
@@ -119,6 +114,7 @@ def register_all_nodes(service_host, nodes_list, client=None):
         register_func(service_host, node, client=client)
 
 
-def using_ironic():
-    out = subprocess.check_output(["keystone", "service-list"])
-    return 'ironic' in out
+def using_ironic(keystone=None):
+    if keystone is None:
+        keystone = _get_keystone_client()
+    return 'ironic' in [service.name for service in keystone.services.list()]
