@@ -15,8 +15,10 @@
 
 import os
 import subprocess
+import time
 
 from ironicclient import client as ironicclient
+from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 
 
 def _get_id_line(lines, id_description, position=3):
@@ -70,9 +72,14 @@ def register_ironic_node(service_host, node, client=None):
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
-    ironic_node = client.node.create(driver=node["pm_type"],
-                                     driver_info=driver_info,
-                                     properties=properties)
+    for count in range(60):
+        try:
+            ironic_node = client.node.create(driver=node["pm_type"],
+                                             driver_info=driver_info,
+                                             properties=properties)
+            break
+        except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
+            time.sleep(10)
 
     for mac in node["mac"]:
         client.port.create(address=mac, node_uuid=ironic_node.uuid)
@@ -110,20 +117,8 @@ def check_nova_bm_service():
     subprocess.check_call(["nova", "baremetal-node-delete", node_id])
 
 
-# TODO(StevenK): Perhaps this should spin over the first node until it is
-# registered successfully for a minute or so, replacing this function.
-def check_ironic_service():
-    subprocess.check_call(["wait_for", "60", "10", "ironic", "chassis-create",
-                          "-d", "devtest_canary"])
-    out = subprocess.check_output(["ironic", "chassis-list"])
-    chassis_id = _get_id_line(out, "devtest_canary", position=1)
-    subprocess.check_call(["ironic", "chassis-delete", chassis_id])
-
-
 def check_service():
-    if using_ironic():
-        check_ironic_service()
-    else:
+    if not using_ironic():
         check_nova_bm_service()
 
 
