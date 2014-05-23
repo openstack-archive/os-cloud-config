@@ -20,14 +20,9 @@ import time
 from ironicclient import client as ironicclient
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 from novaclient.extension import Extension
+from novaclient.openstack.common.apiclient import exceptions as novaexc
 from novaclient.v1_1 import client as novav11client
 from novaclient.v1_1.contrib import baremetal
-
-
-def _get_id_line(lines, id_description, position=3):
-    for line in lines.split('\n'):
-        if id_description in line:
-            return line.split()[position]
 
 
 def _check_output(command):
@@ -46,12 +41,17 @@ def _check_output(command):
 def register_nova_bm_node(service_host, node, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
-    bm_node = client.baremetal.create(service_host, node["cpu"],
-                                      node["memory"], node["disk"],
-                                      node["mac"][0],
-                                      pm_address=node["pm_addr"],
-                                      pm_user=node["pm_user"],
-                                      pm_password=node["pm_password"])
+    for count in range(60):
+        try:
+            bm_node = client.baremetal.create(service_host, node["cpu"],
+                                              node["memory"], node["disk"],
+                                              node["mac"][0],
+                                              pm_address=node["pm_addr"],
+                                              pm_user=node["pm_user"],
+                                              pm_password=node["pm_password"])
+            break
+        except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
+            time.sleep(10)
     for mac in node["mac"][1:]:
         client.baremetal.add_interface(bm_node, mac)
 
@@ -117,22 +117,6 @@ def register_all_nodes(service_host, nodes_list, client=None):
         register_func = register_nova_bm_node
     for node in nodes_list:
         register_func(service_host, node, client=client)
-
-
-# TODO(StevenK): Perhaps this should spin over the first node until it is
-# registered successfully for a minute or so, replacing this function.
-def check_nova_bm_service():
-    subprocess.check_call(["wait_for", "60", "10", "nova",
-                          "baremetal-node-create", "devtest_canary", "1", "1",
-                          "1", "11:22:33:44:55:66"])
-    out = subprocess.check_output(["nova", "baremetal-node-list"])
-    node_id = _get_id_line(out, "devtest_canary", position=1)
-    subprocess.check_call(["nova", "baremetal-node-delete", node_id])
-
-
-def check_service():
-    if not using_ironic():
-        check_nova_bm_service()
 
 
 def using_ironic():

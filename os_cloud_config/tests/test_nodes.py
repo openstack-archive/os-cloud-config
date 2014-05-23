@@ -18,6 +18,7 @@ import collections
 import mock
 
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+from novaclient.openstack.common.apiclient import exceptions as novaexc
 from os_cloud_config import nodes
 from os_cloud_config.tests import base
 
@@ -54,6 +55,20 @@ class NodesTest(base.TestCase):
             pm_user="test", pm_password="random")
         client.baremetal.create.has_calls([nova_bm_call, nova_bm_call])
         client.baremetal.add_interface.assert_called_once_with(mock.ANY, "bbb")
+
+    @mock.patch('time.sleep')
+    def test_register_nova_bm_node_retry(self, sleep):
+        client = mock.MagicMock()
+        side_effect = (novaexc.ConnectionRefused,
+                       novaexc.ServiceUnavailable, mock.DEFAULT)
+        client.baremetal.create.side_effect = side_effect
+        nodes.register_nova_bm_node('servicehost',
+                                    self._get_node(), client=client)
+        sleep.assert_has_calls([mock.call(10), mock.call(10)])
+        nova_bm_call = mock.call(
+            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
+            pm_user="test", pm_password="random")
+        client.has_calls([nova_bm_call])
 
     @mock.patch('os.environ')
     @mock.patch('ironicclient.client.get_client')
