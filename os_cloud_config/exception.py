@@ -48,3 +48,7 @@ class CloudConfigException(Exception):
                 message = self.msg_fmt
 
         super(CloudConfigException, self).__init__(message)
+
+
+class MissingEnvironment(CloudConfigException):
+    message = "Required environment variables are not set."
