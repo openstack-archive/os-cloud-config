@@ -28,14 +28,16 @@ from novaclient.v1_1.contrib import baremetal
 def register_nova_bm_node(service_host, node, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
+    kwargs = {'pm_address': node["pm_addr"], 'pm_user': node["pm_user"]}
+    # Nova now enforces the password to be 255 or less characters, and the
+    # ssh key/password to use is set in configuration.
+    if len(node["pm_password"]) <= 255:
+        kwargs["pm_password"] = node["pm_password"]
     for count in range(60):
         try:
             bm_node = client.baremetal.create(service_host, node["cpu"],
                                               node["memory"], node["disk"],
-                                              node["mac"][0],
-                                              pm_address=node["pm_addr"],
-                                              pm_user=node["pm_user"],
-                                              pm_password=node["pm_password"])
+                                              node["mac"][0], **kwargs)
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
             time.sleep(10)
