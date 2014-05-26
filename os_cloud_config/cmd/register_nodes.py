@@ -18,6 +18,7 @@ import simplejson
 import textwrap
 
 from os_cloud_config import nodes
+from os_cloud_config import utils
 
 
 def parse_args():
@@ -52,5 +53,12 @@ def main():
     with open(args.nodes, 'r') as node_file:
         nodes_list = simplejson.load(node_file)
 
+    try:
+        utils._ensure_environment()
+    except utils.MissingEnvironment as e:
+        print(e.message)
+        return 1
+
     # TODO(StevenK): Filter out registered nodes.
     nodes.register_all_nodes(args.service_host, nodes_list)
+    return 0
