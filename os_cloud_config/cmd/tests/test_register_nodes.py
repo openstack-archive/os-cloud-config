@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
 import tempfile
 
@@ -25,6 +26,8 @@ from os_cloud_config.tests import base
 class RegisterNodesTest(base.TestCase):
 
     @mock.patch('os_cloud_config.nodes.register_all_nodes')
+    @mock.patch.object(os, 'environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
+                       'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
     @mock.patch.object(sys, 'argv', ['register-nodes', '--service-host',
                        'seed', '--nodes'])
     def test_with_arguments(self, register_mock):
