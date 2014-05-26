@@ -44,7 +44,7 @@ def register_nova_bm_node(service_host, node, client=None):
     out = _check_output(["nova", "baremetal-node-create",
                          "--pm_address=%s" % node["pm_addr"],
                          "--pm_user=%s" % node["pm_user"],
-                         "--pm_password=%s" % node["pm_password"],
+                         "--pm_password=%s" % node["pm_password"][:255],
                          service_host, node["cpu"], node["memory"],
                          node["disk"], node["mac"][0]])
     bm_id = _get_id_line(out, " id ")
