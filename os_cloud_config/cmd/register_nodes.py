@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import argparse
+import os
 import simplejson
 import textwrap
 
@@ -51,6 +52,12 @@ def main():
             nodes_list = simplejson.load(node_file)
     except simplejson.scanner.JSONDecodeError as e:
         print("Error parsing JSON file: %s" % e.message)
+        return 1
+
+    environ = ("OS_USERNAME", "OS_PASSWORD", "OS_AUTH_URL", "OS_TENANT_NAME")
+    if environ not in os.environ:
+        print("%s environment variables are required to be set." % ", ".join(
+            environ))
         return 1
 
     nodes.check_service()
