@@ -46,8 +46,12 @@ def parse_args():
 def main():
     args = parse_args()
 
-    with open(args.nodes, 'r') as node_file:
-        nodes_list = simplejson.load(node_file)
+    try:
+        with open(args.nodes, 'r') as node_file:
+            nodes_list = simplejson.load(node_file)
+    except simplejson.scanner.JSONDecodeError as e:
+        print("Error parsing JSON file: %s" % e.message)
+        return 1
 
     nodes.check_service()
     # TODO(StevenK): Filter out registered nodes.
