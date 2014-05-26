@@ -156,3 +156,25 @@ class NodesTest(base.TestCase):
         keystone.services.list.return_value = [service('compute')]
         self.assertFalse(nodes.using_ironic(keystone=keystone))
         self.assertEqual(1, keystone.services.list.call_count)
+
+    def test_node_is_not_registered(self):
+        self.assertTrue(nodes.node_is_not_registered([], self._get_node()))
+
+    def test_node_is_registered(self):
+        node = self._get_node()
+        registered_nodes = [self._get_node()]
+        self.assertFalse(nodes.node_is_not_registered(registered_nodes, node))
+
+    def test_node_is_not_registered_non_matching_second_mac(self):
+        node = self._get_node()
+        node["mac"].append("ccc")
+        registered_nodes = [self._get_node()]
+        registered_nodes[0]["mac"].append("bbb")
+        self.assertTrue(nodes.node_is_not_registered(registered_nodes, node))
+
+    def test_node_is_not_registered_matching_mac_non_matching_details(self):
+        node = self._get_node()
+        registered_nodes = [self._get_node()]
+        registered_nodes[0]["pm_addr"] = 'barbaz'
+        registered_nodes[0]["memory"] = 4
+        self.assertTrue(nodes.node_is_not_registered(registered_nodes, node))
