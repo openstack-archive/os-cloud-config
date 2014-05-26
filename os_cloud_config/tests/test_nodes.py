@@ -37,8 +37,7 @@ class NodesTest(base.TestCase):
         nodes.register_all_nodes('servicehost', node_list)
         nova_bm_call = mock.call(
             ["nova", "baremetal-node-create", "--pm_address=foo.bar",
-             "--pm_user=test", "--pm_password=random", "servicehost", "1",
-             "2048", "30", "aaa"])
+             "--pm_user=test", "servicehost", "1", "2048", "30", "aaa"])
         check_mock.has_calls([nova_bm_call, nova_bm_call])
 
     @mock.patch('os_cloud_config.nodes._check_output')
