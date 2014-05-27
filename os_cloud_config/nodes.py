@@ -62,10 +62,9 @@ def register_ironic_node(service_host, node, client=None):
                        "ipmi_username": node["pm_user"],
                        "ipmi_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_ssh":
-        ssh_key_filename = "/mnt/state/var/lib/ironic/virtual-power-key"
         driver_info = {"ssh_address": node["pm_addr"],
                        "ssh_username": node["pm_user"],
-                       "ssh_key_filename": ssh_key_filename,
+                       "ssh_key_contents": node["pm_password"],
                        "ssh_virt_type": "virsh"}
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
