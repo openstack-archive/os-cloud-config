@@ -13,10 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import subprocess
 
 from ironicclient import client as ironicclient
+
+LOG = logging.getLogger(__name__)
 
 
 def _get_id_line(lines, id_description, position=3):
@@ -41,6 +44,7 @@ def _check_output(command):
 def register_nova_bm_node(service_host, node, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
+    LOG.debug('Registering node with nova-baremetal.')
     out = _check_output(["nova", "baremetal-node-create",
                          "--pm_address=%s" % node["pm_addr"],
                          "--pm_user=%s" % node["pm_user"],
@@ -70,6 +74,7 @@ def register_ironic_node(service_host, node, client=None):
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
+    LOG.debug('Registering node with ironic.')
     ironic_node = client.node.create(driver=node["pm_type"],
                                      driver_info=driver_info,
                                      properties=properties)
@@ -81,6 +86,7 @@ def register_ironic_node(service_host, node, client=None):
 
 
 def _get_ironic_client():
+    LOG.debug('Creating ironic client.')
     kwargs = {'os_username': os.environ['OS_USERNAME'],
               'os_password': os.environ['OS_PASSWORD'],
               'os_auth_url': os.environ['OS_AUTH_URL'],
@@ -89,6 +95,7 @@ def _get_ironic_client():
 
 
 def register_all_nodes(service_host, nodes_list, client=None):
+    LOG.debug('Registering all nodes.')
     if using_ironic():
         if client is None:
             client = _get_ironic_client()
@@ -102,6 +109,7 @@ def register_all_nodes(service_host, nodes_list, client=None):
 # TODO(StevenK): Perhaps this should spin over the first node until it is
 # registered successfully for a minute or so, replacing this function.
 def check_nova_bm_service():
+    LOG.debug('Checking nova-baremetal service.')
     subprocess.check_call(["wait_for", "60", "10", "nova",
                           "baremetal-node-create", "devtest_canary", "1", "1",
                           "1", "11:22:33:44:55:66"])
@@ -113,6 +121,7 @@ def check_nova_bm_service():
 # TODO(StevenK): Perhaps this should spin over the first node until it is
 # registered successfully for a minute or so, replacing this function.
 def check_ironic_service():
+    LOG.debug('Checking ironic service.')
     subprocess.check_call(["wait_for", "60", "10", "ironic", "chassis-create",
                           "-d", "devtest_canary"])
     out = subprocess.check_output(["ironic", "chassis-list"])
