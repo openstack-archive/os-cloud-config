@@ -25,14 +25,12 @@ from os_cloud_config.tests import base
 class RegisterNodesTest(base.TestCase):
 
     @mock.patch('os_cloud_config.nodes.register_all_nodes')
-    @mock.patch('os_cloud_config.nodes.check_service')
     @mock.patch.object(sys, 'argv', ['register-nodes', '--service-host',
                        'seed', '--nodes'])
-    def test_with_arguments(self, register_mock, check_mock):
+    def test_with_arguments(self, register_mock):
         with tempfile.NamedTemporaryFile() as f:
             f.write('{}\n')
             f.flush()
             sys.argv.append(f.name)
             register_nodes.main()
-        self.assertEqual(1, check_mock.call_count)
         register_mock.has_calls([mock.call("seed", "{}")])
