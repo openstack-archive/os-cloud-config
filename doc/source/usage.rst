@@ -38,6 +38,10 @@ is registered with Keystone.
     register-nodes will ask Ironic to power off every machine as they are
     registered.
 
+ .. note::
+
+    register-nodes will wait up to 10 minutes for Ironic to register a node.
+
 The nodes argument to register-nodes is a JSON file describing the nodes to
 be registered in a list of objects.
 

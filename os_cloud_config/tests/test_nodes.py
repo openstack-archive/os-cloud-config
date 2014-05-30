@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
+
 import mock
 
+from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 from os_cloud_config import nodes
 from os_cloud_config.tests import base
 
@@ -82,3 +85,17 @@ class NodesTest(base.TestCase):
         ironic.port.create.assert_has_calls([port_call, port_call])
         ironic.node.set_power_state.assert_has_calls(
             [power_off_call, power_off_call])
+
+    @mock.patch('time.sleep')
+    def test_register_ironic_node_retry(self, sleep):
+        ironic = mock.MagicMock()
+        ironic_node = collections.namedtuple('node', ['uuid'])
+        side_effect = (ironicexp.ConnectionRefused,
+                       ironicexp.ServiceUnavailable, ironic_node('1'))
+        ironic.node.create.side_effect = side_effect
+        nodes.register_ironic_node(None, self._get_node(), client=ironic)
+        sleep.assert_has_calls([mock.call(10), mock.call(10)])
+        node_create = mock.call(driver='pxe_ssh',
+                                driver_info=mock.ANY,
+                                properties=mock.ANY)
+        ironic.node.create.assert_has_calls(node_create)
