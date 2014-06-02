@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import time
 
@@ -24,11 +25,14 @@ from novaclient.openstack.common.apiclient import exceptions as novaexc
 from novaclient.v1_1 import client as novav11client
 from novaclient.v1_1.contrib import baremetal
 
+LOG = logging.getLogger(__name__)
+
 
 def register_nova_bm_node(service_host, node, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
     for count in range(60):
+        LOG.debug('Registering node with nova-baremetal, try #%d.' % count)
         try:
             bm_node = client.baremetal.create(service_host, node["cpu"],
                                               node["memory"], node["disk"],
@@ -38,6 +42,7 @@ def register_nova_bm_node(service_host, node, client=None):
                                               pm_password=node["pm_password"])
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
+            LOG.debug('Service not available, sleeping for 10 seconds.')
             time.sleep(10)
     for mac in node["mac"][1:]:
         client.baremetal.add_interface(bm_node, mac)
@@ -62,12 +67,14 @@ def register_ironic_node(service_host, node, client=None):
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
     for count in range(60):
+        LOG.debug('Registering node with ironic, try #%d.' % count)
         try:
             ironic_node = client.node.create(driver=node["pm_type"],
                                              driver_info=driver_info,
                                              properties=properties)
             break
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
+            LOG.debug('Service not available, sleeping for 10 seconds.')
             time.sleep(10)
 
     for mac in node["mac"]:
@@ -77,6 +84,7 @@ def register_ironic_node(service_host, node, client=None):
 
 
 def _get_nova_bm_client():
+    LOG.debug('Creating nova client.')
     baremetal_extension = Extension('baremetal', baremetal)
     return novav11client.Client(os.environ["OS_USERNAME"],
                                 os.environ["OS_PASSWORD"],
@@ -86,6 +94,7 @@ def _get_nova_bm_client():
 
 
 def _get_ironic_client():
+    LOG.debug('Creating ironic client.')
     kwargs = {'os_username': os.environ['OS_USERNAME'],
               'os_password': os.environ['OS_PASSWORD'],
               'os_auth_url': os.environ['OS_AUTH_URL'],
@@ -94,6 +103,7 @@ def _get_ironic_client():
 
 
 def _get_keystone_client():
+    LOG.debug('Creating keystone client.')
     kwargs = {'username': os.environ["OS_USERNAME"],
               'password': os.environ["OS_PASSWORD"],
               'tenant_name': os.environ["OS_TENANT_NAME"],
@@ -102,6 +112,7 @@ def _get_keystone_client():
 
 
 def register_all_nodes(service_host, nodes_list, client=None):
+    LOG.debug('Registering all nodes.')
     if using_ironic(keystone=None):
         if client is None:
             client = _get_ironic_client()
@@ -115,6 +126,7 @@ def register_all_nodes(service_host, nodes_list, client=None):
 
 
 def using_ironic(keystone=None):
+    LOG.debug('Checking for usage of ironic.')
     if keystone is None:
         keystone = _get_keystone_client()
     return 'ironic' in [service.name for service in keystone.services.list()]
