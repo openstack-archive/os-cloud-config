@@ -86,10 +86,9 @@ class NodesTest(base.TestCase):
                            "cpu_arch": "amd64"}
         ironic = mock.MagicMock()
         nodes.register_all_nodes('servicehost', node_list, client=ironic)
-        ssh_key = "/mnt/state/var/lib/ironic/virtual-power-key"
         pxe_node_driver_info = {"ssh_address": "foo.bar",
                                 "ssh_username": "test",
-                                "ssh_key_filename": ssh_key,
+                                "ssh_key_contents": "random",
                                 "ssh_virt_type": "virsh"}
         ipmi_node_driver_info = {"ipmi_address": "foo.bar",
                                  "ipmi_username": "test",
