@@ -66,6 +66,16 @@ class NodesTest(base.TestCase):
             pm_user="test", pm_password="random")
         client.has_calls([nova_bm_call])
 
+    def test_register_nova_bm_node_ignore_long_pm_password(self):
+        client = mock.MagicMock()
+        node = self._get_node()
+        node["pm_password"] = 'abc' * 100
+        nodes.register_nova_bm_node('servicehost', node, client=client)
+        nova_bm_call = mock.call(
+            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
+            pm_user="test")
+        client.has_calls([nova_bm_call])
+
     @mock.patch('os.environ')
     @mock.patch('ironicclient.client.get_client')
     def test_get_ironic_client(self, client_mock, environ):
