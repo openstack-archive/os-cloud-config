@@ -6,7 +6,9 @@ To use os-cloud-config in a project::
 
 	import os_cloud_config
 
-Initializing Keystone for a host::
+-----------------------------------
+Initializing Keystone for a host
+-----------------------------------
 
 The init-keystone command line utility initializes Keystone for use with
 normal authentication by creating the admin and service tenants, the admin
@@ -26,8 +28,9 @@ That acts on the 192.0.2.1 host, sets the admin token and the admin password
 to the string "unset", the admin e-mail address to "admin@example.com", and
 uses the root user to connect to the host via ssh to configure certificates.
 
-
-Registering nodes with a baremetal service::
+--------------------------------------------
+Registering nodes with a baremetal service
+--------------------------------------------
 
 The register-nodes command line utility supports registering nodes with
 either Ironic or Nova-baremetal. Ironic will be used if the Ironic service
@@ -52,18 +55,18 @@ For example::
 
 Where /tmp/one-node contains::
 
-[
-  {
-    "memory": "2048",
-    "disk": "30",
-    "arch": "i386",
-    "pm_user": "steven",
-    "pm_addr": "192.168.122.1",
-    "pm_password": "password",
-    "pm_type": "pxe_ssh",
-    "mac": [
-      "00:76:31:1f:f2:a0"
-    ],
-    "cpu": "1"
-  }
-]
+    [
+      {
+        "memory": "2048",
+        "disk": "30",
+        "arch": "i386",
+        "pm_user": "steven",
+        "pm_addr": "192.168.122.1",
+        "pm_password": "password",
+        "pm_type": "pxe_ssh",
+        "mac": [
+          "00:76:31:1f:f2:a0"
+        ],
+        "cpu": "1"
+      }
+    ]
