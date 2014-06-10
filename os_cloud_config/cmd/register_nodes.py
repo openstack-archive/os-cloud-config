@@ -49,8 +49,13 @@ def parse_args():
 def main():
     args = parse_args()
 
-    with open(args.nodes, 'r') as node_file:
-        nodes_list = simplejson.load(node_file)
+    try:
+        with open(args.nodes, 'r') as node_file:
+            nodes_list = simplejson.load(node_file)
 
-    # TODO(StevenK): Filter out registered nodes.
-    nodes.register_all_nodes(args.service_host, nodes_list)
+        # TODO(StevenK): Filter out registered nodes.
+        nodes.register_all_nodes(args.service_host, nodes_list)
+    except Exception as e:
+        print(e.message)
+        return 1
+    return 0
