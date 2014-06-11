@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Workflow+1: lifeless <robertc@robertcollins.net>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 11 Jun 2014 10:06:51 +0000
+Reviewed-on: https://review.openstack.org/96051
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
