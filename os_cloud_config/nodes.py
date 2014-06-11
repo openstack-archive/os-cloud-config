@@ -33,14 +33,18 @@ def register_nova_bm_node(service_host, node, client=None):
     # ssh key/password to use is set in configuration.
     if len(node["pm_password"]) <= 255:
         kwargs["pm_password"] = node["pm_password"]
+    node_created = False
     for count in range(60):
         try:
             bm_node = client.baremetal.create(service_host, node["cpu"],
                                               node["memory"], node["disk"],
                                               node["mac"][0], **kwargs)
+            node_created = True
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
             time.sleep(10)
+    if not node_created:
+        raise novaexc.ServiceUnavailable()
     for mac in node["mac"][1:]:
         client.baremetal.add_interface(bm_node, mac)
 
@@ -62,14 +66,18 @@ def register_ironic_node(service_host, node, client=None):
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
+    node_created = False
     for count in range(60):
         try:
             ironic_node = client.node.create(driver=node["pm_type"],
                                              driver_info=driver_info,
                                              properties=properties)
+            node_created = True
             break
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
             time.sleep(10)
+    if not node_created:
+        raise ironicexp.ServiceUnavailable()
 
     for mac in node["mac"]:
         client.port.create(address=mac, node_uuid=ironic_node.uuid)

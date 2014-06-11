@@ -66,6 +66,14 @@ class NodesTest(base.TestCase):
             pm_user="test", pm_password="random")
         client.has_calls([nova_bm_call])
 
+    @mock.patch('time.sleep')
+    def test_register_nova_bm_node_failure(self, sleep):
+        client = mock.MagicMock()
+        client.baremetal.create.side_effect = novaexc.ConnectionRefused
+        self.assertRaises(novaexc.ServiceUnavailable,
+                          nodes.register_nova_bm_node, 'servicehost',
+                          self._get_node(), client=client)
+
     def test_register_nova_bm_node_ignore_long_pm_password(self):
         client = mock.MagicMock()
         node = self._get_node()
@@ -130,6 +138,14 @@ class NodesTest(base.TestCase):
                                 driver_info=mock.ANY,
                                 properties=mock.ANY)
         ironic.node.create.assert_has_calls(node_create)
+
+    @mock.patch('time.sleep')
+    def test_register_ironic_node_failure(self, sleep):
+        ironic = mock.MagicMock()
+        ironic.node.create.side_effect = ironicexp.ConnectionRefused
+        self.assertRaises(ironicexp.ServiceUnavailable,
+                          nodes.register_ironic_node, None, self._get_node(),
+                          client=ironic)
 
     @mock.patch('os.environ')
     @mock.patch('keystoneclient.v2_0.client.Client')
