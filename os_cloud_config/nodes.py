@@ -96,7 +96,12 @@ def register_ironic_node(service_host, node, client=None):
     for mac in node["mac"]:
         client.port.create(address=mac, node_uuid=ironic_node.uuid)
     # Ironic should do this directly, see bug 1315225.
-    client.node.set_power_state(ironic_node.uuid, 'off')
+    try:
+        client.node.set_power_state(ironic_node.uuid, 'off')
+    except ironicexp.Conflict:
+        # Conflict means the Ironic conductor got there first, so we can
+        # ignore the exception.
+        pass
 
 
 def _get_nova_bm_client():
