@@ -32,5 +32,18 @@ class RegisterNodesTest(base.TestCase):
             f.write('{}\n')
             f.flush()
             sys.argv.append(f.name)
-            register_nodes.main()
+            return_code = register_nodes.main()
         register_mock.has_calls([mock.call("seed", "{}")])
+        self.assertEqual(0, return_code)
+
+    @mock.patch('os_cloud_config.nodes.register_all_nodes')
+    @mock.patch.object(sys, 'argv', ['register-nodes', '--service-host',
+                       'seed', '--nodes'])
+    def test_with_exception(self, register_mock):
+        register_mock.side_effect = ValueError
+        with tempfile.NamedTemporaryFile() as f:
+            f.write('{}\n')
+            f.flush()
+            sys.argv.append(f.name)
+            return_code = register_nodes.main()
+        self.assertEqual(1, return_code)
