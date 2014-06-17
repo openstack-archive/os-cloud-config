@@ -18,7 +18,6 @@ from keystoneclient.openstack.common.apiclient import exceptions
 from os_cloud_config import keystone
 from os_cloud_config.tests import base
 
-
 class KeystoneTest(base.TestCase):
 
     def assert_endpoint(self, host, region='regionOne', public_endpoint=None):
@@ -46,13 +45,8 @@ class KeystoneTest(base.TestCase):
 
         self.client.tenants.find.assert_called_once_with(name='admin')
         self.client.roles.find.assert_called_once_with(name='admin')
-        self.client.users.create.assert_called_once_with(
-            'admin', email='admin@example.org', password='adminpasswd',
-            tenant_id=self.client.tenants.find.return_value.id)
-
-        self.client.roles.find.assert_called_once_with(name='admin')
-        self.client.roles.add_user_role.assert_called_once_with(
-            self.client.users.create.return_value,
+        self.client.users.find.assert_called_once_with(name='admin')
+        self.client.roles.roles_for_user(
             self.client.roles.find.return_value,
             self.client.tenants.find.return_value)
 
@@ -137,3 +131,49 @@ class KeystoneTest(base.TestCase):
     def _patch_client_cleanup(self):
         self.create_admin_client_patcher.stop()
         self.client = None
+
+    def test_create_admin_user_user_exists(self):
+        self._patch_client()
+        keystone._create_admin_user(self.client, 'admin@example.org', 'adminpasswd')
+        self.client.tenants.find.assert_called_once_with(name='admin')
+        self.client.roles.find.assert_called_once_with(name='admin')
+        self.client.users.find.assert_called_once_with(name='admin')
+        self.client.users.create.assert_not_called()
+
+    def test_create_admin_user_user_does_not_exist(self):
+        self._patch_client()
+        self.client.users.find.side_effect = exceptions.NotFound()
+        keystone._create_admin_user(self.client, 'admin@example.org', 'adminpasswd')
+        self.client.tenants.find.assert_called_once_with(name='admin')
+        self.client.roles.find.assert_called_once_with(name='admin')
+        self.client.users.find.assert_called_once_with(name='admin')
+        self.client.users.create.assert_called_once_with(
+            'admin', email='admin@example.org', password='adminpasswd',
+            tenant_id=self.client.tenants.find.return_value.id)
+
+    def test_create_admin_user_role_assigned(self):
+        self._patch_client()
+        self.client.roles.roles_for_user.return_value = [self.client.roles.find.return_value]
+        keystone._create_admin_user(self.client, 'admin@example.org', 'adminpasswd')
+        self.client.tenants.find.assert_called_once_with(name='admin')
+        self.client.roles.find.assert_called_once_with(name='admin')
+        self.client.users.find.assert_called_once_with(name='admin')
+        self.client.roles.roles_for_user(
+            self.client.roles.find.return_value,
+            self.client.tenants.find.return_value)
+        self.client.roles.add_user_role.assert_not_called()
+
+    def test_create_admin_user_role_not_assigned(self):
+        self._patch_client()
+        self.client.roles.roles_for_user.return_value = []
+        keystone._create_admin_user(self.client, 'admin@example.org', 'adminpasswd')
+        self.client.tenants.find.assert_called_once_with(name='admin')
+        self.client.roles.find.assert_called_once_with(name='admin')
+        self.client.users.find.assert_called_once_with(name='admin')
+        self.client.roles.roles_for_user(
+            self.client.roles.find.return_value,
+            self.client.tenants.find.return_value)
+        self.client.roles.add_user_role.assert_called_once_with(
+            self.client.users.find.return_value,
+            self.client.roles.find.return_value,
+            self.client.tenants.find.return_value)
