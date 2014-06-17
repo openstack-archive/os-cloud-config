@@ -37,11 +37,11 @@ def initialize(host, admin_token, admin_email, admin_password,
 
     keystone = _create_admin_client(host, admin_token)
 
-    _create_roles(keystone)
-    _create_tenants(keystone)
+#    _create_roles(keystone)
+#    _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
-    _create_endpoint(keystone, host, region, ssl)
-    _perform_pki_initialization(host, user)
+#    _create_endpoint(keystone, host, region, ssl)
+#    _perform_pki_initialization(host, user)
 
 
 def initialize_for_swift(host, admin_token):
@@ -164,9 +164,16 @@ def _create_admin_user(keystone, admin_email, admin_password):
     admin_tenant = keystone.tenants.find(name='admin')
     admin_role = keystone.roles.find(name='admin')
 
-    LOG.debug('Creating admin user.')
-    admin_user = keystone.users.create('admin', email=admin_email,
-                                       password=admin_password,
-                                       tenant_id=admin_tenant.id)
-    LOG.debug('Granting admin role to admin user on admin tenant.')
-    keystone.roles.add_user_role(admin_user, admin_role, admin_tenant)
+    try:
+        admin_user = keystone.users.find(name='admin')
+        LOG.debug('Admin user already exists, skip creation')
+    except exceptions.NotFound, e:
+        LOG.debug('Creating admin user.')
+        admin_user = keystone.users.create('admin', email=admin_email,
+                                           password=admin_password,
+                                           tenant_id=admin_tenant.id)
+    if admin_role in keystone.roles.roles_for_user(admin_user, admin_tenant):
+        LOG.debug('Admin user is already granted admin role with admin tenant, skipping role grant')
+    else:
+        LOG.debug('Granting admin role to admin user on admin tenant.')
+        keystone.roles.add_user_role(admin_user, admin_role, admin_tenant)
