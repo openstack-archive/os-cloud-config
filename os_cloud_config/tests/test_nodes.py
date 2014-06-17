@@ -84,6 +84,29 @@ class NodesTest(base.TestCase):
             pm_user="test")
         client.has_calls([nova_bm_call])
 
+    def assert_nova_bm_call_with_no_pm_password(self, node):
+        client = mock.MagicMock()
+        nodes.register_nova_bm_node('servicehost', node, client=client)
+        nova_bm_call = mock.call(
+            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
+            pm_user="test")
+        client.has_calls([nova_bm_call])
+
+    def test_register_nova_bm_node_no_pm_password(self):
+        node = self._get_node()
+        del node["pm_password"]
+        self.assert_nova_bm_call_with_no_pm_password(node)
+
+    def test_register_nova_bm_node_pm_password_of_none(self):
+        node = self._get_node()
+        node["pm_password"] = None
+        self.assert_nova_bm_call_with_no_pm_password(node)
+
+    def test_register_nova_bm_node_pm_password_of_empty_string(self):
+        node = self._get_node()
+        node["pm_password"] = ""
+        self.assert_nova_bm_call_with_no_pm_password(node)
+
     @mock.patch('os.environ')
     @mock.patch('ironicclient.client.get_client')
     def test_get_ironic_client(self, client_mock, environ):
