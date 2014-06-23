@@ -43,3 +43,33 @@ class UtilsTest(base.TestCase):
                      'OS_TENANT_NAME': 'a', 'OS_USERNAME': 'a'})
     def test_ensure_environment_missing_none(self):
         self.assertIs(None, utils._ensure_environment())
+
+    @mock.patch('os.environ')
+    @mock.patch('ironicclient.client.get_client')
+    def test_get_ironic_client(self, client_mock, environ):
+        utils._get_ironic_client()
+        client_mock.assert_called_once_with(
+            1, os_username=environ["OS_USERNAME"],
+            os_password=environ["OS_PASSWORD"],
+            os_auth_url=environ["OS_AUTH_URL"],
+            os_tenant_name=environ["OS_TENANT_NAME"])
+
+    @mock.patch('os.environ')
+    @mock.patch('novaclient.v1_1.client.Client')
+    def test_get_nova_bm_client(self, client_mock, environ):
+        utils._get_nova_bm_client()
+        client_mock.assert_called_once_with(environ["OS_USERNAME"],
+                                            environ["OS_PASSWORD"],
+                                            environ["OS_AUTH_URL"],
+                                            environ["OS_TENANT_NAME"],
+                                            extensions=[mock.ANY])
+
+    @mock.patch('os.environ')
+    @mock.patch('keystoneclient.v2_0.client.Client')
+    def test_get_keystone_client(self, client_mock, environ):
+        utils._get_keystone_client()
+        client_mock.assert_called_once_with(
+            username=environ["OS_USERNAME"],
+            password=environ["OS_PASSWORD"],
+            auth_url=environ["OS_AUTH_URL"],
+            tenant_name=environ["OS_TENANT_NAME"])
