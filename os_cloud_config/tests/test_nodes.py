@@ -30,16 +30,6 @@ class NodesTest(base.TestCase):
                 'mac': ['aaa'], 'pm_addr': 'foo.bar', 'pm_user': 'test',
                 'pm_password': 'random', 'pm_type': 'pxe_ssh'}
 
-    @mock.patch('os.environ')
-    @mock.patch('novaclient.v1_1.client.Client')
-    def test_get_nova_bm_client(self, client_mock, environ):
-        nodes._get_nova_bm_client()
-        client_mock.assert_called_once_with(environ["OS_USERNAME"],
-                                            environ["OS_PASSWORD"],
-                                            environ["OS_AUTH_URL"],
-                                            environ["OS_TENANT_NAME"],
-                                            extensions=[mock.ANY])
-
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
     def test_register_all_nodes_nova_bm(self, ironic_mock):
         node_list = [self._get_node(), self._get_node()]
@@ -107,16 +97,6 @@ class NodesTest(base.TestCase):
         node["pm_password"] = ""
         self.assert_nova_bm_call_with_no_pm_password(node)
 
-    @mock.patch('os.environ')
-    @mock.patch('ironicclient.client.get_client')
-    def test_get_ironic_client(self, client_mock, environ):
-        nodes._get_ironic_client()
-        client_mock.assert_called_once_with(
-            1, os_username=environ["OS_USERNAME"],
-            os_password=environ["OS_PASSWORD"],
-            os_auth_url=environ["OS_AUTH_URL"],
-            os_tenant_name=environ["OS_TENANT_NAME"])
-
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
     def test_register_all_nodes_ironic(self, using_ironic):
         node_list = [self._get_node(), self._get_node()]
@@ -169,16 +149,6 @@ class NodesTest(base.TestCase):
         self.assertRaises(ironicexp.ServiceUnavailable,
                           nodes.register_ironic_node, None, self._get_node(),
                           client=ironic)
-
-    @mock.patch('os.environ')
-    @mock.patch('keystoneclient.v2_0.client.Client')
-    def test_get_keystone_client(self, client_mock, environ):
-        nodes._get_keystone_client()
-        client_mock.assert_called_once_with(
-            username=environ["OS_USERNAME"],
-            password=environ["OS_PASSWORD"],
-            auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
 
     def test_using_ironic(self):
         keystone = mock.MagicMock()
