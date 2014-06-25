@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Petr Blaho <pblaho@redhat.com>
+Workflow+1: Petr Blaho <pblaho@redhat.com>
+Code-Review+1: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 25 Jun 2014 10:45:59 +0000
+Reviewed-on: https://review.openstack.org/93253
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
