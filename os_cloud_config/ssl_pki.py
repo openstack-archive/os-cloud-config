@@ -29,7 +29,12 @@ SIGNING_CERT_DAYS = 10 * 365
 X509_VERSION = 2
 
 
-def create_ca_pair(cert_serial=1):
+def create_ca_pair(cert_serial=1,
+                   subject_C='XX',
+                   subject_ST='Unset',
+                   subject_L='Unset',
+                   subject_O='Unset',
+                   subject_CN='os-cloud-config CA'):
     """Create CA private key and self-signed certificate.
 
     CA generation is mostly meant for proof-of-concept
@@ -38,6 +43,16 @@ def create_ca_pair(cert_serial=1):
 
     :param cert_serial: serial number of the generated certificate
     :type  cert_serial: integer
+    :param subject_C: Country code
+    :type subject_C: string
+    :param subject_ST: State/Province code
+    :type subject_ST: string
+    :param subject_L: Locality name
+    :type subject_L: string
+    :param subject_O: Organization name
+    :type subject_O: string
+    :param subject_CN: Common name
+    :type subject_CN: string
     :return: (ca_key_pem, ca_cert_pem) tuple of base64 encoded CA
              private key and CA certificate (PEM format)
     :rtype:  (string, string)
@@ -50,11 +65,11 @@ def create_ca_pair(cert_serial=1):
     ca_cert.set_version(X509_VERSION)
     ca_cert.set_serial_number(cert_serial)
     subject = ca_cert.get_subject()
-    subject.C = 'XX'
-    subject.ST = 'Unset'
-    subject.L = 'Unset'
-    subject.O = 'Unset'
-    subject.CN = 'Keystone CA'
+    subject.C = subject_C
+    subject.ST = subject_ST
+    subject.L = subject_L
+    subject.O = subject_O
+    subject.CN = subject_CN
     ca_cert.gmtime_adj_notBefore(0)
     ca_cert.gmtime_adj_notAfter(60 * 60 * 24 * CA_CERT_DAYS)
     ca_cert.set_issuer(subject)
@@ -69,8 +84,15 @@ def create_ca_pair(cert_serial=1):
             crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
 
 
-def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
-    """Create signing private key and certificate.
+def create_certificate_pair(ca_key_pem,
+                            ca_cert_pem,
+                            cert_serial=2,
+                            subject_C='XX',
+                            subject_ST='Unset',
+                            subject_L='Unset',
+                            subject_O='Unset',
+                            subject_CN='os-cloud-config Signing'):
+    """Create ssl key and certificate.
 
     Os-cloud-config key generation and certificate signing is mostly
     meant for proof-of-concept deployments. For real deployments it is
@@ -83,8 +105,18 @@ def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
     :type  ca_cert_pem: string
     :param cert_serial: serial number of the generated certificate
     :type  cert_serial: integer
-    :return: (signing_key_pem, signing_cert_pem) tuple of base64
-             encoded signing private key and signing certificate
+    :param subject_C: Country code
+    :type subject_C: string
+    :param subject_ST: State/Province code
+    :type subject_ST: string
+    :param subject_L: Locality name
+    :type subject_L: string
+    :param subject_O: Organization name
+    :type subject_O: string
+    :param subject_CN: Common name
+    :type subject_CN: string
+    :return: (key_pem, cert_pem) tuple of base64
+             encoded ssl private key and certificate
              (PEM format)
     :rtype:  (string, string)
     """
@@ -99,11 +131,11 @@ def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
     signing_cert.set_version(X509_VERSION)
     signing_cert.set_serial_number(cert_serial)
     subject = signing_cert.get_subject()
-    subject.C = 'XX'
-    subject.ST = 'Unset'
-    subject.L = 'Unset'
-    subject.O = 'Unset'
-    subject.CN = 'Keystone Signing'
+    subject.C = subject_C
+    subject.ST = subject_ST
+    subject.L = subject_L
+    subject.O = subject_O
+    subject.CN = subject_CN
     signing_cert.gmtime_adj_notBefore(0)
     signing_cert.gmtime_adj_notAfter(60 * 60 * 24 * SIGNING_CERT_DAYS)
     signing_cert.set_issuer(ca_cert.get_subject())
@@ -115,26 +147,56 @@ def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
             crypto.dump_certificate(crypto.FILETYPE_PEM, signing_cert))
 
 
-def create_and_write_ca_and_signing_pairs(directory):
-    """Create and write out CA and signing keys and certificates.
+def create_and_write_certificate(directory, name, overwrite=False):
+    """Create and write out an SSL certificate.
+
+    Gernerate cert_<name>.pem and cert_<name>_key.pem and write them out to
+    directory.
+
+    :param directory: directory where the certificate and key will be written
+    :type directory: string
+    :param name: name for the certificate.
+    :type name: string
+    :param overwrite: overwrite certificate if it already exists
+    :type overwrite: boolean
+    """
+    if not path.isdir(directory):
+        os.mkdir(directory)
+
+    if not overwrite:
+        for dest in ('cert_%s.pem', 'cert_%s_key.pem'):
+            if path.isfile(path.join(directory, dest % name)):
+                return
+
+    key_pem, cert_pem = create_certificate_pair(ca_key_pem, ca_cert_pem)
+
+    _write_pki_file(path.join(directory, 'cert_%s_key.pem'), key_pem)
+    _write_pki_file(path.join(directory, 'cert_%s.pem'), cert_pem)
+
+
+def create_and_write_ca(directory, overwrite=False):
+    """Create and write out CA certificat and private key.
 
     Generate ca_key.pem, ca_cert.pem, signing_key.pem,
     signing_cert.pem and write them out to a directory.
 
     :param directory: directory where keys and certs will be written
     :type  directory: string
+    :param overwrite: overwrite certificate if it already exists
+    :type overwrite: boolean
     """
     if not path.isdir(directory):
         os.mkdir(directory)
 
+    if not overwrite:
+        for dest in ('ca_key.pem', 'ca_cert.pem'):
+            if path.isfile(path.join(directory, dest)):
+                return
+
     ca_key_pem, ca_cert_pem = create_ca_pair()
-    signing_key_pem, signing_cert_pem = create_signing_pair(ca_key_pem,
-                                                            ca_cert_pem)
 
     _write_pki_file(path.join(directory, 'ca_key.pem'), ca_key_pem)
     _write_pki_file(path.join(directory, 'ca_cert.pem'), ca_cert_pem)
-    _write_pki_file(path.join(directory, 'signing_key.pem'), signing_key_pem)
-    _write_pki_file(path.join(directory, 'signing_cert.pem'), signing_cert_pem)
 
 
 def generate_certs_into_json(jsonfile, seed):
