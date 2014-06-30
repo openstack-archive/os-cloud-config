@@ -14,7 +14,7 @@
 import argparse
 import textwrap
 
-from os_cloud_config import keystone_pki
+from os_cloud_config import ssl_pki
 
 
 def parse_args():
