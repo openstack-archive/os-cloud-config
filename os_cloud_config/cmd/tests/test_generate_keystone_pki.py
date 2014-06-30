@@ -23,14 +23,14 @@ from os_cloud_config.tests import base
 
 class GenerateKeystonePKITest(base.TestCase):
 
-    @mock.patch('os_cloud_config.keystone_pki.generate_certs_into_json')
+    @mock.patch('os_cloud_config.ssl_pki.generate_cert_into_json')
     @mock.patch.object(sys, 'argv', ['generate-keystone-pki', '-j',
                        'foo.json', '-s'])
     def test_with_heatenv(self, generate_mock):
         generate_keystone_pki.main()
-        generate_mock.assert_called_once_with('foo.json', True)
+        generate_mock.assert_called_once_with('foo.json', 'keystone')
 
-    @mock.patch('os_cloud_config.keystone_pki.create_and_write_ca_'
+    @mock.patch('os_cloud_config.ssl_pki.create_and_write_ca_'
                 'and_signing_pairs')
     @mock.patch.object(sys, 'argv', ['generate-keystone-pki', '-d', 'bar'])
     def test_without_heatenv(self, create_mock):
