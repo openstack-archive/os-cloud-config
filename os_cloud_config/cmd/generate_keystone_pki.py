@@ -14,7 +14,7 @@
 import argparse
 import textwrap
 
-from os_cloud_config import keystone_pki
+from os_cloud_config import ssl_pki
 
 
 def parse_args():
@@ -45,4 +45,4 @@ def parse_args():
 
 def main():
     args = parse_args()
-    keystone_pki.create_and_write_ca_and_signing_pairs(args.directory)
+    ssl_pki.create_and_write_ca_and_signing_pairs(args.directory)

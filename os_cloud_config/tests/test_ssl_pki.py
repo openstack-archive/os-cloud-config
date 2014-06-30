@@ -17,18 +17,18 @@ import stat
 import mock
 from OpenSSL import crypto
 
-from os_cloud_config import keystone_pki
+from os_cloud_config import ssl_pki
 from os_cloud_config.tests import base
 
 
-class KeystonePKITest(base.TestCase):
+class SslPKITest(base.TestCase):
 
     def test_create_ca_and_signing_pairs(self):
         # use one common test to avoid generating CA pair twice
         # do not mock out pyOpenSSL, test generated keys/certs
 
         # create CA pair
-        ca_key_pem, ca_cert_pem = keystone_pki.create_ca_pair()
+        ca_key_pem, ca_cert_pem = ssl_pki.create_ca_pair()
         ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_key_pem)
         ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, ca_cert_pem)
 
@@ -38,11 +38,11 @@ class KeystonePKITest(base.TestCase):
 
         # check CA cert properties
         self.assertFalse(ca_cert.has_expired())
-        self.assertEqual('Keystone CA', ca_cert.get_issuer().CN)
-        self.assertEqual('Keystone CA', ca_cert.get_subject().CN)
+        self.assertEqual('os-cloud-config CA', ca_cert.get_issuer().CN)
+        self.assertEqual('os-cloud-config CA', ca_cert.get_subject().CN)
 
         # create signing pair
-        signing_key_pem, signing_cert_pem = keystone_pki.create_signing_pair(
+        signing_key_pem, signing_cert_pem = ssl_pki.create_signing_pair(
             ca_key_pem, ca_cert_pem)
         signing_key = crypto.load_privatekey(crypto.FILETYPE_PEM,
                                              signing_key_pem)
@@ -55,22 +55,23 @@ class KeystonePKITest(base.TestCase):
 
         # check signing cert properties
         self.assertFalse(signing_cert.has_expired())
-        self.assertEqual('Keystone CA', signing_cert.get_issuer().CN)
-        self.assertEqual('Keystone Signing', signing_cert.get_subject().CN)
+        self.assertEqual('os-cloud-config CA', signing_cert.get_issuer().CN)
+        self.assertEqual('os-cloud-config Signing',
+                         signing_cert.get_subject().CN)
         # pyOpenSSL currenty cannot verify a cert against a CA cert
 
-    @mock.patch('os_cloud_config.keystone_pki.os.chmod', create=True)
-    @mock.patch('os_cloud_config.keystone_pki.os.mkdir', create=True)
-    @mock.patch('os_cloud_config.keystone_pki.path.isdir', create=True)
-    @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
-    @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
-    @mock.patch('os_cloud_config.keystone_pki.open', create=True)
+    @mock.patch('os_cloud_config.ssl_pki.os.chmod', create=True)
+    @mock.patch('os_cloud_config.ssl_pki.os.mkdir', create=True)
+    @mock.patch('os_cloud_config.ssl_pki.path.isdir', create=True)
+    @mock.patch('os_cloud_config.ssl_pki.create_ca_pair')
+    @mock.patch('os_cloud_config.ssl_pki.create_signing_pair')
+    @mock.patch('os_cloud_config.ssl_pki.open', create=True)
     def test_create_and_write_ca_and_signing_pairs(
             self, open_, create_signing, create_ca, isdir, mkdir, chmod):
         create_ca.return_value = ('mock_ca_key', 'mock_ca_cert')
         create_signing.return_value = ('mock_signing_key', 'mock_signing_cert')
         isdir.return_value = False
-        keystone_pki.create_and_write_ca_and_signing_pairs('/fake_dir')
+        ssl_pki.create_and_write_ca_and_signing_pairs('/fake_dir')
 
         mkdir.assert_called_with('/fake_dir')
         chmod.assert_has_calls([
