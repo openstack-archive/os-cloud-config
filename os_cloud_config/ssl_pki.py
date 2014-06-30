@@ -54,7 +54,7 @@ def create_ca_pair(cert_serial=1):
     subject.ST = 'Unset'
     subject.L = 'Unset'
     subject.O = 'Unset'
-    subject.CN = 'Keystone CA'
+    subject.CN = 'os-cloud-config CA'
     ca_cert.gmtime_adj_notBefore(0)
     ca_cert.gmtime_adj_notAfter(60 * 60 * 24 * CA_CERT_DAYS)
     ca_cert.set_issuer(subject)
@@ -103,7 +103,7 @@ def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
     subject.ST = 'Unset'
     subject.L = 'Unset'
     subject.O = 'Unset'
-    subject.CN = 'Keystone Signing'
+    subject.CN = 'os-cloud-config Signing'
     signing_cert.gmtime_adj_notBefore(0)
     signing_cert.gmtime_adj_notAfter(60 * 60 * 24 * SIGNING_CERT_DAYS)
     signing_cert.set_issuer(ca_cert.get_subject())
@@ -137,18 +137,54 @@ def create_and_write_ca_and_signing_pairs(directory):
     _write_pki_file(path.join(directory, 'signing_cert.pem'), signing_cert_pem)
 
 
-def generate_certs_into_json(jsonfile, seed):
-    """Create and write out CA certificate and signing certificate/key.
+def generate_cert_into_json(jsonfile, name, auto_gen_ca=True,
+                            overwrite=False):
+    """Create and write out an SSL certificate.
 
-    Generate CA certificate, signing certificate and signing key and
-    add them into a JSON file. If key/certs already exist in JSON file, no
-    change is done.
+    Create an ssl certificate, sign it with a CA, and output the certificate
+    to <jsonfile> which is a heat JSON environment. If the parameters
+    property exists in destination, then the following properties are added:
+    {
+        "parameters": {
+            "<name>SSLCertificate": PEM_DATA,
+            "<name>SSLCertificateKey": PEM_DATA
+        }
+    }
 
-    :param jsonfile: JSON file where certs and key will be written
-    :type  jsonfile: string
-    :param seed: JSON file for seed machine has different structure. Different
-                 key/certs names and different parent node are used
-    :type  seed: boolean
+    The CA certificate and key lives in the parameters "CaSSLCertificate" and
+    "CaSSLCertificateKey". If these parameters are not defined then a new CA
+    is created and these properties are added.
+
+    If no "parameters" property exists then the following properties are
+    added:
+
+    {
+        "<name>": {
+            "ssl" : {
+                "certificate": PEM DATA,
+                "certificate_key: PEM_DATA
+            }
+        }
+    }
+
+    The CA certificate and key in this case are:
+
+    {
+        "ssl": {
+            "ca_certificate": PEM_DATA,
+            "ca_certificate_key": PEM_DATA
+        }
+    }
+
+    :param jsonfile: Destination to write certificate and possible CA to.
+    :type jsonfile: string
+    :param cert_serial: Serial for the certificate. If None then this is
+                        automatically determined.
+    :type cert_serial: integer
+    :param name: name for the certificate.
+    :type name: string
+    :param overwrite: overwrite certificate if it already exists
+    :type overwrite: boolean
     """
     if os.path.isfile(jsonfile):
         with open(jsonfile) as json_fd:
@@ -156,30 +192,60 @@ def generate_certs_into_json(jsonfile, seed):
     else:
         all_data = {}
 
-    if seed:
-        parent = 'keystone'
-        ca_cert_name = 'ca_certificate'
-        signing_key_name = 'signing_key'
-        signing_cert_name = 'signing_certificate'
+    parent = all_data.get("parameters")
+    ca_parent = None
+    if parent is not None:
+        cert_dest = "%sSSLCertificate" % name
+        cert_key_dest = "%sSSLCertificateKey" % name
+        ca_dest = "CaSSLCertificate"
+        ca_key_dest = "CaSSLCertificateKey"
+        cert_count_dest = "SSLCertificatCount"
+        ca_parent = parent
     else:
-        parent = 'parameters'
-        ca_cert_name = 'KeystoneCACertificate'
-        signing_key_name = 'KeystoneSigningKey'
-        signing_cert_name = 'KeystoneSigningCertificate'
+        cert_dest = "certificate"
+        cert_key_dest = "certificate_key"
+        ca_dest = "ca_certificate"
+        ca_key_dest = "ca_certificate_key"
+        cert_count_dest = "certificate_count"
 
-    if parent not in all_data:
-        all_data[parent] = {}
-    parent_node = all_data[parent]
+        # Make parent be a node in all_data
+        svc = all_data.get(name, {})
+        parent = all_data.get("ssl", {})
+        svc["ssl"] = parent
+        ca_parent = all_data.get("ssl", {})
 
-    if not (ca_cert_name in parent_node and
-            signing_key_name in parent_node and
-            signing_cert_name in parent_node):
-        ca_key_pem, ca_cert_pem = create_ca_pair()
+        all_data[name] = svc
+        all_data["ssl"] = ca_parent
+
+    # If we only have one of cert or key this is an error if not overwriting
+    if (cert_dest not in parent and cert_key_dest in parent or
+            cert_dest in parent and cert_key_dest not in parent) and \
+            not overwrite:
+        raise ValueError("Only one of certificate or key defined.")
+
+    if cert_dest not in parent or overwrite:
+        # Check that we have both a CA cert and key or neither
+        if (ca_dest not in parent and ca_key_dest in parent) or \
+                (ca_dest in parent and ca_key_dest not in parent):
+            raise ValueError("Only one of CA certificate or key defined.")
+
+        # Gen CA
+        if ca_dest not in parent:
+            ca_key_pem, ca_cert_pem = create_ca_pair()
+            ca_parent[ca_key_dest] = ca_key_pem
+            ca_parent[ca_dest] = ca_cert_pem
+
+        # Gen cert
+        cert_serial = ca_parent.get(cert_count_dest, 0)
+        cert_serial += 1
         signing_key_pem, signing_cert_pem = create_signing_pair(ca_key_pem,
-                                                                ca_cert_pem)
-        parent_node.update({ca_cert_name: ca_cert_pem,
-                            signing_key_name: signing_key_pem,
-                            signing_cert_name: signing_cert_pem})
+                                                                ca_cert_pem,
+                                                                cert_serial)
+        ca_parent[cert_count_dest] = cert_serial
+        parent[cert_key_dest] = signing_key_pem
+        parent[cert_dest] = signing_cert_pem
+
+        # Write out env
         with open(jsonfile, 'w') as json_fd:
             json.dump(all_data, json_fd, sort_keys=True)
             LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))
