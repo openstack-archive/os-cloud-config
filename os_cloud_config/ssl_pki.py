@@ -28,7 +28,12 @@ SIGNING_CERT_DAYS = 10 * 365
 X509_VERSION = 2
 
 
-def create_ca_pair(cert_serial=1):
+def create_ca_pair(cert_serial=1,
+                   subject_C='XX',
+                   subject_ST='Unset',
+                   subject_L='Unset',
+                   subject_O='Unset',
+                   subject_CN='os-cloud-config CA'):
     """Create CA private key and self-signed certificate.
 
     CA generation is mostly meant for proof-of-concept
@@ -37,6 +42,16 @@ def create_ca_pair(cert_serial=1):
 
     :param cert_serial: serial number of the generated certificate
     :type  cert_serial: integer
+    :param subject_C: Country code
+    :type subject_C: string
+    :param subject_ST: State/Province code
+    :type subject_ST: string
+    :param subject_L: Locality name
+    :type subject_L: string
+    :param subject_O: Organization name
+    :type subject_O: string
+    :param subject_CN: Common name
+    :type subject_CN: string
     :return: (ca_key_pem, ca_cert_pem) tuple of base64 encoded CA
              private key and CA certificate (PEM format)
     :rtype:  (string, string)
@@ -49,11 +64,11 @@ def create_ca_pair(cert_serial=1):
     ca_cert.set_version(X509_VERSION)
     ca_cert.set_serial_number(cert_serial)
     subject = ca_cert.get_subject()
-    subject.C = 'XX'
-    subject.ST = 'Unset'
-    subject.L = 'Unset'
-    subject.O = 'Unset'
-    subject.CN = 'Keystone CA'
+    subject.C = subject_C
+    subject.ST = subject_ST
+    subject.L = subject_L
+    subject.O = subject_O
+    subject.CN = subject_CN
     ca_cert.gmtime_adj_notBefore(0)
     ca_cert.gmtime_adj_notAfter(60 * 60 * 24 * CA_CERT_DAYS)
     ca_cert.set_issuer(subject)
@@ -68,7 +83,14 @@ def create_ca_pair(cert_serial=1):
             crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
 
 
-def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
+def create_signing_pair(ca_key_pem,
+                        ca_cert_pem,
+                        cert_serial=2,
+                        subject_C='XX',
+                        subject_ST='Unset',
+                        subject_L='Unset',
+                        subject_O='Unset',
+                        subject_CN='os-cloud-config Signing'):
     """Create signing private key and certificate.
 
     Os-cloud-config key generation and certificate signing is mostly
@@ -82,6 +104,16 @@ def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
     :type  ca_cert_pem: string
     :param cert_serial: serial number of the generated certificate
     :type  cert_serial: integer
+    :param subject_C: Country code
+    :type subject_C: string
+    :param subject_ST: State/Province code
+    :type subject_ST: string
+    :param subject_L: Locality name
+    :type subject_L: string
+    :param subject_O: Organization name
+    :type subject_O: string
+    :param subject_CN: Common name
+    :type subject_CN: string
     :return: (signing_key_pem, signing_cert_pem) tuple of base64
              encoded signing private key and signing certificate
              (PEM format)
@@ -98,11 +130,11 @@ def create_signing_pair(ca_key_pem, ca_cert_pem, cert_serial=2):
     signing_cert.set_version(X509_VERSION)
     signing_cert.set_serial_number(cert_serial)
     subject = signing_cert.get_subject()
-    subject.C = 'XX'
-    subject.ST = 'Unset'
-    subject.L = 'Unset'
-    subject.O = 'Unset'
-    subject.CN = 'Keystone Signing'
+    subject.C = subject_C
+    subject.ST = subject_ST
+    subject.L = subject_L
+    subject.O = subject_O
+    subject.CN = subject_CN
     signing_cert.gmtime_adj_notBefore(0)
     signing_cert.gmtime_adj_notAfter(60 * 60 * 24 * SIGNING_CERT_DAYS)
     signing_cert.set_issuer(ca_cert.get_subject())
