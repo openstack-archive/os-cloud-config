@@ -15,6 +15,7 @@
 import logging
 import os
 from os import path
+import simplejson
 import stat
 
 from OpenSSL import crypto
@@ -134,6 +135,57 @@ def create_and_write_ca_and_signing_pairs(directory):
     _write_pki_file(path.join(directory, 'ca_cert.pem'), ca_cert_pem)
     _write_pki_file(path.join(directory, 'signing_key.pem'), signing_key_pem)
     _write_pki_file(path.join(directory, 'signing_cert.pem'), signing_cert_pem)
+
+
+def generate_certs_into_json(jsonfile, seed):
+    """Create and write out CA certificate and signing certificate/key.
+
+    Generate CA certificate, signing certificate and signing key and
+    add them into a JSON file. If key/certs already exist in JSON file, no
+    change is done.
+
+    :param jsonfile: JSON file where certs and key will be written
+    :type  jsonfile: string
+    :param seed: JSON file for seed machine has different structure. Different
+                 key/certs names and different parent node are used
+    :type  seed: boolean
+    """
+    if os.path.isfile(jsonfile):
+        with open(jsonfile) as json_fd:
+            all_data = simplejson.load(json_fd)
+    else:
+        all_data = {}
+
+    if seed:
+        parent = 'keystone'
+        ca_cert_name = 'ca_certificate'
+        signing_key_name = 'signing_key'
+        signing_cert_name = 'signing_certificate'
+    else:
+        parent = 'parameters'
+        ca_cert_name = 'KeystoneCACertificate'
+        signing_key_name = 'KeystoneSigningKey'
+        signing_cert_name = 'KeystoneSigningCertificate'
+
+    if parent not in all_data:
+        all_data[parent] = {}
+    parent_node = all_data[parent]
+
+    if not (ca_cert_name in parent_node and
+            signing_key_name in parent_node and
+            signing_cert_name in parent_node):
+        ca_key_pem, ca_cert_pem = create_ca_pair()
+        signing_key_pem, signing_cert_pem = create_signing_pair(ca_key_pem,
+                                                                ca_cert_pem)
+        parent_node.update({ca_cert_name: ca_cert_pem,
+                            signing_key_name: signing_key_pem,
+                            signing_cert_name: signing_cert_pem})
+        with open(jsonfile, 'w') as json_fd:
+            simplejson.dump(all_data, json_fd, sort_keys=True)
+            LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))
+    else:
+        LOG.info("Key/certs are already present in '%s', skipping.",
+                 path.abspath(jsonfile))
 
 
 def _write_pki_file(file_path, contents):
