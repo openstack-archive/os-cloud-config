@@ -70,3 +70,49 @@ Where /tmp/one-node contains::
         "cpu": "1"
       }
     ]
+
+----------------------------------------------------------
+Generating keys and certificates for use with Keystone PKI
+----------------------------------------------------------
+
+The generate-keystone-pki line utility generates keys and certificates
+which Keystone uses for signing authentication tokens.
+
+- Keys and certificates can be generated into separate files::
+
+    generate-keystone-pki /tmp/certificates
+
+  That creates four files with signing and CA keys and certificates in
+  /tmp/certificates directory.
+
+- Key and certificates can be generated into heat environment file::
+
+    generate-keystone-pki -j overcloud-env.json
+
+  That adds following values into overcloud-env.json file::
+
+    {
+      "parameters": {
+        "KeystoneSigningKey": "some_key",
+        "KeystoneSigningCertificate": "some_cert",
+        "KeystoneCACertificate": "some_cert"
+      }
+    }
+
+  CA certificate is not added because this file is not needed by Keystone PKI.
+
+- Key and certificates can be generated into os-apply-config metadata file::
+
+    generate-keystone-pki -s -j local.json
+
+  This adds following values into local.json file::
+
+    {
+      "keystone": {
+        "signing_certificate": "some_cert",
+        "signing_key": "some_key",
+        "ca_certificate": "some_cert"
+      }
+    }
+
+  CA certificate is not added because this file is not needed by Keystone PKI.
