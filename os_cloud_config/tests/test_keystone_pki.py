@@ -98,3 +98,43 @@ class KeystonePKITest(base.TestCase):
             mock.call('mock_signing_key'),
             mock.call('mock_signing_cert'),
         ])
+
+    @mock.patch('os_cloud_config.keystone_pki.path.isfile', create=True)
+    @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
+    @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
+    @mock.patch('os_cloud_config.keystone_pki.open', create=True)
+    @mock.patch('os_cloud_config.keystone_pki.simplejson.dump')
+    def test_generate_certs_into_json(
+        self, mock_json, open_, create_signing, create_ca, isfile):
+        create_ca.return_value = ('mock_ca_key', 'mock_ca_cert')
+        create_signing.return_value = ('mock_signing_key', 'mock_signing_cert')
+        isfile.return_value = False
+
+        keystone_pki.generate_certs_into_json('/jsonfile', False)
+
+        params = mock_json.call_args[0][0]['parameters']
+        self.assertEqual(params['KeystoneCACertificate'], 'mock_ca_cert')
+        self.assertEqual(params['KeystoneSigningKey'], 'mock_signing_key')
+        self.assertEqual(params['KeystoneSigningCertificate'],
+                         'mock_signing_cert')
+
+    @mock.patch('os_cloud_config.keystone_pki.path.isfile', create=True)
+    @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
+    @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
+    @mock.patch('os_cloud_config.keystone_pki.open', create=True)
+    @mock.patch('os_cloud_config.keystone_pki.simplejson.load')
+    @mock.patch('os_cloud_config.keystone_pki.simplejson.dump')
+    def test_generate_certs_into_json_with_existing_certs(
+        self, mock_json_dump, mock_json_load, open_, create_signing,
+        create_ca, isfile):
+        create_ca.return_value = ('mock_ca_key', 'mock_ca_cert')
+        create_signing.return_value = ('mock_signing_key', 'mock_signing_cert')
+        isfile.return_value = True
+        mock_json_load.return_value = {
+            'KeystoneCACertificate': 'mock_ca_cert',
+            'KeystoneSigningKey': 'mock_signing_key',
+            'KeystoneSigningCertificate': 'mock_signing_cert'
+        }
+
+        keystone_pki.generate_certs_into_json('/jsonfile', False)
+        mock_json_dump.assert_not_called()

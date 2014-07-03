@@ -28,6 +28,8 @@ def parse_args():
     signing_cert.pem - certificate for verifying token validity, the
                        certificate itself is verifiable by ca_cert.pem
 
+    Alternatively write generated key/certs into <heatenv>  JSON file.
+
     ca_key.pem doesn't have to (shouldn't) be uploaded to Keystone nodes.
     """)
 
@@ -35,14 +37,24 @@ def parse_args():
         description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument(
-        'directory',
-        metavar='<directory>',
-        help='directory where keys/certs will be generated',
-    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-d', '--directory', dest='directory',
+                       help='directory where keys/certs will be generated')
+    group.add_argument('-j', '--heatenv', dest='heatenv',
+                       help='write signing key/cert and CA cert into JSON '
+                            'Heat environment file, CA key is omitted')
+    parser.add_argument('-s', '--seed', action='store_true',
+                        help='JSON file for seed machine has different '
+                             'structure (for seed machine we update directly '
+                             'heat metadata file injected into image). '
+                             'Different key/certs names and different '
+                             'parent node are used (default: false)')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    keystone_pki.create_and_write_ca_and_signing_pairs(args.directory)
+    if args.heatenv:
+        keystone_pki.generate_certs_into_json(args.heatenv, args.seed)
+    else:
+        keystone_pki.create_and_write_ca_and_signing_pairs(args.directory)
