@@ -50,6 +50,9 @@ def parse_args():
     parser.add_argument('-s', '--ssl', dest='ssl',
                         help="ip/hostname to use as the ssl endpoint, if "
                         "required")
+    parser.add_argument('-b', '--public', dest='public',
+                        help="ip/hostname to use as the public endpoint, if "
+                        "the default is not suitable")
     parser.add_argument('-u', '--user', dest='user', required=True,
                         help="user to connect to the Keystone node via ssh")
     return parser.parse_args()
@@ -58,4 +61,5 @@ def parse_args():
 def main():
     args = parse_args()
     initialize(args.host, args.admin_token, args.admin_email,
-               args.admin_password, args.region, args.ssl, args.user)
+               args.admin_password, args.region, args.ssl, args.public,
+               args.user)
