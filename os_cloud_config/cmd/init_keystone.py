@@ -47,9 +47,13 @@ def parse_args():
                         required=True)
     parser.add_argument('-r', '--region', dest='region', default='regionOne',
                         help="region to create the endpoint in")
-    parser.add_argument('-s', '--ssl', dest='ssl',
-                        help="ip/hostname to use as the ssl endpoint, if "
-                        "required")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-s', '--ssl', dest='ssl',
+                       help="ip/hostname to use as the ssl endpoint, if "
+                       "required")
+    group.add_argument('--public', dest='public',
+                       help="ip/hostname to use as the public endpoint, if "
+                       "the default is not suitable")
     parser.add_argument('-u', '--user', dest='user', required=True,
                         help="user to connect to the Keystone node via ssh")
     return parser.parse_args()
@@ -58,4 +62,5 @@ def parse_args():
 def main():
     args = parse_args()
     initialize(args.host, args.admin_token, args.admin_email,
-               args.admin_password, args.region, args.ssl, args.user)
+               args.admin_password, args.region, args.ssl, args.public,
+               args.user)

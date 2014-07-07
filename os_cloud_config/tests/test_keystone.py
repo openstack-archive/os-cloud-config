@@ -92,14 +92,31 @@ class KeystoneTest(base.TestCase):
         self._patch_client()
 
         keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
-                                  'keystone.example.com')
+                                  'keystone.example.com', None)
+        public_endpoint = 'https://keystone.example.com:13000/v2.0'
+        self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
+
+    def test_create_endpoint_public(self):
+        self._patch_client()
+
+        keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
+                                  None, 'keystone.internal')
+        public_endpoint = 'http://keystone.internal:5000/v2.0'
+        self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
+
+    def test_create_endpoint_ssl_and_public(self):
+        self._patch_client()
+
+        keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
+                                  'keystone.example.com', 'keystone.internal')
         public_endpoint = 'https://keystone.example.com:13000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
 
     def test_create_endpoint_region(self):
         self._patch_client()
 
-        keystone._create_endpoint(self.client, '192.0.0.3', 'regionTwo', None)
+        keystone._create_endpoint(self.client, '192.0.0.3', 'regionTwo', None,
+                                  None)
         self.assert_endpoint('192.0.0.3', region='regionTwo')
 
     @mock.patch('time.sleep')
