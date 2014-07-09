@@ -34,7 +34,9 @@ def register_nova_bm_node(service_host, node, client=None):
     kwargs = {'pm_address': node["pm_addr"], 'pm_user': node["pm_user"]}
     # Nova now enforces the password to be 255 or less characters, and the
     # ssh key/password to use is set in configuration.
-    if len(node["pm_password"]) <= 255:
+    if not node.get('pm_password'):
+        LOG.debug('pm_password not set.')
+    elif len(node["pm_password"]) <= 255:
         LOG.debug('Setting pm_password for nova-bm, it is <=255 characters.')
         kwargs["pm_password"] = node["pm_password"]
     else:
