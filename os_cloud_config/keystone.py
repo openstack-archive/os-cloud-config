@@ -23,7 +23,7 @@ LOG = logging.getLogger(__name__)
 
 
 def initialize(host, admin_token, admin_email, admin_password,
-               region='regionOne', ssl=None, user='root'):
+               region='regionOne', ssl=None, public=None, user='root'):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -32,6 +32,8 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param admin_password: admin user's password to be set
     :param region: region to create the endpoint in
     :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param public: ip/hostname to use as the public endpoint, if the default
+        is not suitable
     :param user: user to use to connect to the node where Keystone is running
     """
 
@@ -40,7 +42,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_roles(keystone)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
-    _create_endpoint(keystone, host, region, ssl)
+    _create_endpoint(keystone, host, region, ssl, public)
     _perform_pki_initialization(host, user)
 
 
@@ -122,13 +124,15 @@ def _create_tenants(keystone):
     keystone.tenants.create('service', None)
 
 
-def _create_endpoint(keystone, host, region, ssl):
+def _create_endpoint(keystone, host, region, ssl, public):
     """Create keystone endpoint in Keystone.
 
     :param keystone: keystone v2 client
     :param host: ip/hostname of node where Keystone is running
     :param region: region to create the endpoint in
     :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param public: ip/hostname to use as the public endpoint, if default is
+        not suitable
     """
     LOG.debug('Create keystone public endpoint')
     service = keystone.services.create('keystone', 'identity',
@@ -136,6 +140,8 @@ def _create_endpoint(keystone, host, region, ssl):
     public_url = 'http://%s:5000/v2.0' % host
     if ssl:
         public_url = 'https://%s:13000/v2.0' % ssl
+    elif public:
+        public_url = 'http://%s:5000/v2.0' % public
     keystone.endpoints.create(region, service.id, public_url,
                               'http://%s:35357/v2.0' % host,
                               'http://%s:5000/v2.0' % host)
