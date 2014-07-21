@@ -15,10 +15,10 @@
 import logging
 import os
 from os import path
-import simplejson
 import stat
 
 from OpenSSL import crypto
+import simplejson
 
 LOG = logging.getLogger(__name__)
 

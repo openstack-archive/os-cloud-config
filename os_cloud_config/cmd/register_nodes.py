@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import argparse
-import simplejson
 import textwrap
+
+import simplejson
 
 from os_cloud_config import nodes
 from os_cloud_config import utils
