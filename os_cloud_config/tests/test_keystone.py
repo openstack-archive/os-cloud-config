@@ -12,10 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from keystoneclient.openstack.common.apiclient import exceptions
 import keystoneclient.v2_0.client as ksclient
 import mock
 
-from keystoneclient.openstack.common.apiclient import exceptions
 from os_cloud_config import keystone
 from os_cloud_config.tests import base
 

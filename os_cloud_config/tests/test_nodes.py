@@ -20,6 +20,7 @@ from testtools import matchers
 
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 from novaclient.openstack.common.apiclient import exceptions as novaexc
+
 from os_cloud_config import nodes
 from os_cloud_config.tests import base
 
