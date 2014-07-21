@@ -11,8 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
 import sys
+
+import mock
 
 from os_cloud_config.cmd import setup_endpoints
 from os_cloud_config.tests import base
@@ -27,7 +28,8 @@ class SetupEndpointsTest(base.TestCase):
         sys, 'argv',
         ['setup-endpoints', '-s', '{"nova": {"password": "123"}}',
          '-p', '192.0.2.28', '-r', 'EC'])
-    @mock.patch.dict('os.environ', {'OS_USERNAME': 'admin',
+    @mock.patch.dict('os.environ', {
+                     'OS_USERNAME': 'admin',
                      'OS_PASSWORD': 'password',
                      'OS_TENANT_NAME': 'admin',
                      'OS_AUTH_URL': 'http://localhost:5000'})

@@ -15,11 +15,11 @@
 
 import collections
 
+from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 import mock
+from novaclient.openstack.common.apiclient import exceptions as novaexc
 from testtools import matchers
 
-from ironicclient.openstack.common.apiclient import exceptions as ironicexp
-from novaclient.openstack.common.apiclient import exceptions as novaexc
 from os_cloud_config import nodes
 from os_cloud_config.tests import base
 
@@ -245,7 +245,7 @@ class NodesTest(base.TestCase):
                 key['op'] = 'replace'
             self.assertThat(update_patch,
                             matchers.MatchesSetwise(*(map(matchers.Equals,
-                            args[1]))))
+                                                          args[1]))))
         ironic.node.update.side_effect = side_effect
         nodes._update_or_register_ironic_node(None, node, node_map,
                                               client=ironic)
@@ -298,7 +298,7 @@ class NodesTest(base.TestCase):
                 key['op'] = 'replace'
             self.assertThat(update_patch,
                             matchers.MatchesSetwise(*(map(matchers.Equals,
-                            args[1]))))
+                                                      args[1]))))
         ironic.node.update.side_effect = side_effect
         nodes._update_or_register_ironic_node(None, node, node_map,
                                               client=ironic)

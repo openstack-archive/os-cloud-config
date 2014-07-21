@@ -25,8 +25,8 @@ class InitKeystoneTest(base.TestCase):
 
     @mock.patch('os_cloud_config.cmd.init_keystone.initialize')
     @mock.patch.object(sys, 'argv', ['init-keystone', '-o', 'hostname', '-t',
-                       'token', '-e', 'admin@example.com', '-p', 'password',
-                       '-u', 'root'])
+                                     'token', '-e', 'admin@example.com', '-p',
+                                     'password', '-u', 'root'])
     def test_script(self, initialize_mock):
         init_keystone.main()
         initialize_mock.assert_called_once_with(

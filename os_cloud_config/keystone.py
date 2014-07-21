@@ -15,12 +15,13 @@
 from __future__ import print_function
 
 import logging
-from six.moves.urllib.parse import urlparse
 import subprocess
 import time
 
 from keystoneclient.openstack.common.apiclient import exceptions
 import keystoneclient.v2_0.client as ksclient
+from six.moves.urllib.parse import urlparse
+
 from os_cloud_config.utils import clients
 
 LOG = logging.getLogger(__name__)

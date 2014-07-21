@@ -13,9 +13,9 @@
 
 import argparse
 import os
-import simplejson
 import textwrap
 
+import simplejson
 
 from os_cloud_config.cmd.utils import _clients
 from os_cloud_config.cmd.utils import environment

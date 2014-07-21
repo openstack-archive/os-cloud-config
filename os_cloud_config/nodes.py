@@ -18,8 +18,9 @@ import time
 
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 from novaclient.openstack.common.apiclient import exceptions as novaexc
-from os_cloud_config.cmd.utils import _clients as clients
 import six
+
+from os_cloud_config.cmd.utils import _clients as clients
 
 LOG = logging.getLogger(__name__)
 
