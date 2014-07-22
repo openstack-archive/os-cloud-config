@@ -18,6 +18,7 @@ import os
 
 from ironicclient import client as ironicclient
 from keystoneclient.v2_0 import client as ksclient
+from neutronclient.neutron import client as neutronclient
 from novaclient.extension import Extension
 from novaclient.v1_1 import client as novav11client
 from novaclient.v1_1.contrib import baremetal
@@ -51,3 +52,14 @@ def get_keystone_client():
               'tenant_name': os.environ["OS_TENANT_NAME"],
               'auth_url': os.environ["OS_AUTH_URL"]}
     return ksclient.Client(**kwargs)
+
+
+def get_neutron_client():
+    LOG.debug('Creating neutron client.')
+    kwargs = {'username': os.environ["OS_USERNAME"],
+              'password': os.environ["OS_PASSWORD"],
+              'tenant_name': os.environ["OS_TENANT_NAME"],
+              'auth_url': os.environ["OS_AUTH_URL"]}
+    neutron = neutronclient.Client('2.0', **kwargs)
+    neutron.format = 'json'
+    return neutron

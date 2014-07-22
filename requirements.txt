@@ -4,6 +4,7 @@ argparse
 Babel>=1.3
 python-ironicclient
 python-keystoneclient>=0.9.0
+python-neutronclient>=2.3.4,<3
 python-novaclient>=2.17.0
 oslo.config>=1.2.1
 pyOpenSSL>=0.11
