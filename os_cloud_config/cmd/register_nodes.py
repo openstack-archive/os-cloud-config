@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import argparse
-import simplejson
+import json
 import textwrap
 
 from os_cloud_config import nodes
@@ -52,7 +52,7 @@ def main():
 
     try:
         with open(args.nodes, 'r') as node_file:
-            nodes_list = simplejson.load(node_file)
+            nodes_list = json.load(node_file)
         utils._ensure_environment()
 
         # TODO(StevenK): Filter out registered nodes.
