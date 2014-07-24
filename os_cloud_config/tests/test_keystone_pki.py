@@ -103,7 +103,7 @@ class KeystonePKITest(base.TestCase):
     @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
     @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
     @mock.patch('os_cloud_config.keystone_pki.open', create=True)
-    @mock.patch('os_cloud_config.keystone_pki.simplejson.dump')
+    @mock.patch('os_cloud_config.keystone_pki.json.dump')
     def test_generate_certs_into_json(
         self, mock_json, open_, create_signing, create_ca, isfile):
         create_ca.return_value = ('mock_ca_key', 'mock_ca_cert')
@@ -122,8 +122,8 @@ class KeystonePKITest(base.TestCase):
     @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
     @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
     @mock.patch('os_cloud_config.keystone_pki.open', create=True)
-    @mock.patch('os_cloud_config.keystone_pki.simplejson.load')
-    @mock.patch('os_cloud_config.keystone_pki.simplejson.dump')
+    @mock.patch('os_cloud_config.keystone_pki.json.load')
+    @mock.patch('os_cloud_config.keystone_pki.json.dump')
     def test_generate_certs_into_json_with_existing_certs(
         self, mock_json_dump, mock_json_load, open_, create_signing,
         create_ca, isfile):

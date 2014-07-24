@@ -12,10 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import logging
 import os
 from os import path
-import simplejson
 import stat
 
 from OpenSSL import crypto
@@ -152,7 +152,7 @@ def generate_certs_into_json(jsonfile, seed):
     """
     if os.path.isfile(jsonfile):
         with open(jsonfile) as json_fd:
-            all_data = simplejson.load(json_fd)
+            all_data = json.load(json_fd)
     else:
         all_data = {}
 
@@ -181,7 +181,7 @@ def generate_certs_into_json(jsonfile, seed):
                             signing_key_name: signing_key_pem,
                             signing_cert_name: signing_cert_pem})
         with open(jsonfile, 'w') as json_fd:
-            simplejson.dump(all_data, json_fd, sort_keys=True)
+            json.dump(all_data, json_fd, sort_keys=True)
             LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))
     else:
         LOG.info("Key/certs are already present in '%s', skipping.",
