@@ -14,16 +14,11 @@
 # limitations under the License.
 
 import logging
-import os
 import time
 
-from ironicclient import client as ironicclient
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
-from keystoneclient.v2_0 import client as ksclient
-from novaclient.extension import Extension
 from novaclient.openstack.common.apiclient import exceptions as novaexc
-from novaclient.v1_1 import client as novav11client
-from novaclient.v1_1.contrib import baremetal
+from os_cloud_config.utils import _clients as clients
 
 LOG = logging.getLogger(__name__)
 
@@ -106,43 +101,15 @@ def register_ironic_node(service_host, node, client=None):
         pass
 
 
-def _get_nova_bm_client():
-    LOG.debug('Creating nova client.')
-    baremetal_extension = Extension('baremetal', baremetal)
-    return novav11client.Client(os.environ["OS_USERNAME"],
-                                os.environ["OS_PASSWORD"],
-                                os.environ["OS_TENANT_NAME"],
-                                os.environ["OS_AUTH_URL"],
-                                extensions=[baremetal_extension])
-
-
-def _get_ironic_client():
-    LOG.debug('Creating ironic client.')
-    kwargs = {'os_username': os.environ['OS_USERNAME'],
-              'os_password': os.environ['OS_PASSWORD'],
-              'os_auth_url': os.environ['OS_AUTH_URL'],
-              'os_tenant_name': os.environ['OS_TENANT_NAME']}
-    return ironicclient.get_client(1, **kwargs)
-
-
-def _get_keystone_client():
-    LOG.debug('Creating keystone client.')
-    kwargs = {'username': os.environ["OS_USERNAME"],
-              'password': os.environ["OS_PASSWORD"],
-              'tenant_name': os.environ["OS_TENANT_NAME"],
-              'auth_url': os.environ["OS_AUTH_URL"]}
-    return ksclient.Client(**kwargs)
-
-
 def register_all_nodes(service_host, nodes_list, client=None):
     LOG.debug('Registering all nodes.')
     if using_ironic(keystone=None):
         if client is None:
-            client = _get_ironic_client()
+            client = clients.get_ironic_client()
         register_func = register_ironic_node
     else:
         if client is None:
-            client = _get_nova_bm_client()
+            client = clients.get_nova_bm_client()
         register_func = register_nova_bm_node
     for node in nodes_list:
         register_func(service_host, node, client=client)
@@ -151,5 +118,5 @@ def register_all_nodes(service_host, nodes_list, client=None):
 def using_ironic(keystone=None):
     LOG.debug('Checking for usage of ironic.')
     if keystone is None:
-        keystone = _get_keystone_client()
+        keystone = clients.get_keystone_client()
     return 'ironic' in [service.name for service in keystone.services.list()]
