@@ -150,6 +150,21 @@ class NodesTest(base.TestCase):
                           nodes.register_ironic_node, None, self._get_node(),
                           client=ironic)
 
+    def test_register_ironic_node_with_capabilities(self):
+        ironic = mock.MagicMock()
+
+        capable_node = self._get_node()
+        capable_node["flavors"] = ["flavor1", "flavor2"]
+
+        flavors = {"flavor1": {"extra_specs": "k:v"},
+                   "flavor2": {"extra_specs": "x:y"}}
+
+        nodes.register_ironic_node(None, capable_node,
+                                   flavors=flavors, client=ironic)
+
+        properties = ironic.node.create.call_args[1]["properties"]
+        self.assertEqual("k:v,x:y", properties["capabilities"])
+
     def test_using_ironic(self):
         keystone = mock.MagicMock()
         service = collections.namedtuple('servicelist', ['name'])

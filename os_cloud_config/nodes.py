@@ -23,7 +23,7 @@ from os_cloud_config.utils import _clients as clients
 LOG = logging.getLogger(__name__)
 
 
-def register_nova_bm_node(service_host, node, client=None):
+def register_nova_bm_node(service_host, node, flavors=None, client=None):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
     kwargs = {'pm_address': node["pm_addr"], 'pm_user': node["pm_user"]}
@@ -56,11 +56,23 @@ def register_nova_bm_node(service_host, node, client=None):
         client.baremetal.add_interface(bm_node, mac)
 
 
-def register_ironic_node(service_host, node, client=None):
+def register_ironic_node(service_host, node, flavors=None, client=None):
     properties = {"cpus": node["cpu"],
                   "memory_mb": node["memory"],
                   "local_gb": node["disk"],
                   "cpu_arch": node["arch"]}
+    if "flavors" in node:
+        if not flavors:
+            raise Exception("Flavor specified in nodes, but no "
+                            "flavors have been defined")
+        capabilities = []
+        for flavor in node["flavors"]:
+            if flavor not in flavors:
+                raise Exception("Flavor %s specified in nodes, but no "
+                                "such flavor is defined" % flavor)
+            if "extra_specs" in flavors[flavor]:
+                capabilities.append(flavors[flavor]["extra_specs"])
+        properties["capabilities"] = ",".join(capabilities)
     if "ipmi" in node["pm_type"]:
         driver_info = {"ipmi_address": node["pm_addr"],
                        "ipmi_username": node["pm_user"],
@@ -101,7 +113,7 @@ def register_ironic_node(service_host, node, client=None):
         pass
 
 
-def register_all_nodes(service_host, nodes_list, client=None):
+def register_all_nodes(service_host, nodes_list, flavors=None, client=None):
     LOG.debug('Registering all nodes.')
     if using_ironic(keystone=None):
         if client is None:
@@ -112,7 +124,7 @@ def register_all_nodes(service_host, nodes_list, client=None):
             client = clients.get_nova_bm_client()
         register_func = register_nova_bm_node
     for node in nodes_list:
-        register_func(service_host, node, client=client)
+        register_func(service_host, node, flavors=flavors, client=client)
 
 
 def using_ironic(keystone=None):
