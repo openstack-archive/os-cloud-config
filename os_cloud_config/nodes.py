@@ -61,6 +61,8 @@ def register_ironic_node(service_host, node, client=None):
                   "memory_mb": node["memory"],
                   "local_gb": node["disk"],
                   "cpu_arch": node["arch"]}
+    if "capabilities" in node:
+        properties["capabilities"] = node["capabilities"]
     if "ipmi" in node["pm_type"]:
         driver_info = {"ipmi_address": node["pm_addr"],
                        "ipmi_username": node["pm_user"],
