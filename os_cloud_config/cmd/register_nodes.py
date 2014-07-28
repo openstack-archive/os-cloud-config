@@ -44,6 +44,10 @@ def parse_args():
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
+    parser.add_argument('-f', '--flavors', dest='flavors', required=False,
+                        help='A JSON file containing data of flavors which, '
+                        'if referred to by nodes, have their extra_specs '
+                        'treated as capabilities on those nodes')
     return parser.parse_args()
 
 
@@ -53,10 +57,14 @@ def main():
     try:
         with open(args.nodes, 'r') as node_file:
             nodes_list = json.load(node_file)
+        flavors = None
+        if args.flavors:
+            with open(args.flavors, 'r') as flavors_file:
+                flavors = json.load(flavors_file)
         utils._ensure_environment()
 
         # TODO(StevenK): Filter out registered nodes.
-        nodes.register_all_nodes(args.service_host, nodes_list)
+        nodes.register_all_nodes(args.service_host, nodes_list, flavors)
     except Exception as e:
         print(e.message)
         return 1
