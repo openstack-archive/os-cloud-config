@@ -150,6 +150,16 @@ class NodesTest(base.TestCase):
                           nodes.register_ironic_node, None, self._get_node(),
                           client=ironic)
 
+    def test_register_ironic_node_with_capabilities(self):
+        ironic = mock.MagicMock()
+
+        capable_node = self._get_node()
+        capable_node["capabilities"] = "k:v"
+        nodes.register_ironic_node(None, capable_node, client=ironic)
+
+        properties = ironic.node.create.call_args[1]["properties"]
+        self.assertEqual("k:v", properties["capabilities"])
+
     def test_using_ironic(self):
         keystone = mock.MagicMock()
         service = collections.namedtuple('servicelist', ['name'])
