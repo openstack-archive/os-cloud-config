@@ -60,6 +60,6 @@ def main():
         # TODO(StevenK): Filter out registered nodes.
         nodes.register_all_nodes(args.service_host, nodes_list)
     except Exception as e:
-        print(e.message)
+        print(str(e))
         return 1
     return 0
