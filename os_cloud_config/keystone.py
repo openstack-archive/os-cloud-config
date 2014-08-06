@@ -23,7 +23,8 @@ LOG = logging.getLogger(__name__)
 
 
 def initialize(host, admin_token, admin_email, admin_password,
-               region='regionOne', ssl=None, public=None, user='root'):
+               region='regionOne', ssl=None, public=None, user='root',
+               timeout=600, wait_time=10):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -35,11 +36,13 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param public: ip/hostname to use as the public endpoint, if the default
         is not suitable
     :param user: user to use to connect to the node where Keystone is running
+    :param timeout: Time to wait for keystone to be running (in seconds)
+    :param wait_time: Wait time between keystone poll attempts (in seconds)
     """
 
     keystone = _create_admin_client(host, admin_token)
 
-    _create_roles(keystone)
+    _create_roles(keystone, timeout, wait_time)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
     _create_endpoint(keystone, host, region, ssl, public)
@@ -96,19 +99,22 @@ def _create_admin_client(host, admin_token):
     return ksclient.Client(endpoint=admin_url, token=admin_token)
 
 
-def _create_roles(keystone):
+def _create_roles(keystone, timeout, wait_time):
     """Create initial roles in Keystone.
 
     :param keystone: keystone v2 client
+    :param timeout: total seconds to wait for keystone
+    :param wait_time: sleep time between keystone checks
     """
-    for count in range(60):
+    wait_cycles = timeout / wait_time
+    for count in range(wait_cycles):
         try:
             LOG.debug('Creating admin role, try %d.' % count)
             keystone.roles.create('admin')
             break
         except (exceptions.ConnectionRefused, exceptions.ServiceUnavailable):
-            LOG.debug('Unable to create, sleeping for 10 seconds.')
-            time.sleep(10)
+            LOG.debug('Unable to create, sleeping for %d seconds.' % wait_time)
+            time.sleep(wait_time)
     LOG.debug('Creating Member role.')
     keystone.roles.create('Member')
 
