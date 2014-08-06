@@ -17,8 +17,9 @@ registers the initial identity endpoint.
 
  .. note::
 
-    init-keystone will wait up to 10 minutes for a Keystone service to be
-    running on the specified host.
+    init-keystone will wait for a user-specified amount of time for a Keystone 
+    service to be running on the specified host.  The default is a 10 minute
+    wait time with 10 seconds between poll attempts.
 
 For example::
 

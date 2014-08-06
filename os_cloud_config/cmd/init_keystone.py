@@ -28,8 +28,9 @@ def parse_args():
     initial identity endpoint, after which Keystone may be used with normal
     authentication.
 
-    This command will wait up to 10 minutes for a Keystone service to be
-    running on the specified host.
+    This command will wait for a user-specified amount of time for a Keystone
+    service to be running on the specified host.  The default is a 10 minute
+    wait time with 10 seconds between poll attempts.
     """)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -56,6 +57,10 @@ def parse_args():
                        "the default is not suitable")
     parser.add_argument('-u', '--user', dest='user', required=True,
                         help="user to connect to the Keystone node via ssh")
+    parser.add_argument('--timeout', dest='timeout', default=600,
+                        help="Total seconds to wait for keystone to be ready")
+    parser.add_argument('--wait_time', dest='waittime', default=10,
+                        help="Seconds to wait between keystone checks")
     return parser.parse_args()
 
 
@@ -63,4 +68,4 @@ def main():
     args = parse_args()
     initialize(args.host, args.admin_token, args.admin_email,
                args.admin_password, args.region, args.ssl, args.public,
-               args.user)
+               args.user, args.timeout, args.waittime)
