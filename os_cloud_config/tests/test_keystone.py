@@ -89,35 +89,37 @@ class KeystoneTest(base.TestCase):
             user=self.client.users.create.return_value,
             domain=self.client.domains.create.return_value)
 
-    def test_create_endpoint_ssl(self):
+    def test_create_keystone_endpoint_ssl(self):
         self._patch_client()
 
-        keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
-                                  'keystone.example.com', None)
+        keystone._create_keystone_endpoint(
+            self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
+            None)
         public_endpoint = 'https://keystone.example.com:13000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
 
-    def test_create_endpoint_public(self):
+    def test_create_keystone_endpoint_public(self):
         self._patch_client()
 
-        keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
-                                  None, 'keystone.internal')
+        keystone._create_keystone_endpoint(
+            self.client, '192.0.0.3', 'regionOne', None, 'keystone.internal')
         public_endpoint = 'http://keystone.internal:5000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
 
-    def test_create_endpoint_ssl_and_public(self):
+    def test_create_keystone_endpoint_ssl_and_public(self):
         self._patch_client()
 
-        keystone._create_endpoint(self.client, '192.0.0.3', 'regionOne',
-                                  'keystone.example.com', 'keystone.internal')
+        keystone._create_keystone_endpoint(
+            self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
+            'keystone.internal')
         public_endpoint = 'https://keystone.example.com:13000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
 
-    def test_create_endpoint_region(self):
+    def test_create_keystone_endpoint_region(self):
         self._patch_client()
 
-        keystone._create_endpoint(self.client, '192.0.0.3', 'regionTwo', None,
-                                  None)
+        keystone._create_keystone_endpoint(
+            self.client, '192.0.0.3', 'regionTwo', None, None)
         self.assert_endpoint('192.0.0.3', region='regionTwo')
 
     @mock.patch('time.sleep')
@@ -135,6 +137,8 @@ class KeystoneTest(base.TestCase):
     def test_setup_endpoints(self):
         self.client = mock.MagicMock()
         self.client.users.find.side_effect = ksclient.exceptions.NotFound()
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
 
         keystone.setup_endpoints(
             {'nova': {'password': 'pass', 'type': 'compute',
@@ -145,6 +149,9 @@ class KeystoneTest(base.TestCase):
         self.client.users.find.assert_called_once_with(name='nova')
         self.client.tenants.find.assert_called_once_with(name='service')
         self.client.roles.find.assert_called_once_with(name='admin')
+        self.client.services.findall.assert_called_once_with(type='compute')
+        self.client.endpoints.findall.assert_called_once_with(
+            publicurl='https://192.0.0.4:1234/v2/$(tenant_id)s')
 
         self.client.users.create.assert_called_once_with(
             'nova', 'pass',
@@ -164,6 +171,36 @@ class KeystoneTest(base.TestCase):
             'https://192.0.0.4:1234/v2/$(tenant_id)s',
             'http://192.0.0.3:8774/v2/$(tenant_id)s',
             'http://192.0.0.3:8774/v2/$(tenant_id)s')
+
+    def test_idempotent_register_endpoint(self):
+        self.client = mock.MagicMock()
+
+        # Explicitly defining that endpoint has been already created
+        self.client.users.find.return_value = mock.MagicMock()
+        self.client.services.findall.return_value = mock.MagicMock()
+        self.client.endpoints.findall.return_value = mock.MagicMock()
+
+        keystone._register_endpoint(
+            self.client,
+            'nova',
+            {'password': 'pass', 'type': 'compute',
+             'ssl_port': 1234, 'public_host': '192.0.0.4',
+             'internal_host': '192.0.0.3'},
+            region=None)
+
+        # Calling just a subset of find APIs
+        self.client.users.find.assert_called_once_with(name='nova')
+        self.assertFalse(self.client.tenants.find.called)
+        self.assertFalse(self.client.roles.find.called)
+        self.client.services.findall.assert_called_once_with(type='compute')
+        self.client.endpoints.findall.assert_called_once_with(
+            publicurl='https://192.0.0.4:1234/')
+
+        # None of creating API calls has been called
+        self.assertFalse(self.client.users.create.called)
+        self.assertFalse(self.client.roles.add_user_role.called)
+        self.assertFalse(self.client.services.create.called)
+        self.assertFalse(self.client.endpoints.create.called)
 
     @mock.patch('os_cloud_config.keystone.ksclient.Client')
     def test_create_admin_client(self, client):
