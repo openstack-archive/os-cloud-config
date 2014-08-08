@@ -191,10 +191,10 @@ def setup_endpoints(endpoints, public_host=None, region=None, client=None):
         conf = SERVICES[service].copy()
         conf.update(common_data)
         conf.update(data)
-        _register_endpoint(client, service, conf, public_host, region)
+        _register_endpoint(client, service, conf, region)
 
 
-def _register_endpoint(keystone, service, data, public_host=None, region=None):
+def _register_endpoint(keystone, service, data, region=None):
     """Create single service endpoint in Keystone.
 
     :param keystone: keystone v2 client
@@ -232,13 +232,24 @@ def _register_endpoint(keystone, service, data, public_host=None, region=None):
     if not data.get('nouser'):
         _create_user_for_service(keystone, name, data.get('password', None))
 
-    LOG.debug('Creating service for %s.', data.get('type'))
-    kservice = keystone.services.create(name, data.get('type'),
-                                        description=data.get('description'))
+    existing_services = keystone.services.findall(type=data.get('type'))
+    if not existing_services:
+        LOG.debug('Creating service for %s.', data.get('type'))
+        kservice = keystone.services.create(
+            name, data.get('type'), description=data.get('description'))
+    else:
+        LOG.debug('Service %s for %s already created.', name, data.get('type'))
+        kservice = existing_services[0]
 
-    LOG.debug('Creating endpoint for service %s.', service)
-    keystone.endpoints.create(region or 'regionOne', kservice.id,
-                              public_uri, admin_uri, internal_uri)
+    if kservice:
+        if not keystone.endpoints.findall(publicurl=public_uri):
+            LOG.debug('Creating endpoint for service %s.', service)
+            keystone.endpoints.create(
+                region or 'regionOne', kservice.id,
+                public_uri, admin_uri, internal_uri)
+        else:
+            LOG.debug('Endpoint for service %s and public uri %s '
+                      'already exists.', service, public_uri)
 
 
 def _create_user_for_service(keystone, name, password):
