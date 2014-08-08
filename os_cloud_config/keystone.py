@@ -123,7 +123,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_roles(keystone)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
-    _create_endpoint(keystone, host, region, ssl, public)
+    _create_keystone_endpoint(keystone, host, region, ssl, public)
     _perform_pki_initialization(host, user)
 
 
@@ -167,6 +167,48 @@ def initialize_for_heat(host, admin_token, domain_admin_password):
     keystone.roles.grant(admin_role, user=heat_admin, domain=heat_domain)
 
 
+def _create_service(keystone, name, service_type, description=""):
+    """Helper for idempotent creating of service.
+
+    :param keystone: keystone v2 client
+    :param name: service name
+    :param service_type: unique service type
+    :param description: service description
+    :return keystone service object
+    """
+
+    existing_services = keystone.services.findall(type=service_type)
+    if not existing_services:
+        LOG.debug('Creating service for %s.', service_type)
+        kservice = keystone.services.create(
+            name, service_type, description=description)
+    else:
+        LOG.debug('Service %s for %s already created.', name, service_type)
+        kservice = existing_services[0]
+
+    return kservice
+
+
+def _create_endpoint(keystone, region, service_id, public_uri, admin_uri,
+                     internal_uri):
+    """Helper for idempotent creating of endpoint.
+
+    :param keystone: keystone v2 client
+    :param region: endpoint region
+    :param service_id: id of associated service
+    :param public_uri: endpoint public uri
+    :param admin_uri: endpoint admin uri
+    :param internal_uri: endpoint internal uri
+    """
+    if not keystone.endpoints.findall(publicurl=public_uri):
+        LOG.debug('Creating endpoint for service %s.', service_id)
+        keystone.endpoints.create(
+            region, service_id, public_uri, admin_uri, internal_uri)
+    else:
+        LOG.debug('Endpoint for service %s and public uri %s '
+                  'already exists.', service_id, public_uri)
+
+
 def setup_endpoints(endpoints, public_host=None, region=None, client=None):
     """Create services endpoints in Keystone.
 
@@ -191,10 +233,10 @@ def setup_endpoints(endpoints, public_host=None, region=None, client=None):
         conf = SERVICES[service].copy()
         conf.update(common_data)
         conf.update(data)
-        _register_endpoint(client, service, conf, public_host, region)
+        _register_endpoint(client, service, conf, region)
 
 
-def _register_endpoint(keystone, service, data, public_host=None, region=None):
+def _register_endpoint(keystone, service, data, region=None):
     """Create single service endpoint in Keystone.
 
     :param keystone: keystone v2 client
@@ -232,13 +274,13 @@ def _register_endpoint(keystone, service, data, public_host=None, region=None):
     if not data.get('nouser'):
         _create_user_for_service(keystone, name, data.get('password', None))
 
-    LOG.debug('Creating service for %s.', data.get('type'))
-    kservice = keystone.services.create(name, data.get('type'),
-                                        description=data.get('description'))
+    kservice = _create_service(
+        keystone, name, data.get('type'), description=data.get('description'))
 
-    LOG.debug('Creating endpoint for service %s.', service)
-    keystone.endpoints.create(region or 'regionOne', kservice.id,
-                              public_uri, admin_uri, internal_uri)
+    if kservice:
+        _create_endpoint(
+            keystone, region or 'regionOne', kservice.id,
+            public_uri, admin_uri, internal_uri)
 
 
 def _create_user_for_service(keystone, name, password):
@@ -306,7 +348,7 @@ def _create_tenants(keystone):
     keystone.tenants.create('service', None)
 
 
-def _create_endpoint(keystone, host, region, ssl, public):
+def _create_keystone_endpoint(keystone, host, region, ssl, public):
     """Create keystone endpoint in Keystone.
 
     :param keystone: keystone v2 client
