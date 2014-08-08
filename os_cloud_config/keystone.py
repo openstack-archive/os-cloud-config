@@ -230,13 +230,24 @@ def _register_endpoint(keystone, service, data, public_host=None, region=None):
     if not data.get('nouser'):
         _create_user_for_service(keystone, name, data.get('password', None))
 
-    LOG.debug('Creating service for %s.', data.get('type'))
-    kservice = keystone.services.create(name, data.get('type'),
-                                        description=data.get('description'))
 
-    LOG.debug('Creating endpoint for service %s.', service)
-    keystone.endpoints.create(region or 'regionOne', kservice.id,
-                              public_uri, admin_uri, internal_uri)
+    if not keystone.services.findall(name=name):
+        LOG.debug('Creating service for %s.', data.get('type'))
+        kservice = keystone.services.create(
+            name, data.get('type'), description=data.get('description'))
+    else:
+        LOG.debug('Service %s for %s already created.', name, data.get('type'))
+        kservice = keystone.services.findall(name=name)[0]
+
+    if kservice:
+        if not keystone.endpoints.findall(publicurl=public_uri):
+            LOG.debug('Creating endpoint for service %s.', service)
+            keystone.endpoints.create(
+                region or 'regionOne', kservice.id,
+                public_uri, admin_uri, internal_uri)
+        else:
+            LOG.debug('Endpoint for service %s and public uri %s '
+                      'already exists.', service, public_uri)
 
 
 def _create_user_for_service(keystone, name, password):
