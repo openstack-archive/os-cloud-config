@@ -42,7 +42,11 @@ class KeystoneTest(base.TestCase):
         self._patch_client()
 
         keystone.initialize(
-            '192.0.0.3', 'mytoken', 'admin@example.org', 'adminpasswd')
+            '192.0.0.3',
+            'mytoken',
+            'admin@example.org',
+            'adminpasswd',
+            pki_setup=True)
 
         self.client.roles.create.assert_has_calls(
             [mock.call('admin'), mock.call('Member')])
