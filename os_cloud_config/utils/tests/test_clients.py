@@ -50,3 +50,13 @@ class ClientsTest(base.TestCase):
             password=environ["OS_PASSWORD"],
             auth_url=environ["OS_AUTH_URL"],
             tenant_name=environ["OS_TENANT_NAME"])
+
+    @mock.patch('os.environ')
+    @mock.patch('neutronclient.neutron.client.Client')
+    def test_get_client(self, client_mock, environ):
+        clients.get_neutron_client()
+        client_mock.assert_called_once_with(
+            '2.0', username=environ["OS_USERNAME"],
+            password=environ["OS_PASSWORD"],
+            auth_url=environ["OS_AUTH_URL"],
+            tenant_name=environ["OS_TENANT_NAME"])
