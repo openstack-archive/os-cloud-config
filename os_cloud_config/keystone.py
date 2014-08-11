@@ -103,7 +103,8 @@ SERVICES = {
 
 
 def initialize(host, admin_token, admin_email, admin_password,
-               region='regionOne', ssl=None, public=None, user='root'):
+               region='regionOne', ssl=None, public=None, user='root',
+               pki_setup=True):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -123,7 +124,8 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
     _create_keystone_endpoint(keystone, host, region, ssl, public)
-    _perform_pki_initialization(host, user)
+    if pki_setup:
+        _perform_pki_initialization(host, user)
 
 
 def initialize_for_swift(host, admin_token):
