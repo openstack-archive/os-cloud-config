@@ -43,6 +43,9 @@ class KeystoneTest(base.TestCase):
     def test_initialize(self, check_call_mock):
         self._patch_client()
 
+        self.client.roles.findall.return_value = []
+        self.client.tenants.findall.return_value = []
+
         keystone.initialize(
             '192.0.0.3',
             'mytoken',
@@ -68,31 +71,35 @@ class KeystoneTest(base.TestCase):
              "--keystone-group",
              "$(getent group | grep '^keystone' | cut -d: -f1)"])
 
-    def test_initialize_for_swift(self):
+    def test_setup_roles(self):
         self._patch_client()
 
-        keystone.initialize_for_swift('192.0.0.3', 'mytoken')
+        self.client.roles.findall.return_value = []
+
+        keystone._setup_roles(self.client)
+
+        self.client.roles.findall.assert_has_calls(
+            [mock.call(name='swiftoperator'), mock.call(name='ResellerAdmin'),
+             mock.call(name='heat_stack_user')])
 
         self.client.roles.create.assert_has_calls(
-            [mock.call('swiftoperator'), mock.call('ResellerAdmin')])
+            [mock.call('swiftoperator'), mock.call('ResellerAdmin'),
+             mock.call('heat_stack_user')])
 
-    def test_initialize_for_heat(self):
+    def test_idempotent_setup_roles(self):
         self._patch_client()
 
-        keystone.initialize_for_heat('192.0.0.3', 'mytoken', 'heatadminpasswd')
+        self.client.roles.findall.return_value = mock.MagicMock()
 
-        self.client.domains.create.assert_called_once_with(
-            'heat', description='Owns users and tenants created by heat')
-        self.client.users.create.assert_called_once_with(
-            'heat_domain_admin',
-            description='Manages users and tenants created by heat',
-            domain=self.client.domains.create.return_value,
-            password='heatadminpasswd')
-        self.client.roles.find.assert_called_once_with(name='admin')
-        self.client.roles.grant.assert_called_once_with(
-            self.client.roles.find.return_value,
-            user=self.client.users.create.return_value,
-            domain=self.client.domains.create.return_value)
+        keystone._setup_roles(self.client)
+
+        self.client.roles.findall.assert_has_calls(
+            [mock.call(name='swiftoperator'), mock.call(name='ResellerAdmin'),
+             mock.call(name='heat_stack_user')], any_order=True)
+
+        self.assertFalse(self.client.roles.create('swiftoperator').called)
+        self.assertFalse(self.client.roles.create('ResellerAdmin').called)
+        self.assertFalse(self.client.roles.create('heat_stack_user').called)
 
     def test_create_keystone_endpoint_ssl(self):
         self._patch_client()
@@ -134,6 +141,8 @@ class KeystoneTest(base.TestCase):
                        exceptions.ServiceUnavailable, mock.DEFAULT,
                        mock.DEFAULT)
         self.client.roles.create.side_effect = side_effect
+        self.client.roles.findall.return_value = []
+
         keystone._create_roles(self.client)
         sleep.assert_has_calls([mock.call(10), mock.call(10)])
         self.client.roles.create.assert_has_calls(
