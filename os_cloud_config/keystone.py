@@ -134,6 +134,8 @@ def initialize_for_swift(host, admin_token):
     :param host: ip/hostname of node where Keystone is running
     :param admin_token: admin token to use with Keystone's admin endpoint
     """
+    LOG.warn('This function is deprecated.')
+
     keystone = _create_admin_client(host, admin_token)
 
     LOG.debug('Creating swiftoperator role.')
@@ -149,6 +151,8 @@ def initialize_for_heat(host, admin_token, domain_admin_password):
     :param admin_token: admin token to use with Keystone's admin endpoint
     :param domain_admin_password: heat domain admin's password to be set
     """
+    LOG.warn('This function is deprecated.')
+
     keystone = _create_admin_client(host, admin_token)
     admin_role = keystone.roles.find(name='admin')
 
@@ -166,6 +170,33 @@ def initialize_for_heat(host, admin_token, domain_admin_password):
     )
     LOG.debug('Granting admin role to heat_domain_admin user on heat domain.')
     keystone.roles.grant(admin_role, user=heat_admin, domain=heat_domain)
+
+
+def _create_role(keystone, name):
+    """Helper for idempotent creating of role
+
+    :param keystone: keystone v2 client
+    :param name: name of the role
+    """
+    role = keystone.roles.findall(name=name)
+    if role:
+        LOG.info("Role %s was already created." % name)
+    else:
+        LOG.debug("Creating %s role." % name)
+        keystone.roles.create(name)
+
+
+def _setup_roles(keystone):
+    """Create roles in Keystone for all services.
+
+    :param keystone: keystone v2 client
+    """
+    # Create roles in Keystone for use with Swift.
+    _create_role(keystone, 'swiftoperator')
+    _create_role(keystone, 'ResellerAdmin')
+
+    # Create Heat role.
+    _create_role(keystone, 'heat_stack_user')
 
 
 def _create_service(keystone, name, service_type, description=""):
@@ -231,6 +262,10 @@ def setup_endpoints(endpoints, public_host=None, region=None, client=None,
                                  tenant_name=os_tenant_name,
                                  auth_url=os_auth_url)
 
+    # Setup roles first
+    _setup_roles(client)
+
+    # Create endpoints
     LOG.debug('Creating service endpoints.')
     for service, data in endpoints.iteritems():
         conf = SERVICES[service].copy()
@@ -331,13 +366,12 @@ def _create_roles(keystone):
     for count in range(60):
         try:
             LOG.debug('Creating admin role, try %d.' % count)
-            keystone.roles.create('admin')
+            _create_role(keystone, 'admin')
             break
         except (exceptions.ConnectionRefused, exceptions.ServiceUnavailable):
             LOG.debug('Unable to create, sleeping for 10 seconds.')
             time.sleep(10)
-    LOG.debug('Creating Member role.')
-    keystone.roles.create('Member')
+    _create_role(keystone, 'Member')
 
 
 def _create_tenants(keystone):
