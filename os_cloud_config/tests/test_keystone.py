@@ -42,6 +42,9 @@ class KeystoneTest(base.TestCase):
     def test_initialize(self, check_call_mock):
         self._patch_client()
 
+        self.client.roles.findall.return_value = []
+        self.client.tenants.findall.return_value = []
+
         keystone.initialize(
             '192.0.0.3', 'mytoken', 'admin@example.org', 'adminpasswd')
 
@@ -89,6 +92,36 @@ class KeystoneTest(base.TestCase):
             user=self.client.users.create.return_value,
             domain=self.client.domains.create.return_value)
 
+    def test_setup_roles(self):
+        self._patch_client()
+
+        self.client.roles.findall.return_value = []
+
+        keystone._setup_roles(self.client)
+
+        self.client.roles.findall.assert_has_calls(
+            [mock.call(name='swiftoperator'), mock.call(name='ResellerAdmin'),
+             mock.call(name='heat_stack_user')])
+
+        self.client.roles.create.assert_has_calls(
+            [mock.call('swiftoperator'), mock.call('ResellerAdmin'),
+             mock.call('heat_stack_user')])
+
+    def test_idempotent_setup_roles(self):
+        self._patch_client()
+
+        self.client.roles.findall.return_value = mock.MagicMock()
+
+        keystone._setup_roles(self.client)
+
+        self.client.roles.findall.assert_has_calls(
+            [mock.call(name='swiftoperator'), mock.call(name='ResellerAdmin'),
+             mock.call(name='heat_stack_user')], any_order=True)
+
+        self.assertFalse(self.client.roles.create('swiftoperator').called)
+        self.assertFalse(self.client.roles.create('ResellerAdmin').called)
+        self.assertFalse(self.client.roles.create('heat_stack_user').called)
+
     def test_create_keystone_endpoint_ssl(self):
         self._patch_client()
 
@@ -129,6 +162,8 @@ class KeystoneTest(base.TestCase):
                        exceptions.ServiceUnavailable, mock.DEFAULT,
                        mock.DEFAULT)
         self.client.roles.create.side_effect = side_effect
+        self.client.roles.findall.return_value = []
+
         keystone._create_roles(self.client)
         sleep.assert_has_calls([mock.call(10), mock.call(10)])
         self.client.roles.create.assert_has_calls(
