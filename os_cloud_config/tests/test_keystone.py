@@ -101,6 +101,35 @@ class KeystoneTest(base.TestCase):
         self.assertFalse(self.client.roles.create('ResellerAdmin').called)
         self.assertFalse(self.client.roles.create('heat_stack_user').called)
 
+    def test_create_tenants(self):
+        self._patch_client()
+
+        self.client.tenants.findall.return_value = []
+
+        keystone._create_tenants(self.client)
+
+        self.client.tenants.findall.assert_has_calls(
+            [mock.call(name='admin'), mock.call(name='service')],
+            any_order=True)
+
+        self.client.tenants.create.assert_has_calls(
+            [mock.call('admin', None), mock.call('service', None)])
+
+    def test_idempotent_create_tenants(self):
+        self._patch_client()
+
+        self.client.tenants.findall.return_value = mock.MagicMock()
+
+        keystone._create_tenants(self.client)
+
+        self.client.tenants.findall.assert_has_calls(
+            [mock.call(name='admin'), mock.call(name='service')],
+            any_order=True)
+
+        # Test that tenants are not created again if they exists
+        self.assertFalse(self.client.tenants.create('admin', None).called)
+        self.assertFalse(self.client.tenants.create('service', None).called)
+
     def test_create_keystone_endpoint_ssl(self):
         self._patch_client()
 
