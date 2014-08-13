@@ -408,16 +408,16 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public):
         not suitable
     """
     LOG.debug('Create keystone public endpoint')
-    service = keystone.services.create('keystone', 'identity',
-                                       description='Keystone Identity Service')
+    service = _create_service(keystone, 'keystone', 'identity',
+                              description='Keystone Identity Service')
     public_url = 'http://%s:5000/v2.0' % host
     if ssl:
         public_url = 'https://%s:13000/v2.0' % ssl
     elif public:
         public_url = 'http://%s:5000/v2.0' % public
-    keystone.endpoints.create(region, service.id, public_url,
-                              'http://%s:35357/v2.0' % host,
-                              'http://%s:5000/v2.0' % host)
+    _create_endpoint(keystone, region, service.id, public_url,
+                     'http://%s:35357/v2.0' % host,
+                     'http://%s:5000/v2.0' % host)
 
 
 def _perform_pki_initialization(host, user):
