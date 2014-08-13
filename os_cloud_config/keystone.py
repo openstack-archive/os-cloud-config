@@ -143,6 +143,22 @@ def _create_role(keystone, name):
         keystone.roles.create(name)
 
 
+def _create_tenant(keystone, name):
+    """Helper for idempotent creating of tenant
+
+    :param keystone: keystone v2 client
+    :param name: name of the tenant
+    """
+    LOG.debug('Creating service tenant.')
+
+    tenants = keystone.tenants.findall(name=name)
+    if tenants:
+        LOG.debug("Tenant %s was already created." % name)
+    else:
+        LOG.debug("Creating %s tenant." % name)
+        keystone.tenants.create(name, None)
+
+
 def _setup_roles(keystone):
     """Create roles in Keystone for all services.
 
@@ -303,10 +319,8 @@ def _create_tenants(keystone):
 
     :param keystone: keystone v2 client
     """
-    LOG.debug('Creating admin tenant.')
-    keystone.tenants.create('admin', None)
-    LOG.debug('Creating service tenant.')
-    keystone.tenants.create('service', None)
+    _create_tenant(keystone, 'admin')
+    _create_tenant(keystone, 'service')
 
 
 def _create_endpoint(keystone, host, region, ssl, public):
