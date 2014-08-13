@@ -43,6 +43,8 @@ class KeystoneTest(base.TestCase):
     def test_initialize(self, check_call_mock):
         self._patch_client()
 
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
         self.client.roles.findall.return_value = []
         self.client.tenants.findall.return_value = []
 
@@ -62,6 +64,38 @@ class KeystoneTest(base.TestCase):
         self.assert_calls_in_create_user()
 
         self.assert_endpoint('192.0.0.3')
+
+        check_call_mock.assert_called_once_with(
+            ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
+             "192.0.0.3", "sudo", "keystone-manage", "pki_setup",
+             "--keystone-user",
+             "$(getent passwd | grep '^keystone' | cut -d: -f1)",
+             "--keystone-group",
+             "$(getent group | grep '^keystone' | cut -d: -f1)"])
+
+    @mock.patch('subprocess.check_call')
+    def test_idempotent_initialize(self, check_call_mock):
+        self._patch_client()
+
+        self.client.services.findall.return_value = mock.MagicMock()
+        self.client.endpoints.findall.return_value = mock.MagicMock()
+        self.client.roles.findall.return_value = mock.MagicMock()
+        self.client.tenants.findall.return_value = mock.MagicMock()
+
+        keystone.initialize(
+            '192.0.0.3',
+            'mytoken',
+            'admin@example.org',
+            'adminpasswd',
+            pki_setup=True)
+
+        self.assertFalse(self.client.roles.create('admin').called)
+        self.assertFalse(self.client.roles.create('service').called)
+
+        self.assertFalse(self.client.tenants.create('admin', None).called)
+        self.assertFalse(self.client.tenants.create('service', None).called)
+
+        self.assert_calls_in_create_user()
 
         check_call_mock.assert_called_once_with(
             ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
@@ -133,6 +167,9 @@ class KeystoneTest(base.TestCase):
     def test_create_keystone_endpoint_ssl(self):
         self._patch_client()
 
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
         keystone._create_keystone_endpoint(
             self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
             None)
@@ -142,6 +179,9 @@ class KeystoneTest(base.TestCase):
     def test_create_keystone_endpoint_public(self):
         self._patch_client()
 
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
         keystone._create_keystone_endpoint(
             self.client, '192.0.0.3', 'regionOne', None, 'keystone.internal')
         public_endpoint = 'http://keystone.internal:5000/v2.0'
@@ -149,6 +189,9 @@ class KeystoneTest(base.TestCase):
 
     def test_create_keystone_endpoint_ssl_and_public(self):
         self._patch_client()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
 
         keystone._create_keystone_endpoint(
             self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
@@ -158,6 +201,9 @@ class KeystoneTest(base.TestCase):
 
     def test_create_keystone_endpoint_region(self):
         self._patch_client()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
 
         keystone._create_keystone_endpoint(
             self.client, '192.0.0.3', 'regionTwo', None, None)
