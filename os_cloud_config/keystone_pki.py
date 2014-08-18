@@ -171,20 +171,28 @@ def generate_certs_into_json(jsonfile, seed):
         all_data[parent] = {}
     parent_node = all_data[parent]
 
-    if not (ca_cert_name in parent_node and
-            signing_key_name in parent_node and
-            signing_cert_name in parent_node):
+    if not (ca_cert_name in parent_node):
         ca_key_pem, ca_cert_pem = create_ca_pair()
+        parent_node.update({ca_cert_name: ca_cert_pem})
+        with open(jsonfile, 'w') as json_fd:
+            json.dump(all_data, json_fd, sort_keys=True)
+            LOG.debug("Wrote CA cert into '%s'.", path.abspath(jsonfile))
+    else:
+        LOG.info("CA cert is already present in '%s', skipping.",
+                 path.abspath(jsonfile))
+
+    if not (signing_key_name in parent_node and
+            signing_cert_name in parent_node):
         signing_key_pem, signing_cert_pem = create_signing_pair(ca_key_pem,
                                                                 ca_cert_pem)
-        parent_node.update({ca_cert_name: ca_cert_pem,
-                            signing_key_name: signing_key_pem,
+        parent_node.update({signing_key_name: signing_key_pem,
                             signing_cert_name: signing_cert_pem})
         with open(jsonfile, 'w') as json_fd:
             json.dump(all_data, json_fd, sort_keys=True)
-            LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))
+            LOG.debug("Wrote signing key and cert into '%s'.",
+                      path.abspath(jsonfile))
     else:
-        LOG.info("Key/certs are already present in '%s', skipping.",
+        LOG.info("Signing key and cert are already present in '%s', skipping.",
                  path.abspath(jsonfile))
 
 
