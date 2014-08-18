@@ -12,7 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
 import pbr.version
-
+import sys
 
 __version__ = pbr.version.VersionInfo('os_cloud_config').version_string()
+FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+DATE_FORMAT = '%H:%M:%S'
+logging.basicConfig(datefmt=DATE_FORMAT,
+                    format=FORMAT,
+                    level=logging.INFO, stream=sys.stdout)
