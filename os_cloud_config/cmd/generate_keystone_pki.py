@@ -15,6 +15,7 @@ import argparse
 import textwrap
 
 from os_cloud_config import keystone_pki
+from os_cloud_config import utils
 
 
 def parse_args():
@@ -50,11 +51,14 @@ def parse_args():
                              'heat metadata file injected into image). '
                              'Different key/certs names and different '
                              'parent node are used (default: false)')
+    utils._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
+
     if args.heatenv:
         keystone_pki.generate_certs_into_json(args.heatenv, args.seed)
     else:
