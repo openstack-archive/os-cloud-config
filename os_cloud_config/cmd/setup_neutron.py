@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import json
+import logging
 import textwrap
 
 from os_cloud_config import neutron
@@ -57,18 +56,20 @@ def parse_args():
     parser.add_argument('-n', '--network-json', dest='json',
                         help='JSON formatted description of the network(s) to '
                         'create', required=True)
+    utils._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
 
     try:
         utils._ensure_environment()
         with open(args.json, 'r') as jsonfile:
             network_desc = json.load(jsonfile)
         neutron.initialize_neutron(network_desc)
-    except Exception as e:
-        print(str(e))
+    except Exception:
+        logging.exception("Unexpected error during command execution")
         return 1
     return 0

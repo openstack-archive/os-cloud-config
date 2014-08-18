@@ -17,6 +17,7 @@ import argparse
 import textwrap
 
 from os_cloud_config.keystone import initialize
+from os_cloud_config import utils
 
 
 def parse_args():
@@ -56,11 +57,14 @@ def parse_args():
                        "the default is not suitable")
     parser.add_argument('-u', '--user', dest='user', required=True,
                         help="user to connect to the Keystone node via ssh")
+    utils._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
+
     initialize(args.host, args.admin_token, args.admin_email,
                args.admin_password, args.region, args.ssl, args.public,
                args.user)
