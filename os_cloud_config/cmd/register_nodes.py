@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import json
+import logging
 import textwrap
 
 from os_cloud_config import nodes
@@ -46,11 +45,13 @@ def parse_args():
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
+    utils._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
 
     try:
         with open(args.nodes, 'r') as node_file:
@@ -59,7 +60,7 @@ def main():
 
         # TODO(StevenK): Filter out registered nodes.
         nodes.register_all_nodes(args.service_host, nodes_list)
-    except Exception as e:
-        print(str(e))
+    except Exception:
+        logging.exception("Unexpected error during command execution")
         return 1
     return 0
