@@ -16,9 +16,9 @@
 from __future__ import print_function
 
 import argparse
-import textwrap
-
 import json
+import sys
+import textwrap
 
 from os_cloud_config import neutron
 from os_cloud_config import utils
@@ -58,11 +58,17 @@ def parse_args():
     parser.add_argument('-n', '--network-json', dest='json',
                         help='JSON formatted description of the network(s) to '
                         'create', required=True)
+    parser.add_argument('--debug', action='store_true',
+                        help='set logging level to DEBUG (default is INFO)')
+    parser.add_argument('--log-file', type=argparse.FileType('w'),
+                        default=sys.stdout,
+                        help='log file to write to (defaults to stdout)')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
 
     try:
         utils._ensure_environment()

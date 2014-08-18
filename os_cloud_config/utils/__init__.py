@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 
 from os_cloud_config import exception
@@ -28,3 +29,13 @@ def _ensure_environment():
         message = ("%s environment variable%s required to be set." % (
                    ", ".join(sorted(missing)), plural))
         raise exception.MissingEnvironment(message)
+
+
+def _configure_logging(args):
+    format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(datefmt=date_format,
+                        format=format,
+                        level=log_level,
+                        stream=args.log_file)

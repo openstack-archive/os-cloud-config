@@ -17,6 +17,8 @@ from __future__ import print_function
 
 import argparse
 import json
+import logging
+import sys
 import textwrap
 
 from os_cloud_config import nodes
@@ -46,11 +48,17 @@ def parse_args():
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
+    parser.add_argument('--debug', action='store_true',
+                        help='set logging level to DEBUG (default is INFO)')
+    parser.add_argument('--log-file', type=argparse.FileType('w'),
+                        default=sys.stdout,
+                        help='log file to write to (defaults to stdout)')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
 
     try:
         with open(args.nodes, 'r') as node_file:
@@ -60,6 +68,6 @@ def main():
         # TODO(StevenK): Filter out registered nodes.
         nodes.register_all_nodes(args.service_host, nodes_list)
     except Exception as e:
-        print(str(e))
+        logging.error(str(e))
         return 1
     return 0

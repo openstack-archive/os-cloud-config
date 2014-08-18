@@ -12,9 +12,11 @@
 # limitations under the License.
 
 import argparse
+import sys
 import textwrap
 
 from os_cloud_config import keystone_pki
+from os_cloud_config import utils
 
 
 def parse_args():
@@ -50,11 +52,18 @@ def parse_args():
                              'heat metadata file injected into image). '
                              'Different key/certs names and different '
                              'parent node are used (default: false)')
+    parser.add_argument('--debug', action='store_true',
+                        help='set logging level to DEBUG (default is INFO)')
+    parser.add_argument('--log-file', type=argparse.FileType('w'),
+                        default=sys.stdout,
+                        help='log file to write to (defaults to stdout)')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
+
     if args.heatenv:
         keystone_pki.generate_certs_into_json(args.heatenv, args.seed)
     else:
