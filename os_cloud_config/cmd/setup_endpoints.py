@@ -18,6 +18,7 @@ import sys
 import textwrap
 
 from os_cloud_config import keystone
+from os_cloud_config import utils
 
 
 def parse_args():
@@ -52,11 +53,13 @@ def parse_args():
     parser.add_argument('-r', '--region', dest='region',
                         help='represents the geographic location of the '
                              'service endpoint')
+    utils._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main(stdout=None):
     args = parse_args()
+    utils._configure_logging(args)
 
     sys.stderr.write(args.services)
     if os.path.isfile(args.services):

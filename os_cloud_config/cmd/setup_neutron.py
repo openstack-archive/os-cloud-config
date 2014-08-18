@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
-import textwrap
-
 import json
+import logging
+import textwrap
 
 from os_cloud_config import neutron
 from os_cloud_config import utils
@@ -58,11 +56,13 @@ def parse_args():
     parser.add_argument('-n', '--network-json', dest='json',
                         help='JSON formatted description of the network(s) to '
                         'create', required=True)
+    utils._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    utils._configure_logging(args)
 
     try:
         utils._ensure_environment()
@@ -70,6 +70,6 @@ def main():
             network_desc = json.load(jsonfile)
         neutron.initialize_neutron(network_desc)
     except Exception as e:
-        print(str(e))
+        logging.error(str(e))
         return 1
     return 0
