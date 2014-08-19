@@ -31,7 +31,7 @@ class RegisterNodesTest(base.TestCase):
                        'seed', '--nodes'])
     def test_with_arguments(self, register_mock):
         with tempfile.NamedTemporaryFile() as f:
-            f.write('{}\n')
+            f.write(u'{}\n'.encode('utf-8'))
             f.flush()
             sys.argv.append(f.name)
             return_code = register_nodes.main()
@@ -46,7 +46,7 @@ class RegisterNodesTest(base.TestCase):
     def test_with_exception(self, register_mock):
         register_mock.side_effect = ValueError
         with tempfile.NamedTemporaryFile() as f:
-            f.write('{}\n')
+            f.write(u'{}\n'.encode('utf-8'))
             f.flush()
             sys.argv.append(f.name)
             return_code = register_nodes.main()

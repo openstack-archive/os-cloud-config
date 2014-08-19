@@ -60,7 +60,7 @@ def create_ca_pair(cert_serial=1):
     ca_cert.set_issuer(subject)
     ca_cert.set_pubkey(ca_key)
     ca_cert.add_extensions([
-        crypto.X509Extension("basicConstraints", True, "CA:TRUE, pathlen:0"),
+        crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE, pathlen:0"),
     ])
     ca_cert.sign(ca_key, 'sha1')
     LOG.debug('Generated CA certificate.')
