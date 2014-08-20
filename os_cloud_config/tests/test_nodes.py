@@ -176,6 +176,36 @@ class NodesTest(base.TestCase):
         for key in ('cpu', 'memory', 'disk', 'mac', 'pm_addr', 'pm_user'):
             self.assertEqual(registered_nodes[0][key], existing_node[key])
 
+    def _create_ironic_node_mock_and_assert(self, driver, driver_info):
+        node = mock.MagicMock()
+        node.to_dict.return_value = {'uuid': uuid.uuid1()}
+        client = mock.MagicMock()
+        client.node.list.return_value = [node]
+        ironic_node = collections.namedtuple('node',
+                                             ['properties', 'driver',
+                                              'driver_info'])
+        properties = {u'cpus': u'1', u'memory_mb': u'2048',
+                      u'local_gb': u'30', u'cpu_arch': u'amd64'}
+        client.node.get.return_value = ironic_node(properties, driver,
+                                                   driver_info)
+        port = collections.namedtuple('port', 'address')
+        client.node.list_ports.return_value = [port('aaa')]
+        registered_nodes = nodes.registered_ironic_nodes(client)
+        existing_node = self._get_node()
+        for key in ('cpu', 'memory', 'disk', 'arch', 'mac', 'pm_addr',
+                    'pm_user', 'pm_password'):
+            self.assertEqual(registered_nodes[0][key], existing_node[key])
+
+    def test_registered_ironic_nodes_impi(self):
+        driver_info = {u'ssh_address': u'foo.bar', u'ssh_username': u'test',
+                       u'ssh_key_contents': u'random'}
+        self._create_ironic_node_mock_and_assert('pxe_ssh', driver_info)
+
+    def test_registered_ironic_nodes_ssh(self):
+        driver_info = {u'ipmi_address': u'foo.bar', u'ipmi_username': u'test',
+                       u'ipmi_password': 'random'}
+        self._create_ironic_node_mock_and_assert('ipmi', driver_info)
+
     def test_node_is_not_registered(self):
         self.assertFalse(nodes.node_is_registered([], self._get_node()))
 

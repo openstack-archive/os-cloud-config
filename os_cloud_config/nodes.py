@@ -130,6 +130,33 @@ def registered_nova_bm_nodes(client):
     return nodes
 
 
+def registered_ironic_nodes(client):
+    nodes = []
+    ironic_nodes = [n.to_dict() for n in client.node.list()]
+    for node in ironic_nodes:
+        node_details = client.node.get(node['uuid'])
+        current_node = {'cpu': node_details.properties['cpus'],
+                        'memory': node_details.properties['memory_mb'],
+                        'disk': node_details.properties['local_gb'],
+                        'arch': node_details.properties['cpu_arch']}
+        driver_info = node_details.driver_info
+        if "ipmi" in node_details.driver:
+            current_node.update({'pm_addr': driver_info['ipmi_address'],
+                                 'pm_user': driver_info['ipmi_username'],
+                                 'pm_password': driver_info['ipmi_password']})
+        elif node_details.driver == 'pxe_ssh':
+            pm_password = driver_info['ssh_key_contents']
+            current_node.update({'pm_addr': driver_info['ssh_address'],
+                                 'pm_user': driver_info['ssh_username'],
+                                 'pm_password': pm_password})
+        else:
+            raise Exception("Unknown pm_type: %s" % node_details.driver)
+        port_details = client.node.list_ports(node['uuid'])
+        current_node['mac'] = [port.address for port in port_details]
+        nodes.append(current_node)
+    return nodes
+
+
 def node_is_registered(registered_nodes, node):
     """Determine if a specified node is registered, given a list of registered
     nodes. Returns True if the node is registered.
@@ -160,8 +187,9 @@ def node_is_registered(registered_nodes, node):
 
 
 def filter_registered_nodes(ironic_use, client, nodes_list):
-    registered_nodes = []
-    if not ironic_use:
+    if ironic_use:
+        registered_nodes = registered_ironic_nodes(client)
+    else:
         registered_nodes = registered_nova_bm_nodes(client)
     nodes = [node for node in nodes_list
              if not node_is_registered(registered_nodes, node)]
