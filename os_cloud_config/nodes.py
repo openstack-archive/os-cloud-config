@@ -103,7 +103,8 @@ def register_ironic_node(service_host, node, client=None):
 
 def register_all_nodes(service_host, nodes_list, client=None):
     LOG.debug('Registering all nodes.')
-    if using_ironic(keystone=None):
+    ironic_use = using_ironic(keystone=None)
+    if ironic_use:
         if client is None:
             client = clients.get_ironic_client()
         register_func = register_ironic_node
@@ -111,8 +112,60 @@ def register_all_nodes(service_host, nodes_list, client=None):
         if client is None:
             client = clients.get_nova_bm_client()
         register_func = register_nova_bm_node
-    for node in nodes_list:
+    for node in filter_registered_nodes(ironic_use, client, nodes_list):
         register_func(service_host, node, client=client)
+
+
+def registered_nova_bm_nodes(client):
+    nodes = [bmn.to_dict() for bmn in client.baremetal.list()]
+    massage_map = {'cpu': 'cpus',
+                   'memory': 'memory_mb',
+                   'disk': 'local_gb',
+                   'pm_addr': 'pm_address',
+                   'pm_user': 'pm_user'}
+    for node in nodes:
+        node["mac"] = [addr["address"] for addr in node["interfaces"]]
+        for attr in massage_map:
+            node[attr] = str(node[massage_map[attr]])
+    return nodes
+
+
+def node_is_registered(registered_nodes, node):
+    """Determine if a specified node is registered, given a list of registered
+    nodes. Returns True if the node is registered.
+
+    :param registered_nodes: A list of currently registered nodes.
+    :param node: The node to check.
+    """
+    if not registered_nodes:
+        return False
+    # The best shot we have for uniqueness is the primary MAC.
+    best_shot = None
+    for registered_node in registered_nodes:
+        if registered_node["mac"][0] == node["mac"][0]:
+            best_shot = registered_node
+            break
+    if not best_shot:
+        return False
+    # Compare the rest of the MAC addresses, if any:
+    for idx, mac in enumerate(best_shot["mac"][1:], start=1):
+        if node["mac"][idx] != mac:
+            return False
+    # Compare the rest of the attributes, returning True if any don't match.
+    for attr in ('cpu', 'memory', 'disk', 'pm_addr', 'pm_user'):
+        if node[attr] != best_shot[attr]:
+            return False
+    # best_shot has passed the gauntlet, node is already registered.
+    return True
+
+
+def filter_registered_nodes(ironic_use, client, nodes_list):
+    registered_nodes = []
+    if not ironic_use:
+        registered_nodes = registered_nova_bm_nodes(client)
+    nodes = [node for node in nodes_list
+             if not node_is_registered(registered_nodes, node)]
+    return nodes
 
 
 def using_ironic(keystone=None):

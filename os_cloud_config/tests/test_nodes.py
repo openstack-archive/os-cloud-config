@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import collections
+import uuid
 
 import mock
 
@@ -156,3 +157,43 @@ class NodesTest(base.TestCase):
         keystone.services.list.return_value = [service('compute')]
         self.assertFalse(nodes.using_ironic(keystone=keystone))
         self.assertEqual(1, keystone.services.list.call_count)
+
+    def test_registered_nova_bm_nodes(self):
+        interface = {u'datapath_id': None, u'id': 1, u'port_no': None,
+                     u'address': u'aaa'}
+        node_details = {u'instance_uuid': None, u'pm_address': u'foo.bar',
+                        u'task_state': None, u'uuid': uuid.uuid1(),
+                        u'local_gb': 30, u'interfaces': [interface],
+                        u'cpus': 1, u'updated_at': None, u'memory_mb': 2048,
+                        u'service_host': u'seed', u'pxe_config_path': None,
+                        u'id': 1, u'pm_user': u'test', u'terminal_port': None}
+        bm_node = mock.MagicMock()
+        bm_node.to_dict.return_value = node_details
+        client = mock.MagicMock()
+        client.baremetal.list.return_value = [bm_node]
+        registered_nodes = nodes.registered_nova_bm_nodes(client)
+        existing_node = self._get_node()
+        for key in ('cpu', 'memory', 'disk', 'mac', 'pm_addr', 'pm_user'):
+            self.assertEqual(registered_nodes[0][key], existing_node[key])
+
+    def test_node_is_not_registered(self):
+        self.assertFalse(nodes.node_is_registered([], self._get_node()))
+
+    def test_node_is_registered(self):
+        node = self._get_node()
+        registered_nodes = [self._get_node()]
+        self.assertTrue(nodes.node_is_registered(registered_nodes, node))
+
+    def test_node_is_not_registered_non_matching_second_mac(self):
+        node = self._get_node()
+        node["mac"].append("ccc")
+        registered_nodes = [self._get_node()]
+        registered_nodes[0]["mac"].append("bbb")
+        self.assertFalse(nodes.node_is_registered(registered_nodes, node))
+
+    def test_node_is_not_registered_matching_mac_non_matching_details(self):
+        node = self._get_node()
+        registered_nodes = [self._get_node()]
+        registered_nodes[0]["pm_addr"] = 'barbaz'
+        registered_nodes[0]["memory"] = 4
+        self.assertFalse(nodes.node_is_registered(registered_nodes, node))
