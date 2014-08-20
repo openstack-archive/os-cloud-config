@@ -10,4 +10,4 @@ Configuration for OpenStack clouds.
 Features
 --------
 
-* TODO
+* Support for initializing Keystone.
