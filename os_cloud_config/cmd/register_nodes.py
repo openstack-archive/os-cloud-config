@@ -59,7 +59,7 @@ def main():
         utils._ensure_environment()
 
         # TODO(StevenK): Filter out registered nodes.
-        nodes.register_all_nodes(args.service_host, nodes_list)
+        nodes.register_all_nodes(args.service_host, nodes_list, blocking=True)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
