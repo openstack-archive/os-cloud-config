@@ -23,7 +23,7 @@ from os_cloud_config.cmd.utils import _clients as clients
 LOG = logging.getLogger(__name__)
 
 
-def register_nova_bm_node(service_host, node, client=None):
+def register_nova_bm_node(service_host, node, client=None, blocking=True):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
     kwargs = {'pm_address': node["pm_addr"], 'pm_user': node["pm_user"]}
@@ -47,8 +47,11 @@ def register_nova_bm_node(service_host, node, client=None):
             node_created = True
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
-            LOG.debug('Service not available, sleeping for 10 seconds.')
-            time.sleep(10)
+            if blocking:
+                LOG.debug('Service not available, sleeping for 10 seconds.')
+                time.sleep(10)
+            else:
+                LOG.debug('Service not available.')
     if not node_created:
         LOG.debug('Service unavailable after 10 minutes, giving up.')
         raise novaexc.ServiceUnavailable()
@@ -57,7 +60,7 @@ def register_nova_bm_node(service_host, node, client=None):
     return bm_node
 
 
-def register_ironic_node(service_host, node, client=None):
+def register_ironic_node(service_host, node, client=None, blocking=True):
     properties = {"cpus": node["cpu"],
                   "memory_mb": node["memory"],
                   "local_gb": node["disk"],
@@ -85,8 +88,11 @@ def register_ironic_node(service_host, node, client=None):
             node_created = True
             break
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
-            LOG.debug('Service not available, sleeping for 10 seconds.')
-            time.sleep(10)
+            if blocking:
+                LOG.debug('Service not available, sleeping for 10 seconds.')
+                time.sleep(10)
+            else:
+                LOG.debug('Service not available.')
     if not node_created:
         LOG.debug('Service unavailable after 10 minutes, giving up.')
         raise ironicexp.ServiceUnavailable()
@@ -135,20 +141,23 @@ def _get_node_id(node, node_map):
             return node_map['pm_addr'][node['pm_addr']]
 
 
-def _create_or_register_bm_node(service_host, node, node_map, client=None):
+def _create_or_register_bm_node(service_host, node, node_map, client=None,
+                                blocking=True):
     bm_id = _get_node_id(node, node_map)
     if bm_id:
         bm_node = client.baremetal.get(bm_id)
     else:
         bm_node = None
     if bm_node is None:
-        bm_node = register_nova_bm_node(service_host, node, client)
+        bm_node = register_nova_bm_node(service_host, node, client,
+                                        blocking=blocking)
     else:
         LOG.warning('Node %d already registered, skipping.' % bm_node.id)
     return bm_node.id
 
 
-def _create_or_register_ironic_node(service_host, node, node_map, client=None):
+def _create_or_register_ironic_node(service_host, node, node_map, client=None,
+                                    blocking=True):
     node_uuid = _get_node_id(node, node_map)
     massage_map = {'cpu': '/properties/cpus',
                    'memory': '/properties/memory_mb',
@@ -167,7 +176,8 @@ def _create_or_register_ironic_node(service_host, node, node_map, client=None):
     else:
         ironic_node = None
     if ironic_node is None:
-        ironic_node = register_ironic_node(service_host, node, client)
+        ironic_node = register_ironic_node(service_host, node, client,
+                                           blocking=blocking)
     else:
         LOG.debug('Node %s already registered, updating details.' % (
             ironic_node.uuid))
@@ -203,7 +213,8 @@ def _clean_up_extra_nodes(ironic_in_use, seen, client, remove=False):
             LOG.debug('Extra registered node %s found.' % node)
 
 
-def register_all_nodes(service_host, nodes_list, client=None, remove=False):
+def register_all_nodes(service_host, nodes_list, client=None, remove=False,
+                       blocking=True):
     LOG.debug('Registering all nodes.')
     ironic_in_use = using_ironic(keystone=None)
     if ironic_in_use:
@@ -221,7 +232,8 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False):
     node_map = _populate_node_mapping(ironic_in_use, client)
     seen = set()
     for node in nodes_list:
-        new_node = register_func(service_host, node, node_map, client=client)
+        new_node = register_func(service_host, node, node_map, client=client,
+                                 blocking=blocking)
         seen.add(new_node)
     _clean_up_extra_nodes(ironic_in_use, seen, client, remove=remove)
 

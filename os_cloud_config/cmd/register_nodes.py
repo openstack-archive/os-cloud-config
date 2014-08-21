@@ -69,7 +69,8 @@ def main():
             client = _clients.get_nova_bm_client()
 
         nodes.register_all_nodes(
-            args.service_host, nodes_list, client=client, remove=args.remove)
+            args.service_host, nodes_list, client=client, remove=args.remove,
+            blocking=True)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
