@@ -23,7 +23,7 @@ from os_cloud_config.cmd.utils import _clients as clients
 LOG = logging.getLogger(__name__)
 
 
-def register_nova_bm_node(service_host, node, client=None):
+def register_nova_bm_node(service_host, node, client=None, blocking=True):
     if not service_host:
         raise ValueError("Nova-baremetal requires a service host.")
     kwargs = {'pm_address': node["pm_addr"], 'pm_user': node["pm_user"]}
@@ -48,7 +48,8 @@ def register_nova_bm_node(service_host, node, client=None):
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
             LOG.debug('Service not available, sleeping for 10 seconds.')
-            time.sleep(10)
+            if blocking:
+                time.sleep(10)
     if not node_created:
         LOG.debug('Service unavailable after 10 minutes, giving up.')
         raise novaexc.ServiceUnavailable()
@@ -56,7 +57,7 @@ def register_nova_bm_node(service_host, node, client=None):
         client.baremetal.add_interface(bm_node, mac)
 
 
-def register_ironic_node(service_host, node, client=None):
+def register_ironic_node(service_host, node, client=None, blocking=True):
     properties = {"cpus": node["cpu"],
                   "memory_mb": node["memory"],
                   "local_gb": node["disk"],
@@ -85,7 +86,8 @@ def register_ironic_node(service_host, node, client=None):
             break
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
             LOG.debug('Service not available, sleeping for 10 seconds.')
-            time.sleep(10)
+            if blocking:
+                time.sleep(10)
     if not node_created:
         LOG.debug('Service unavailable after 10 minutes, giving up.')
         raise ironicexp.ServiceUnavailable()
@@ -101,7 +103,7 @@ def register_ironic_node(service_host, node, client=None):
         pass
 
 
-def register_all_nodes(service_host, nodes_list, client=None):
+def register_all_nodes(service_host, nodes_list, client=None, blocking=True):
     LOG.debug('Registering all nodes.')
     if using_ironic(keystone=None):
         if client is None:
@@ -116,7 +118,7 @@ def register_all_nodes(service_host, nodes_list, client=None):
             client = clients.get_nova_bm_client()
         register_func = register_nova_bm_node
     for node in nodes_list:
-        register_func(service_host, node, client=client)
+        register_func(service_host, node, client=client, blocking=blocking)
 
 
 def using_ironic(keystone=None):

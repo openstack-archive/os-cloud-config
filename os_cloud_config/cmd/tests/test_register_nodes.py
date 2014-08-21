@@ -45,7 +45,7 @@ class RegisterNodesTest(base.TestCase):
             return_code = register_nodes.main()
 
         register_mock.assert_called_once_with(
-            "seed", {}, client='nova_bm_client_mock')
+            "seed", {}, blocking=True, client='nova_bm_client_mock')
         using_ironic_mock.assert_called_once_with(
             keystone='keystone_client_mock')
         get_keystone_client_mock.assert_called_once_with()
@@ -74,7 +74,7 @@ class RegisterNodesTest(base.TestCase):
             return_code = register_nodes.main()
 
         register_mock.assert_called_once_with(
-            "seed", {}, client='ironic_client_mock')
+            "seed", {}, blocking=True, client='ironic_client_mock')
         using_ironic_mock.assert_called_once_with(
             keystone='keystone_client_mock')
         get_keystone_client_mock.assert_called_once_with()

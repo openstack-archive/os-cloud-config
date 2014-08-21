@@ -59,14 +59,14 @@ def main():
             nodes_list = json.load(node_file)
         environment._ensure()
 
-        # TODO(StevenK): Filter out registered nodes.
         keystone_client = _clients.get_keystone_client()
         if nodes.using_ironic(keystone=keystone_client):
             client = _clients.get_ironic_client()
         else:
             client = _clients.get_nova_bm_client()
 
-        nodes.register_all_nodes(args.service_host, nodes_list, client=client)
+        nodes.register_all_nodes(args.service_host, nodes_list, client=client,
+                                 blocking=True)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
