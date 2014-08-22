@@ -46,6 +46,9 @@ def parse_args():
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
+    parser.add_argument('-r', '--remove', dest='remove', action='store_true',
+                        help='Remove all unspecified nodes from the baremetal '
+                        'service. Use with extreme caution!')
     return parser.parse_args()
 
 
@@ -57,8 +60,8 @@ def main():
             nodes_list = json.load(node_file)
         utils._ensure_environment()
 
-        # TODO(StevenK): Filter out registered nodes.
-        nodes.register_all_nodes(args.service_host, nodes_list)
+        nodes.register_all_nodes(args.service_host, nodes_list,
+                                 remove=args.remove)
     except Exception as e:
         print(str(e))
         return 1

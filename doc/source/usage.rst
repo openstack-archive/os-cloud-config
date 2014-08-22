@@ -47,7 +47,14 @@ is registered with Keystone.
     register a node.
 
 The nodes argument to register-nodes is a JSON file describing the nodes to
-be registered in a list of objects.
+be registered in a list of objects. If the node is determined to be currently
+registered, the details from the JSON file will be used to update the node
+registration.
+
+ .. note::
+
+    Nova-baremetal does not support updating registered nodes, any previously
+    registered nodes will be skipped.
 
 For example::
 
