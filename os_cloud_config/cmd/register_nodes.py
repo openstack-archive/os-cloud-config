@@ -46,6 +46,9 @@ def parse_args():
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
+    parser.add_argument('-r', '--remove', dest='remove', action='store_true',
+                        help='Remove all unspecified nodes from the baremetal '
+                        'service. Use with extreme caution!')
     environment._add_logging_arguments(parser)
     return parser.parse_args()
 
@@ -59,14 +62,14 @@ def main():
             nodes_list = json.load(node_file)
         environment._ensure()
 
-        # TODO(StevenK): Filter out registered nodes.
         keystone_client = _clients.get_keystone_client()
         if nodes.using_ironic(keystone=keystone_client):
             client = _clients.get_ironic_client()
         else:
             client = _clients.get_nova_bm_client()
 
-        nodes.register_all_nodes(args.service_host, nodes_list, client=client)
+        nodes.register_all_nodes(
+            args.service_host, nodes_list, client=client, remove=args.remove)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
