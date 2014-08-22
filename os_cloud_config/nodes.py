@@ -54,6 +54,7 @@ def register_nova_bm_node(service_host, node, client=None):
         raise novaexc.ServiceUnavailable()
     for mac in node["mac"][1:]:
         client.baremetal.add_interface(bm_node, mac)
+    return bm_node
 
 
 def register_ironic_node(service_host, node, client=None):
@@ -99,20 +100,126 @@ def register_ironic_node(service_host, node, client=None):
         # Conflict means the Ironic conductor got there first, so we can
         # ignore the exception.
         pass
+    return ironic_node
 
 
-def register_all_nodes(service_host, nodes_list, client=None):
+def _populate_node_mapping(ironic_in_use, client):
+    LOG.debug('Populating list of registered nodes.')
+    node_map = {'mac': {}, 'pm_addr': {}}
+    if ironic_in_use:
+        nodes = [n.to_dict() for n in client.node.list()]
+        for node in nodes:
+            node_details = client.node.get(node['uuid'])
+            if node_details.driver == 'pxe_ssh':
+                for port in client.node.list_ports(node['uuid']):
+                    node_map['mac'][port.address] = node['uuid']
+            elif 'ipmi' in node_details.driver:
+                pm_addr = node_details.driver_info['ipmi_address']
+                node_map['pm_addr'][pm_addr] = node['uuid']
+    else:
+        nodes = [bmn.to_dict() for bmn in client.baremetal.list()]
+        for node in nodes:
+            node_map['pm_addr'][node['pm_address']] = node['id']
+            for addr in node['interfaces']:
+                node_map['mac'][addr['address']] = node['id']
+    return node_map
+
+
+def _get_node_id(node, node_map):
+    if node['pm_type'] == 'pxe_ssh':
+        for mac in node['mac']:
+            if mac in node_map['mac']:
+                return node_map['mac'][mac]
+    else:
+        if node['pm_addr'] in node_map['pm_addr']:
+            return node_map['pm_addr'][node['pm_addr']]
+
+
+def _create_or_register_bm_node(service_host, node, node_map, client=None):
+    bm_id = _get_node_id(node, node_map)
+    if bm_id:
+        bm_node = client.baremetal.get(bm_id)
+    else:
+        bm_node = None
+    if bm_node is None:
+        bm_node = register_nova_bm_node(service_host, node, client)
+    else:
+        LOG.debug('Node %d already registered, skipping.' % bm_node.id)
+    return bm_node.id
+
+
+def _create_or_register_ironic_node(service_host, node, node_map, client=None):
+    node_uuid = _get_node_id(node, node_map)
+    massage_map = {'cpu': '/properties/cpus',
+                   'memory': '/properties/memory_mb',
+                   'disk': '/properties/local_gb',
+                   'arch': '/properties/cpu_arch'}
+    if "ipmi" in node['pm_type']:
+        massage_map.update({'pm_addr': '/driver_info/ipmi_address',
+                            'pm_user': '/driver_info/ipmi_username',
+                            'pm_password': '/driver_info/ipmi_password'})
+    elif node['pm_type'] == 'pxe_ssh':
+        massage_map.update({'pm_addr': '/driver_info/ssh_address',
+                            'pm_user': '/driver_info/ssh_username',
+                            'pm_password': '/driver_info/ssh_key_contents'})
+    if node_uuid:
+        ironic_node = client.node.get(node_uuid)
+    else:
+        ironic_node = None
+    if ironic_node is None:
+        ironic_node = register_ironic_node(service_host, node, client)
+    else:
+        LOG.debug('Node %s already registered, updating details.' % (
+            ironic_node.uuid))
+        node_patch = []
+        for key, value in massage_map.items():
+            node_patch.append({'path': value, 'value': node[key],
+                               'op': 'replace'})
+        for count in range(2):
+            try:
+                client.node.update(ironic_node.uuid, node_patch)
+                break
+            except ironicexp.Conflict:
+                LOG.debug('Node locked for updating.')
+                time.sleep(5)
+        else:
+            raise ironicexp.Conflict()
+    return ironic_node.uuid
+
+
+def _clean_up_extra_nodes(ironic_in_use, seen, client, remove=False):
+    if ironic_in_use:
+        all_nodes = set([n.uuid for n in client.node.list()])
+        remove_func = client.node.delete
+    else:
+        all_nodes = set([bmn.id for bmn in client.baremetal.list()])
+        remove_func = client.baremetal.delete
+    extra_nodes = all_nodes - seen
+    for node in extra_nodes:
+        if remove:
+            LOG.debug('Removing extra registered node %s.' % node)
+            remove_func(node)
+        else:
+            LOG.debug('Extra registered node %s found.' % node)
+
+
+def register_all_nodes(service_host, nodes_list, client=None, remove=False):
     LOG.debug('Registering all nodes.')
-    if using_ironic(keystone=None):
+    ironic_in_use = using_ironic(keystone=None)
+    if ironic_in_use:
         if client is None:
             client = clients.get_ironic_client()
-        register_func = register_ironic_node
+        register_func = _create_or_register_ironic_node
     else:
         if client is None:
             client = clients.get_nova_bm_client()
-        register_func = register_nova_bm_node
+        register_func = _create_or_register_bm_node
+    node_map = _populate_node_mapping(ironic_in_use, client)
+    seen = set()
     for node in nodes_list:
-        register_func(service_host, node, client=client)
+        new_node = register_func(service_host, node, node_map, client=client)
+        seen.add(new_node)
+    _clean_up_extra_nodes(ironic_in_use, seen, client, remove=remove)
 
 
 def using_ironic(keystone=None):
