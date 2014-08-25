@@ -16,9 +16,8 @@
 from __future__ import print_function
 
 import argparse
-import textwrap
-
 import json
+import textwrap
 
 from os_cloud_config import neutron
 from os_cloud_config import utils
