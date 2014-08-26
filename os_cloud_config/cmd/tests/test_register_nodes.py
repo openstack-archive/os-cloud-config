@@ -24,18 +24,62 @@ from os_cloud_config.tests import base
 
 class RegisterNodesTest(base.TestCase):
 
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_nova_bm_client',
+                return_value='nova_bm_client_mock')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client',
+                return_value='keystone_client_mock')
+    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
     @mock.patch('os_cloud_config.nodes.register_all_nodes')
     @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
                      'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
     @mock.patch.object(sys, 'argv', ['register-nodes', '--service-host',
                        'seed', '--nodes'])
-    def test_with_arguments(self, register_mock):
+    def test_with_arguments_nova_baremetal(self, register_mock,
+                                           using_ironic_mock,
+                                           get_keystone_client_mock,
+                                           get_nova_bm_client_mock):
         with tempfile.NamedTemporaryFile() as f:
             f.write(u'{}\n'.encode('utf-8'))
             f.flush()
             sys.argv.append(f.name)
             return_code = register_nodes.main()
-        register_mock.has_calls([mock.call("seed", "{}")])
+
+        register_mock.assert_called_once_with(
+            "seed", {}, client='nova_bm_client_mock')
+        using_ironic_mock.assert_called_once_with(
+            keystone='keystone_client_mock')
+        get_keystone_client_mock.assert_called_once_with()
+        get_nova_bm_client_mock.assert_called_once_with()
+
+        self.assertEqual(0, return_code)
+
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_ironic_client',
+                return_value='ironic_client_mock')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client',
+                return_value='keystone_client_mock')
+    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
+    @mock.patch('os_cloud_config.nodes.register_all_nodes')
+    @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
+                     'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
+    @mock.patch.object(sys, 'argv', ['register-nodes', '--service-host',
+                       'seed', '--nodes'])
+    def test_with_arguments_ironic(self, register_mock,
+                                   using_ironic_mock,
+                                   get_keystone_client_mock,
+                                   get_ironic_client_mock):
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(u'{}\n'.encode('utf-8'))
+            f.flush()
+            sys.argv.append(f.name)
+            return_code = register_nodes.main()
+
+        register_mock.assert_called_once_with(
+            "seed", {}, client='ironic_client_mock')
+        using_ironic_mock.assert_called_once_with(
+            keystone='keystone_client_mock')
+        get_keystone_client_mock.assert_called_once_with()
+        get_ironic_client_mock.assert_called_once_with()
+
         self.assertEqual(0, return_code)
 
     @mock.patch('os_cloud_config.nodes.register_all_nodes')
