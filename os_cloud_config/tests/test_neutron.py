@@ -110,8 +110,8 @@ class NeutronTest(base.TestCase):
                                     'enable_dhcp': False}}
         client.create_subnet.assert_called_once_with(external_call)
 
-    @mock.patch('os_cloud_config.utils._clients.get_neutron_client')
-    @mock.patch('os_cloud_config.utils._clients.get_keystone_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_neutron_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client')
     def test_initialize_neutron_physical(self, keystoneclient, neutronclient):
         network_desc = {'physical': {'name': 'ctlplane',
                                      'cidr': '10.0.0.0/24',
@@ -135,8 +135,8 @@ class NeutronTest(base.TestCase):
         neutronclient().create_network.assert_called_once_with(network_call)
         neutronclient().create_subnet.assert_called_once_with(subnet_call)
 
-    @mock.patch('os_cloud_config.utils._clients.get_neutron_client')
-    @mock.patch('os_cloud_config.utils._clients.get_keystone_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_neutron_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client')
     def test_initialize_neutron_float_and_external(self, keystoneclient,
                                                    neutronclient):
         network_desc = {'float': {'name': 'default-net',

@@ -15,7 +15,7 @@
 
 import logging
 
-from os_cloud_config.utils import _clients as clients
+from os_cloud_config.cmd.utils import _clients as clients
 
 LOG = logging.getLogger(__name__)
 
