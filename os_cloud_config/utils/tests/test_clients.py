@@ -16,47 +16,47 @@
 import mock
 
 from os_cloud_config.tests import base
-from os_cloud_config.utils import _clients as clients
+from os_cloud_config.utils import clients
 
 
 class ClientsTest(base.TestCase):
 
-    @mock.patch('os.environ')
     @mock.patch('ironicclient.client.get_client')
-    def test_get_ironic_client(self, client_mock, environ):
-        clients.get_ironic_client()
+    def test_get_ironic_client(self, client_mock):
+        clients.get_ironic_client('username', 'password', 'tenant_name',
+                                  'auth_url')
         client_mock.assert_called_once_with(
-            1, os_username=environ["OS_USERNAME"],
-            os_password=environ["OS_PASSWORD"],
-            os_auth_url=environ["OS_AUTH_URL"],
-            os_tenant_name=environ["OS_TENANT_NAME"])
+            1, os_username='username',
+            os_password='password',
+            os_auth_url='auth_url',
+            os_tenant_name='tenant_name')
 
-    @mock.patch('os.environ')
     @mock.patch('novaclient.v1_1.client.Client')
-    def test_get_nova_bm_client(self, client_mock, environ):
-        clients.get_nova_bm_client()
-        client_mock.assert_called_once_with(environ["OS_USERNAME"],
-                                            environ["OS_PASSWORD"],
-                                            environ["OS_AUTH_URL"],
-                                            environ["OS_TENANT_NAME"],
+    def test_get_nova_bm_client(self, client_mock):
+        clients.get_nova_bm_client('username', 'password', 'tenant_name',
+                                   'auth_url')
+        client_mock.assert_called_once_with('username',
+                                            'password',
+                                            'tenant_name',
+                                            'auth_url',
                                             extensions=[mock.ANY])
 
-    @mock.patch('os.environ')
     @mock.patch('keystoneclient.v2_0.client.Client')
-    def test_get_keystone_client(self, client_mock, environ):
-        clients.get_keystone_client()
+    def test_get_keystone_client(self, client_mock):
+        clients.get_keystone_client('username', 'password', 'tenant_name',
+                                    'auth_url')
         client_mock.assert_called_once_with(
-            username=environ["OS_USERNAME"],
-            password=environ["OS_PASSWORD"],
-            auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
+            username='username',
+            password='password',
+            auth_url='auth_url',
+            tenant_name='tenant_name')
 
-    @mock.patch('os.environ')
     @mock.patch('neutronclient.neutron.client.Client')
-    def test_get_client(self, client_mock, environ):
-        clients.get_neutron_client()
+    def test_get_client(self, client_mock):
+        clients.get_neutron_client('username', 'password', 'tenant_name',
+                                   'auth_url')
         client_mock.assert_called_once_with(
-            '2.0', username=environ["OS_USERNAME"],
-            password=environ["OS_PASSWORD"],
-            auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
+            '2.0', username='username',
+            password='password',
+            auth_url='auth_url',
+            tenant_name='tenant_name')
