@@ -16,9 +16,9 @@
 import mock
 import testtools
 
+from os_cloud_config.cmd.utils import _environment
 from os_cloud_config import exception
 from os_cloud_config.tests import base
-from os_cloud_config import utils
 
 
 class UtilsTest(base.TestCase):
@@ -29,7 +29,7 @@ class UtilsTest(base.TestCase):
                    "environment variables are required to be set.")
         with testtools.ExpectedException(exception.MissingEnvironment,
                                          message):
-            utils._ensure_environment()
+            _environment.ensure()
 
     @mock.patch.dict('os.environ', {'OS_PASSWORD': 'a', 'OS_AUTH_URL': 'a',
                      'OS_TENANT_NAME': 'a'})
@@ -37,9 +37,9 @@ class UtilsTest(base.TestCase):
         message = "OS_USERNAME environment variable is required to be set."
         with testtools.ExpectedException(exception.MissingEnvironment,
                                          message):
-            utils._ensure_environment()
+            _environment.ensure()
 
     @mock.patch.dict('os.environ', {'OS_PASSWORD': 'a', 'OS_AUTH_URL': 'a',
                      'OS_TENANT_NAME': 'a', 'OS_USERNAME': 'a'})
     def test_ensure_environment_missing_none(self):
-        self.assertIs(None, utils._ensure_environment())
+        self.assertIs(None, _environment.ensure())
