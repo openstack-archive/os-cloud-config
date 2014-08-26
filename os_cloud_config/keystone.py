@@ -392,7 +392,7 @@ def _create_roles(keystone, timeout=600, poll_interval=10):
             LOG.debug('Unable to create, sleeping for %d seconds.'
                       % poll_interval)
             time.sleep(poll_interval)
-    _create_role(keystone, 'Member')
+    _create_role(keystone, '_member_')
 
 
 def _create_tenants(keystone):
