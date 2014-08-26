@@ -19,6 +19,7 @@ import time
 
 from keystoneclient.openstack.common.apiclient import exceptions
 import keystoneclient.v2_0.client as ksclient
+from os_cloud_config.utils import clients
 
 LOG = logging.getLogger(__name__)
 
@@ -269,10 +270,10 @@ def setup_endpoints(endpoints, public_host=None, region=None, client=None,
     }
 
     if not client:
-        client = ksclient.Client(username=os_username,
-                                 password=os_password,
-                                 tenant_name=os_tenant_name,
-                                 auth_url=os_auth_url)
+        LOG.warn('Creating client inline is deprecated, please pass '
+                 'the client as parameter.')
+        client = clients.get_keystone_client(
+            os_username, os_password, os_tenant_name, os_auth_url)
 
     # Setup roles first
     _setup_roles(client)
