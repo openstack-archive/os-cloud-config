@@ -20,8 +20,8 @@ import textwrap
 
 import json
 
+from os_cloud_config.cmd.utils import environment
 from os_cloud_config import neutron
-from os_cloud_config import utils
 
 
 def parse_args():
@@ -65,7 +65,7 @@ def main():
     args = parse_args()
 
     try:
-        utils._ensure_environment()
+        environment._ensure()
         with open(args.json, 'r') as jsonfile:
             network_desc = json.load(jsonfile)
         neutron.initialize_neutron(network_desc)

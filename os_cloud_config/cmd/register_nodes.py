@@ -19,8 +19,8 @@ import argparse
 import json
 import textwrap
 
+from os_cloud_config.cmd.utils import environment
 from os_cloud_config import nodes
-from os_cloud_config import utils
 
 
 def parse_args():
@@ -55,7 +55,7 @@ def main():
     try:
         with open(args.nodes, 'r') as node_file:
             nodes_list = json.load(node_file)
-        utils._ensure_environment()
+        environment._ensure()
 
         # TODO(StevenK): Filter out registered nodes.
         nodes.register_all_nodes(args.service_host, nodes_list)
