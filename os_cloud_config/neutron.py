@@ -20,9 +20,17 @@ from os_cloud_config.cmd.utils import _clients as clients
 LOG = logging.getLogger(__name__)
 
 
-def initialize_neutron(network_desc):
-    neutron = clients.get_neutron_client()
-    keystone = clients.get_keystone_client()
+def initialize_neutron(network_desc, neutron_client=None,
+                       keystone_client=None):
+    if not neutron_client:
+        LOG.warn('Creating neutron client inline is deprecated, please pass '
+                 'the client as parameter.')
+        neutron = clients.get_neutron_client()
+    if not keystone_client:
+        LOG.warn('Creating keystone client inline is deprecated, please pass '
+                 'the client as parameter.')
+        keystone = clients.get_keystone_client()
+
     admin_tenant = _get_admin_tenant_id(keystone)
     if 'physical' in network_desc:
         network_type = 'physical'

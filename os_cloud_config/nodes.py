@@ -105,10 +105,14 @@ def register_all_nodes(service_host, nodes_list, client=None):
     LOG.debug('Registering all nodes.')
     if using_ironic(keystone=None):
         if client is None:
+            LOG.warn('Creating ironic client inline is deprecated, please '
+                     'pass the client as parameter.')
             client = clients.get_ironic_client()
         register_func = register_ironic_node
     else:
         if client is None:
+            LOG.warn('Creating nova-bm client inline is deprecated, please '
+                     'pass the client as parameter.')
             client = clients.get_nova_bm_client()
         register_func = register_nova_bm_node
     for node in nodes_list:
@@ -118,5 +122,7 @@ def register_all_nodes(service_host, nodes_list, client=None):
 def using_ironic(keystone=None):
     LOG.debug('Checking for usage of ironic.')
     if keystone is None:
+        LOG.warn('Creating keystone client inline is deprecated, please pass '
+                 'the client as parameter.')
         keystone = clients.get_keystone_client()
     return 'ironic' in [service.name for service in keystone.services.list()]
