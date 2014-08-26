@@ -24,7 +24,7 @@ def parse_args():
     description = textwrap.dedent("""
     Perform initial setup of keystone for a new cloud.
 
-    This will create the admin and service tenants, the admin and Member
+    This will create the admin and service tenants, the admin and _member_
     roles, the admin user, configure certificates and finally register the
     initial identity endpoint, after which Keystone may be used with normal
     authentication.
