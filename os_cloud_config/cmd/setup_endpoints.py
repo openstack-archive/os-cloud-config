@@ -17,6 +17,7 @@ import simplejson
 import sys
 import textwrap
 
+from os_cloud_config.cmd.utils import _clients
 from os_cloud_config import keystone
 
 
@@ -66,11 +67,11 @@ def main(stdout=None):
         # we assume it's just JSON string
         services = simplejson.loads(args.services)
 
+    client = _clients.get_keystone_client()
+
     keystone.setup_endpoints(
         services,
         public_host=args.public_host,
         region=args.region,
-        os_username=os.environ["OS_USERNAME"],
-        os_password=os.environ["OS_PASSWORD"],
-        os_tenant_name=os.environ["OS_TENANT_NAME"],
-        os_auth_url=os.environ["OS_AUTH_URL"])
+        os_auth_url=os.environ["OS_AUTH_URL"],
+        client=client)

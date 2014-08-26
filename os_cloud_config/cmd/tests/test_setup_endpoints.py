@@ -20,6 +20,8 @@ from os_cloud_config.tests import base
 
 class SetupEndpointsTest(base.TestCase):
 
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client',
+                return_value='keystone_client_mock')
     @mock.patch('os_cloud_config.keystone.setup_endpoints')
     @mock.patch.object(
         sys, 'argv',
@@ -29,13 +31,12 @@ class SetupEndpointsTest(base.TestCase):
                      'OS_PASSWORD': 'password',
                      'OS_TENANT_NAME': 'admin',
                      'OS_AUTH_URL': 'http://localhost:5000'})
-    def test_script(self, setup_endpoints_mock):
+    def test_script(self, setup_endpoints_mock, get_keystone_client_mock):
         setup_endpoints.main()
+        get_keystone_client_mock.assert_called_once_with()
         setup_endpoints_mock.assert_called_once_with(
             {'nova': {'password': '123'}},
             public_host='192.0.2.28',
             region='EC',
-            os_username="admin",
-            os_password="password",
-            os_tenant_name="admin",
-            os_auth_url="http://localhost:5000")
+            os_auth_url="http://localhost:5000",
+            client="keystone_client_mock")
