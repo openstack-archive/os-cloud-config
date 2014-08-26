@@ -21,7 +21,7 @@ from os_cloud_config import exception
 from os_cloud_config.tests import base
 
 
-class UtilsTest(base.TestCase):
+class CMDEnviromentTest(base.TestCase):
 
     @mock.patch.dict('os.environ', {})
     def test_ensure_environment_missing_all(self):
