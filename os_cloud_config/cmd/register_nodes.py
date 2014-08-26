@@ -18,8 +18,8 @@ import json
 import logging
 import textwrap
 
+from os_cloud_config.cmd.utils import environment
 from os_cloud_config import nodes
-from os_cloud_config import utils
 
 
 def parse_args():
@@ -45,18 +45,18 @@ def parse_args():
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
-    utils._add_logging_arguments(parser)
+    environment._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    utils._configure_logging(args)
+    environment._configure_logging(args)
 
     try:
         with open(args.nodes, 'r') as node_file:
             nodes_list = json.load(node_file)
-        utils._ensure_environment()
+        environment._ensure()
 
         # TODO(StevenK): Filter out registered nodes.
         nodes.register_all_nodes(args.service_host, nodes_list)

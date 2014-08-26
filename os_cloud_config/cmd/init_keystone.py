@@ -16,8 +16,8 @@
 import argparse
 import textwrap
 
+from os_cloud_config.cmd.utils import environment
 from os_cloud_config.keystone import initialize
-from os_cloud_config import utils
 
 
 def parse_args():
@@ -63,13 +63,13 @@ def parse_args():
     parser.add_argument('--poll-interval', dest='pollinterval',
                         default=10, type=int,
                         help="Seconds to wait between keystone checks")
-    utils._add_logging_arguments(parser)
+    environment._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    utils._configure_logging(args)
+    environment._configure_logging(args)
 
     initialize(args.host, args.admin_token, args.admin_email,
                args.admin_password, args.region, args.ssl, args.public,

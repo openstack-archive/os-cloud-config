@@ -18,8 +18,8 @@ import json
 import logging
 import textwrap
 
+from os_cloud_config.cmd.utils import environment
 from os_cloud_config import neutron
-from os_cloud_config import utils
 
 
 def parse_args():
@@ -56,16 +56,16 @@ def parse_args():
     parser.add_argument('-n', '--network-json', dest='json',
                         help='JSON formatted description of the network(s) to '
                         'create', required=True)
-    utils._add_logging_arguments(parser)
+    environment._add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    utils._configure_logging(args)
+    environment._configure_logging(args)
 
     try:
-        utils._ensure_environment()
+        environment._ensure()
         with open(args.json, 'r') as jsonfile:
             network_desc = json.load(jsonfile)
         neutron.initialize_neutron(network_desc)
