@@ -385,7 +385,7 @@ def _create_roles(keystone):
         except (exceptions.ConnectionRefused, exceptions.ServiceUnavailable):
             LOG.debug('Unable to create, sleeping for 10 seconds.')
             time.sleep(10)
-    _create_role(keystone, 'Member')
+    _create_role(keystone, '_member_')
 
 
 def _create_tenants(keystone):
