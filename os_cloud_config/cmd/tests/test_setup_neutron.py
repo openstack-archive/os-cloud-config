@@ -25,18 +25,29 @@ from os_cloud_config.tests import base
 
 class SetupNeutronTest(base.TestCase):
 
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client',
+                return_value='keystone_client_mock')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_neutron_client',
+                return_value='neutron_client_mock')
     @mock.patch('os_cloud_config.neutron.initialize_neutron')
     @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
                      'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
     @mock.patch.object(sys, 'argv', ['setup-neutron', '--network-json'])
-    def test_with_arguments(self, initialize_mock):
+    def test_with_arguments(self, initialize_mock, get_neutron_client_mock,
+                            get_keystone_client_mock):
         network_desc = {'physical': {'metadata_server': 'foo.bar'}}
         with tempfile.NamedTemporaryFile() as f:
             f.write(json.dumps(network_desc).encode('utf-8'))
             f.flush()
             sys.argv.append(f.name)
             return_code = setup_neutron.main()
-        initialize_mock.assert_called_once_with(mock.ANY)
+
+        get_keystone_client_mock.assert_called_once_with()
+        get_neutron_client_mock.assert_called_once_with()
+        initialize_mock.assert_called_once_with(
+            network_desc,
+            neutron_client='neutron_client_mock',
+            keystone_client='keystone_client_mock')
         self.assertEqual(0, return_code)
 
     @mock.patch('os_cloud_config.neutron.initialize_neutron')

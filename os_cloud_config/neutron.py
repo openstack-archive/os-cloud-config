@@ -20,10 +20,18 @@ from os_cloud_config.cmd.utils import _clients as clients
 LOG = logging.getLogger(__name__)
 
 
-def initialize_neutron(network_desc):
-    neutron = clients.get_neutron_client()
-    keystone = clients.get_keystone_client()
-    admin_tenant = _get_admin_tenant_id(keystone)
+def initialize_neutron(network_desc, neutron_client=None,
+                       keystone_client=None):
+    if not neutron_client:
+        LOG.warn('Creating neutron client inline is deprecated, please pass '
+                 'the client as parameter.')
+        neutron_client = clients.get_neutron_client()
+    if not keystone_client:
+        LOG.warn('Creating keystone client inline is deprecated, please pass '
+                 'the client as parameter.')
+        keystone_client = clients.get_keystone_client()
+
+    admin_tenant = _get_admin_tenant_id(keystone_client)
     if 'physical' in network_desc:
         network_type = 'physical'
         if not admin_tenant:
@@ -35,15 +43,15 @@ def initialize_neutron(network_desc):
         network_type = 'float'
     else:
         raise ValueError("No float or physical network defined.")
-    net = _create_net(neutron, network_desc, network_type, admin_tenant)
-    subnet = _create_subnet(neutron, net, network_desc, network_type,
+    net = _create_net(neutron_client, network_desc, network_type, admin_tenant)
+    subnet = _create_subnet(neutron_client, net, network_desc, network_type,
                             admin_tenant)
     if 'external' in network_desc:
-        router = _create_router(neutron, subnet)
-        ext_net = _create_net(neutron, network_desc, 'external', None)
-        _create_subnet(neutron, ext_net, network_desc, 'external', None)
-        neutron.add_gateway_router(router['router']['id'],
-                                   {'network_id': ext_net['network']['id']})
+        router = _create_router(neutron_client, subnet)
+        ext_net = _create_net(neutron_client, network_desc, 'external', None)
+        _create_subnet(neutron_client, ext_net, network_desc, 'external', None)
+        neutron_client.add_gateway_router(
+            router['router']['id'], {'network_id': ext_net['network']['id']})
     LOG.debug("Neutron configured.")
 
 

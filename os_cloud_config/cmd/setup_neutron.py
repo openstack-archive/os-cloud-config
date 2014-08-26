@@ -18,6 +18,7 @@ import json
 import logging
 import textwrap
 
+from os_cloud_config.cmd.utils import _clients
 from os_cloud_config.cmd.utils import environment
 from os_cloud_config import neutron
 
@@ -68,7 +69,12 @@ def main():
         environment._ensure()
         with open(args.json, 'r') as jsonfile:
             network_desc = json.load(jsonfile)
-        neutron.initialize_neutron(network_desc)
+
+        neutron_client = _clients.get_neutron_client()
+        keystone_client = _clients.get_keystone_client()
+        neutron.initialize_neutron(network_desc,
+                                   neutron_client=neutron_client,
+                                   keystone_client=keystone_client)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
