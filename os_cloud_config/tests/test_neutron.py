@@ -94,8 +94,7 @@ class NeutronTest(base.TestCase):
         neutron._create_subnet(client, net, network, 'float', None)
         float_call = {'subnet': {'ip_version': 4,
                                  'network_id': 'abcd',
-                                 'cidr': '172.16.5.0/24',
-                                 'dns_nameservers': ['8.8.8.8']}}
+                                 'cidr': '172.16.5.0/24'}}
         client.create_subnet.assert_called_once_with(float_call)
 
     def test_create_subnet_external(self):
@@ -135,9 +134,21 @@ class NeutronTest(base.TestCase):
         float_call = {'subnet': {'ip_version': 4,
                                  'network_id': 'abcd',
                                  'cidr': '172.16.5.0/24',
-                                 'dns_nameservers': ['8.8.8.8'],
                                  'allocation_pools': [{'start': '172.16.5.25',
                                                        'end': '172.16.5.40'}]}}
+        client.create_subnet.assert_called_once_with(float_call)
+
+    def test_create_subnet_with_nameserver(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        network = {'float': {'name': 'default-net',
+                             'cidr': '172.16.5.0/24',
+                             'nameserver': '172.16.5.254'}}
+        neutron._create_subnet(client, net, network, 'float', None)
+        float_call = {'subnet': {'ip_version': 4,
+                                 'network_id': 'abcd',
+                                 'cidr': '172.16.5.0/24',
+                                 'dns_nameservers': ['172.16.5.254']}}
         client.create_subnet.assert_called_once_with(float_call)
 
     @mock.patch('os_cloud_config.cmd.utils._clients.get_neutron_client')
@@ -184,8 +195,7 @@ class NeutronTest(base.TestCase):
                                         'admin_state_up': True}}
         float_subnet = {'subnet': {'ip_version': 4,
                                    'network_id': mock.ANY,
-                                   'cidr': '172.16.5.0/24',
-                                   'dns_nameservers': ['8.8.8.8']}}
+                                   'cidr': '172.16.5.0/24'}}
         external_subnet = {'subnet': {'ip_version': 4,
                                       'network_id': mock.ANY,
                                       'cidr': '1.2.3.0/24',
