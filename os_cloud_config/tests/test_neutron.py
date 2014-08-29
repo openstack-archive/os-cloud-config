@@ -110,6 +110,36 @@ class NeutronTest(base.TestCase):
                                     'enable_dhcp': False}}
         client.create_subnet.assert_called_once_with(external_call)
 
+    def test_create_subnet_with_gateway(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        network = {'external': {'name': 'ext-net',
+                                'cidr': '1.2.3.0/24',
+                                'gateway': '1.2.3.4'}}
+        neutron._create_subnet(client, net, network, 'external', None)
+        external_call = {'subnet': {'ip_version': 4,
+                                    'network_id': 'abcd',
+                                    'cidr': '1.2.3.0/24',
+                                    'gateway_ip': '1.2.3.4',
+                                    'enable_dhcp': False}}
+        client.create_subnet.assert_called_once_with(external_call)
+
+    def test_create_subnet_with_allocation_pool(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        network = {'float': {'name': 'default-net',
+                             'cidr': '172.16.5.0/24',
+                             'allocation_start': '172.16.5.25',
+                             'allocation_end': '172.16.5.40'}}
+        neutron._create_subnet(client, net, network, 'float', None)
+        float_call = {'subnet': {'ip_version': 4,
+                                 'network_id': 'abcd',
+                                 'cidr': '172.16.5.0/24',
+                                 'dns_nameservers': ['8.8.8.8'],
+                                 'allocation_pools': [{'start': '172.16.5.25',
+                                                       'end': '172.16.5.40'}]}}
+        client.create_subnet.assert_called_once_with(float_call)
+
     @mock.patch('os_cloud_config.utils._clients.get_neutron_client')
     @mock.patch('os_cloud_config.utils._clients.get_keystone_client')
     def test_initialize_neutron_physical(self, keystoneclient, neutronclient):
