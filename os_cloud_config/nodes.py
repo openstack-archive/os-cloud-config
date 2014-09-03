@@ -36,7 +36,6 @@ def register_nova_bm_node(service_host, node, client=None):
         kwargs["pm_password"] = node["pm_password"]
     else:
         LOG.info('Ignoring pm_password for nova-bm, it is >255 characters.')
-    node_created = False
     for count in range(60):
         LOG.debug('Registering %s node with nova-baremetal, try #%d.' %
                   (node["pm_addr"], count))
@@ -44,12 +43,11 @@ def register_nova_bm_node(service_host, node, client=None):
             bm_node = client.baremetal.create(service_host, node["cpu"],
                                               node["memory"], node["disk"],
                                               node["mac"][0], **kwargs)
-            node_created = True
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
             LOG.debug('Service not available, sleeping for 10 seconds.')
             time.sleep(10)
-    if not node_created:
+    else:
         LOG.debug('Service unavailable after 10 minutes, giving up.')
         raise novaexc.ServiceUnavailable()
     for mac in node["mac"][1:]:
@@ -73,7 +71,6 @@ def register_ironic_node(service_host, node, client=None):
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
 
-    node_created = False
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
                   (node["pm_addr"], count))
@@ -81,12 +78,11 @@ def register_ironic_node(service_host, node, client=None):
             ironic_node = client.node.create(driver=node["pm_type"],
                                              driver_info=driver_info,
                                              properties=properties)
-            node_created = True
             break
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
             LOG.debug('Service not available, sleeping for 10 seconds.')
             time.sleep(10)
-    if not node_created:
+    else:
         LOG.debug('Service unavailable after 10 minutes, giving up.')
         raise ironicexp.ServiceUnavailable()
 
