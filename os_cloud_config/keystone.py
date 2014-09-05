@@ -463,3 +463,8 @@ def _create_admin_user(keystone, admin_email, admin_password):
     else:
         LOG.debug('Granting admin role to admin user on admin tenant.')
         keystone.roles.add_user_role(admin_user, admin_role, admin_tenant)
+
+    
+    if admin_user.domain_id == "default":
+        LOG.debug('Granting admin role to admin user on default domain')
+        keystone.roles.grant(admin_role, user=admin_user, domain="default")
