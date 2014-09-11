@@ -105,7 +105,7 @@ SERVICES = {
 
 def initialize(host, admin_token, admin_email, admin_password,
                region='regionOne', ssl=None, public=None, user='root',
-               timeout=600, poll_interval=10):
+               timeout=600, poll_interval=10, pki_setup=True):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -119,6 +119,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param user: user to use to connect to the node where Keystone is running
     :param timeout: Total seconds to wait for keystone to be running
     :param poll_interval: Seconds to wait between keystone poll attempts
+    :param pki_setup: Boolean for running pki_setup conditionally
     """
 
     keystone = _create_admin_client(host, admin_token)
@@ -127,7 +128,8 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
     _create_keystone_endpoint(keystone, host, region, ssl, public)
-    _perform_pki_initialization(host, user)
+    if pki_setup:
+        _perform_pki_initialization(host, user)
 
 
 def initialize_for_swift(host, admin_token):
