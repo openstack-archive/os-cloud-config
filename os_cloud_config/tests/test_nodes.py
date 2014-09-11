@@ -150,6 +150,73 @@ class NodesTest(base.TestCase):
                           nodes.register_ironic_node, None, self._get_node(),
                           client=ironic)
 
+    def test_get_driver_info_with_pm_type_pxe_ssh(self):
+        pxe_node_driver_info = {"ssh_address": "foo.bar",
+                                "ssh_username": "test",
+                                "ssh_key_contents": "random",
+                                "ssh_virt_type": "virsh"}
+        node = self._get_node()
+        driver, drive_info = nodes._get_driver_info(node)
+        self.assertEqual(driver, "pxe_ssh")
+        self.assertEqual(drive_info, pxe_node_driver_info)
+
+    def test_get_driver_info_with_pm_type_ipmi(self):
+        ipmi_node_driver_info = {"ipmi_address": "foo.bar",
+                                 "ipmi_username": "test",
+                                 "ipmi_password": "random"}
+        node = self._get_node()
+        node["pm_type"] = "ipmi"
+        driver, drive_info = nodes._get_driver_info(node)
+        self.assertEqual(driver, "ipmi")
+        self.assertEqual(drive_info, ipmi_node_driver_info)
+
+    def test_get_driver_info_with_pm_type_unknown(self):
+        node = self._get_node()
+        node["pm_type"] = "unknown"
+        self.assertRaises(ValueError, nodes._get_driver_info, node)
+
+    def test_get_driver_info_with_driver_pxe_ssh(self):
+        pxe_node_driver_info = {"ssh_address": "foo.bar",
+                                "ssh_username": "test",
+                                "ssh_key_contents": "random",
+                                "ssh_virt_type": "virsh"}
+        node = self._get_node()
+        node["driver"] = "pxe_ssh"
+        del node["pm_type"]
+        del node["pm_addr"]
+        del node["pm_user"]
+        del node["pm_password"]
+        node.update(pxe_node_driver_info)
+        driver, drive_info = nodes._get_driver_info(node)
+        self.assertEqual(driver, "pxe_ssh")
+        self.assertEqual(drive_info, pxe_node_driver_info)
+
+    def test_get_driver_info_with_driver_ipmi(self):
+        ipmi_node_driver_info = {"ipmi_address": "foo.bar",
+                                 "ipmi_username": "test",
+                                 "ipmi_password": "random"}
+        node = self._get_node()
+        node["driver"] = "ipmi"
+        del node["pm_type"]
+        del node["pm_addr"]
+        del node["pm_user"]
+        del node["pm_password"]
+        node.update(ipmi_node_driver_info)
+        driver, drive_info = nodes._get_driver_info(node)
+        self.assertEqual(driver, "ipmi")
+        self.assertEqual(drive_info, ipmi_node_driver_info)
+
+    def test_get_driver_info_with_driver_unknown(self):
+        node = self._get_node()
+        del node["pm_type"]
+        node["driver"] = "unknown"
+        self.assertRaises(ValueError, nodes._get_driver_info, node)
+
+    def test_get_driver_info_with_no_pm_type_or_driver(self):
+        node = self._get_node()
+        del node["pm_type"]
+        self.assertRaises(ValueError, nodes._get_driver_info, node)
+
     def test_using_ironic(self):
         keystone = mock.MagicMock()
         service = collections.namedtuple('servicelist', ['name'])
