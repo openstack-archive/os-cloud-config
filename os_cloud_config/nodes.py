@@ -56,22 +56,42 @@ def register_nova_bm_node(service_host, node, client=None):
         client.baremetal.add_interface(bm_node, mac)
 
 
+def _get_driver_info(node):
+    if "pm_type" in node:
+        if "ipmi" in node["pm_type"]:
+            driver_info = {"ipmi_address": node["pm_addr"],
+                           "ipmi_username": node["pm_user"],
+                           "ipmi_password": node["pm_password"]}
+        elif node["pm_type"] == "pxe_ssh":
+            driver_info = {"ssh_address": node["pm_addr"],
+                           "ssh_username": node["pm_user"],
+                           "ssh_key_contents": node["pm_password"],
+                           "ssh_virt_type": "virsh"}
+        else:
+            raise ValueError("Unknown pm_type: %s" % node["pm_type"])
+    elif "driver" in node:
+        if "ipmi" in node["driver"]:
+            driver_info = {"ipmi_address": node["ipmi_address"],
+                           "ipmi_username": node["ipmi_username"],
+                           "ipmi_password": node["ipmi_password"]}
+        elif node["driver"] == "pxe_ssh":
+            driver_info = {"ssh_address": node["ssh_address"],
+                           "ssh_username": node["ssh_username"],
+                           "ssh_key_contents": node["ssh_key_contents"],
+                           "ssh_virt_type": node["ssh_virt_type"]}
+        else:
+            raise ValueError("Unknown driver: %s" % node["driver"])
+    else:
+        raise ValueError("Ironic requires pm_type or driver.")
+    return driver_info
+
+
 def register_ironic_node(service_host, node, client=None):
     properties = {"cpus": node["cpu"],
                   "memory_mb": node["memory"],
                   "local_gb": node["disk"],
                   "cpu_arch": node["arch"]}
-    if "ipmi" in node["pm_type"]:
-        driver_info = {"ipmi_address": node["pm_addr"],
-                       "ipmi_username": node["pm_user"],
-                       "ipmi_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_ssh":
-        driver_info = {"ssh_address": node["pm_addr"],
-                       "ssh_username": node["pm_user"],
-                       "ssh_key_contents": node["pm_password"],
-                       "ssh_virt_type": "virsh"}
-    else:
-        raise Exception("Unknown pm_type: %s" % node["pm_type"])
+    driver_info = _get_driver_info(node)
 
     node_created = False
     for count in range(60):
