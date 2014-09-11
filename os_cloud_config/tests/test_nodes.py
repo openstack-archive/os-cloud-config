@@ -110,8 +110,9 @@ class NodesTest(base.TestCase):
 
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
     def test_register_all_nodes_ironic(self, using_ironic):
-        node_list = [self._get_node(), self._get_node()]
+        node_list = [self._get_node(), self._get_node(), self._get_node()]
         node_list[1]["pm_type"] = "ipmi"
+        node_list[2]["pm_ssh_virt_type"] = "vbox"
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
                            "local_gb": "30",
@@ -125,6 +126,10 @@ class NodesTest(base.TestCase):
         ipmi_node_driver_info = {"ipmi_address": "foo.bar",
                                  "ipmi_username": "test",
                                  "ipmi_password": "random"}
+        pxe_node_driver_info_vbox = {"ssh_address": "foo.bar",
+                                     "ssh_username": "test",
+                                     "ssh_key_contents": "random",
+                                     "ssh_virt_type": "vbox"}
         pxe_node = mock.call(driver="pxe_ssh",
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
@@ -134,11 +139,15 @@ class NodesTest(base.TestCase):
         ipmi_node = mock.call(driver="ipmi",
                               driver_info=ipmi_node_driver_info,
                               properties=node_properties)
-        ironic.node.create.assert_has_calls([pxe_node, mock.ANY, ipmi_node,
-                                             mock.ANY])
-        ironic.port.create.assert_has_calls([port_call, port_call])
+        pxe_vbox_node = mock.call(driver="pxe_ssh",
+                                  driver_info=pxe_node_driver_info_vbox,
+                                  properties=node_properties)
+        ironic.node.create.assert_has_calls([pxe_node, mock.ANY,
+                                             ipmi_node, mock.ANY,
+                                             pxe_vbox_node, mock.ANY])
+        ironic.port.create.assert_has_calls([port_call, port_call, port_call])
         ironic.node.set_power_state.assert_has_calls(
-            [power_off_call, power_off_call])
+            [power_off_call, power_off_call, power_off_call])
 
     @mock.patch('time.sleep')
     def test_register_ironic_node_retry(self, sleep):
