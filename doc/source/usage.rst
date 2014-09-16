@@ -83,7 +83,7 @@ Where /tmp/one-node contains::
 Generating keys and certificates for use with Keystone PKI
 ----------------------------------------------------------
 
-The generate-keystone-pki line utility generates keys and certificates
+The generate-keystone-pki command line utility generates keys and certificates
 which Keystone uses for signing authentication tokens.
 
 - Keys and certificates can be generated into separate files::
@@ -124,3 +124,82 @@ which Keystone uses for signing authentication tokens.
     }
 
   CA key is not added because this file is not needed by Keystone PKI.
+
+---------------------
+Setting up networking
+---------------------
+
+The setup-neutron command line utility allows setting up of a physical control
+plane network suitable for deployment clouds, or an external network with an
+internal floating network suitable for workload clouds.
+
+The network JSON argument allows specifying the network(s) to be created.
+
+    setup-neutron -n /tmp/ctlplane
+
+Where /tmp/ctlplane contains::
+
+    {
+      "physical": {
+        "gateway": "192.0.2.1",
+        "metadata_server": "192.0.2.1",
+        "cidr": "192.0.2.0/24",
+        "allocation_end": "192.0.2.20",
+        "allocation_start": "192.0.2.2",
+        "name": "ctlplane"
+      }
+    }
+
+This will create a Neutron flat net with a name of 'ctlplane', and a subnet
+with a CIDR of '192.0.2.0/24', a metadata server and gateway of '192.0.2.1',
+and will allocate DHCP leases in the range of '192.0.2.2' to '192.0.2.20', as
+well as adding a route for 169.254.169.254/32.
+
+setup-neutron also supports datacentre networks that require 802.1Q VLAN tags.
+
+    setup-neutron -n /tmp/ctlplane-dc
+
+Where /tmp/ctlplane-dc contains::
+
+    {
+      "physical": {
+        "gateway": "192.0.2.1",
+        "metadata_server": "192.0.2.1",
+        "cidr": "192.0.2.0/24",
+        "allocation_end": "192.0.2.20",
+        "allocation_start": "192.0.2.2",
+        "name": "ctlplane",
+        "segmentation_id": 25
+      }
+    }
+
+This creates a Neutron datacentre 'net' using VLAN tag 25, with the same
+details as the flat network created above.
+
+setup-neutron can also create two networks suitable for workload clouds.
+
+    setup-neutron -n /tmp/float
+
+Where /tmp/float contains::
+
+    {
+      "float": {
+          "cidr": "10.0.0.0/8",
+          "name": "default-net",
+      },
+      "external": {
+          "name": "ext-net",
+          "cidr": "192.0.2.0/24",
+          "allocation_start": "192.0.2.45",
+          "allocation_end": "192.0.2.64",
+          "gateway": "192.0.2.1"
+      }
+    }
+
+This creates two Neutron nets, the first with a name of 'default-net' and set
+as shared, and second with a name 'ext-net' with the 'router:external'
+property set to true. The default-net subnet has a CIDR of 10.0.0.0/8 and a
+default nameserver of 8.8.8.8, and the ext-net subnet has a CIDR of
+192.0.2.0/24, a gateway of 192.0.2.1 and allocates DHCP from 192.0.2.45 until
+192.0.2.64. setup-neutron will also create a router for the float network,
+setting the external network as the gateway.
