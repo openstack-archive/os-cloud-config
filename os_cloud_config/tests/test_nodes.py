@@ -62,7 +62,7 @@ class NodesTest(base.TestCase):
     def test_register_nova_bm_node_no_update(self, ironic_mock, register_mock):
         client = mock.MagicMock()
         node_map = {'mac': {'aaa': 1}}
-        nodes._create_or_register_bm_node('servicehost', self._get_node(),
+        nodes._update_or_register_bm_node('servicehost', self._get_node(),
                                           node_map, client=client)
         client.baremetal.get.assert_called_once_with(1)
         register_mock.assert_not_called()
@@ -189,7 +189,7 @@ class NodesTest(base.TestCase):
                             matchers.MatchesSetwise(*(map(matchers.Equals,
                             args[1]))))
         ironic.node.update.side_effect = side_effect
-        nodes._create_or_register_ironic_node(None, node, node_map,
+        nodes._update_or_register_ironic_node(None, node, node_map,
                                               client=ironic)
         ironic.node.update.assert_called_once_with(
             ironic.node.get.return_value.uuid, mock.ANY)
@@ -201,7 +201,7 @@ class NodesTest(base.TestCase):
         ironic.node.update.side_effect = ironicexp.Conflict
         node_map = {'mac': {'aaa': 1}}
         self.assertRaises(ironicexp.Conflict,
-                          nodes._create_or_register_ironic_node, None, node,
+                          nodes._update_or_register_ironic_node, None, node,
                           node_map, client=ironic)
 
     def test_populate_node_mapping_nova_bm(self):

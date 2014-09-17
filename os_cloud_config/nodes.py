@@ -140,7 +140,7 @@ def _get_node_id(node, node_map):
             return node_map['pm_addr'][node['pm_addr']]
 
 
-def _create_or_register_bm_node(service_host, node, node_map, client=None):
+def _update_or_register_bm_node(service_host, node, node_map, client=None):
     bm_id = _get_node_id(node, node_map)
     if bm_id:
         bm_node = client.baremetal.get(bm_id)
@@ -153,7 +153,7 @@ def _create_or_register_bm_node(service_host, node, node_map, client=None):
     return bm_node.id
 
 
-def _create_or_register_ironic_node(service_host, node, node_map, client=None):
+def _update_or_register_ironic_node(service_host, node, node_map, client=None):
     node_uuid = _get_node_id(node, node_map)
     massage_map = {'cpu': '/properties/cpus',
                    'memory': '/properties/memory_mb',
@@ -216,13 +216,13 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False):
             LOG.warn('Creating ironic client inline is deprecated, please '
                      'pass the client as parameter.')
             client = clients.get_ironic_client()
-        register_func = _create_or_register_ironic_node
+        register_func = _update_or_register_ironic_node
     else:
         if client is None:
             LOG.warn('Creating nova-bm client inline is deprecated, please '
                      'pass the client as parameter.')
             client = clients.get_nova_bm_client()
-        register_func = _create_or_register_bm_node
+        register_func = _update_or_register_bm_node
     node_map = _populate_node_mapping(ironic_in_use, client)
     seen = set()
     for node in nodes_list:
