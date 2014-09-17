@@ -26,6 +26,9 @@ Features
   - Register nodes with a baremetal service, such as Nova-baremetal or Ironic.
 * setup-endpoints:
   - Register services, such as Glance and Cinder with a configured Keystone.
+* setup-flavors:
+  - Creates flavors in Nova, either describing the distinct set of nodes the
+    cloud has registered, or a custom set of flavors that has been specified.
 * setup-neutron:
   - Configure Neutron at the cloud (not the host) level, setting up either a
     physical control plane network suitable for deployment clouds, or an
