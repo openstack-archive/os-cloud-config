@@ -110,12 +110,14 @@ def _create_subnet(neutron, net, network_desc, network_type, admin_tenant):
         subnet.update({'tenant_id': admin_tenant,
                        'host_routes': [{'destination': '169.254.169.254/32',
                                        'nexthop': metadata}]})
-    elif network_type == 'float':
-        subnet['dns_nameservers'] = ['8.8.8.8']
     elif network_type == 'external':
         subnet['enable_dhcp'] = False
     if network_desc[network_type].get('gateway'):
         subnet['gateway_ip'] = network_desc[network_type]['gateway']
+    if network_desc[network_type].get('nameserver'):
+        subnet['dns_nameservers'] = [network_desc[network_type]['nameserver']]
+    elif network_type == 'float':
+        subnet['dns_nameservers'] = ['8.8.8.8']
     if (network_desc[network_type].get('allocation_start') and
         network_desc[network_type].get('allocation_end')):
         allocation_start = network_desc[network_type]['allocation_start']

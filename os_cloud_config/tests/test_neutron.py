@@ -140,6 +140,19 @@ class NeutronTest(base.TestCase):
                                                        'end': '172.16.5.40'}]}}
         client.create_subnet.assert_called_once_with(float_call)
 
+    def test_create_subnet_with_nameserver(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        network = {'float': {'name': 'default-net',
+                             'cidr': '172.16.5.0/24',
+                             'nameserver': '172.16.5.254'}}
+        neutron._create_subnet(client, net, network, 'float', None)
+        float_call = {'subnet': {'ip_version': 4,
+                                 'network_id': 'abcd',
+                                 'cidr': '172.16.5.0/24',
+                                 'dns_nameservers': ['172.16.5.254']}}
+        client.create_subnet.assert_called_once_with(float_call)
+
     @mock.patch('os_cloud_config.cmd.utils._clients.get_neutron_client')
     @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client')
     def test_initialize_neutron_physical(self, keystoneclient, neutronclient):
