@@ -91,3 +91,16 @@ class FlavorsTest(base.TestCase):
                     'baremetal:deploy__ramdisk_id': 'bbb'}
         client.flavors.create.return_value.set_keys.assert_called_once_with(
             metadata=metadata)
+
+    def test_create_flavor_with_extra_spec(self):
+        flavor = {'cpu': '1', 'memory': '2048', 'disk': '30', 'arch': 'i386',
+                  'kernel': 'aaa', 'ramdisk': 'bbb', 'name': 'baremetal',
+                  'ephemeral': None, 'extra_specs': {'key': 'value'}}
+        client = mock.MagicMock()
+        flavors._create_flavor(client, flavor)
+        client.flavors.create.assert_called_once_with(
+            'baremetal', '2048', '1', '30', None, ephemeral=None)
+        metadata = {'cpu_arch': 'i386', 'baremetal:deploy__kernel_id': 'aaa',
+                    'baremetal:deploy__ramdisk_id': 'bbb', 'key': 'value'}
+        client.flavors.create.return_value.set_keys.assert_called_once_with(
+            metadata=metadata)
