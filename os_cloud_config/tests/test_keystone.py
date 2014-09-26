@@ -50,9 +50,6 @@ class KeystoneTest(base.TestCase):
         keystone.initialize(
             '192.0.0.3', 'mytoken', 'admin@example.org', 'adminpasswd')
 
-        self.client.roles.create.assert_has_calls(
-            [mock.call('admin'), mock.call('_member_')])
-
         self.client.tenants.create.assert_has_calls(
             [mock.call('admin', None), mock.call('service', None)])
 
@@ -240,8 +237,6 @@ class KeystoneTest(base.TestCase):
 
         keystone._create_roles(self.client)
         sleep.assert_has_calls([mock.call(10), mock.call(10)])
-        self.client.roles.create.assert_has_calls(
-            [mock.call('admin'), mock.call('_member_')])
 
     def test_setup_endpoints(self):
         self.client = mock.MagicMock()

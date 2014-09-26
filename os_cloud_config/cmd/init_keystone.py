@@ -24,10 +24,9 @@ def parse_args():
     description = textwrap.dedent("""
     Perform initial setup of keystone for a new cloud.
 
-    This will create the admin and service tenants, the admin and _member_
-    roles, the admin user, configure certificates and finally register the
-    initial identity endpoint, after which Keystone may be used with normal
-    authentication.
+    This will create the admin and service tenants, the admin role, the admin
+    user, configure certificates and finally register the initial identity
+    endpoint, after which Keystone may be used with normal authentication.
 
     This command will wait for a user-specified amount of time for a Keystone
     service to be running on the specified host.  The default is a 10 minute
