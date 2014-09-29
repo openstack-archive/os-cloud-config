@@ -42,7 +42,8 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=description)
     parser.add_argument('-s', '--service-host', dest='service_host',
-                        help='Nova-bm service host to register nodes with')
+                        help='Nova compute service host to register nodes '
+                        'with')
     parser.add_argument('-n', '--nodes', dest='nodes', required=True,
                         help='A JSON file containing a list of nodes that '
                         'are intended to be registered')
