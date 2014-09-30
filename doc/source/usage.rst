@@ -10,10 +10,10 @@ To use os-cloud-config in a project::
 Initializing Keystone for a host
 -----------------------------------
 
-The init-keystone command line utility initializes Keystone for use with
-normal authentication by creating the admin and service tenants, the admin
-and Member roles, the admin user, configure certificates and finally
-registers the initial identity endpoint.
+The init-keystone command line utility initializes Keystone for use with normal
+authentication by creating the admin and service tenants, the admin role, the
+admin user, configure certificates and finally registers the initial identity
+endpoint.
 
  .. note::
 
