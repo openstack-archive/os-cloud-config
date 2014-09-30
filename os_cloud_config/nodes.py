@@ -82,9 +82,9 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
                        "iboot_username": node["pm_user"],
                        "iboot_password": node["pm_password"]}
         # iboot_relay_id and iboot_port are optional
-        if "iboot_relay_id" in node:
+        if "pm_relay_id" in node:
             driver_info["iboot_relay_id"] = node["pm_relay_id"]
-        if "iboot_port" in node:
+        if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])

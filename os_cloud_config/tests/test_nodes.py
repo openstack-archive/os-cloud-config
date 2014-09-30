@@ -114,6 +114,8 @@ class NodesTest(base.TestCase):
                      self._get_node(), self._get_node()]
         node_list[1]["pm_type"] = "ipmi"
         node_list[2]["pm_type"] = "pxe_iboot"
+        node_list[2]["pm_relay_id"] = "pxe_iboot_id"
+        node_list[2]["pm_port"] = "8080"
         node_list[3]["pm_virt_type"] = "vbox"
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
@@ -130,7 +132,9 @@ class NodesTest(base.TestCase):
                                  "ipmi_password": "random"}
         iboot_node_driver_info = {"iboot_address": "foo.bar",
                                   "iboot_username": "test",
-                                  "iboot_password": "random"}
+                                  "iboot_password": "random",
+                                  "iboot_relay_id": "pxe_iboot_id",
+                                  "iboot_port": "8080"}
         pxe_node_driver_info_vbox = {"ssh_address": "foo.bar",
                                      "ssh_username": "test",
                                      "ssh_key_contents": "random",
