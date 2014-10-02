@@ -122,7 +122,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param pki_setup: Boolean for running pki_setup conditionally
     """
 
-    keystone = _create_admin_client(host, admin_token)
+    keystone = _create_admin_client(host, admin_token, ssl, public)
 
     _create_roles(keystone, timeout, poll_interval)
     _create_tenants(keystone)
@@ -132,15 +132,18 @@ def initialize(host, admin_token, admin_email, admin_password,
         _perform_pki_initialization(host, user)
 
 
-def initialize_for_swift(host, admin_token):
+def initialize_for_swift(host, admin_token, ssl=None, public=None):
     """Create roles in Keystone for use with Swift.
 
     :param host: ip/hostname of node where Keystone is running
     :param admin_token: admin token to use with Keystone's admin endpoint
+    :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param public: ip/hostname to use as the public endpoint, if the default
+        is not suitable
     """
     LOG.warn('This function is deprecated.')
 
-    keystone = _create_admin_client(host, admin_token)
+    keystone = _create_admin_client(host, admin_token, ssl, public)
 
     LOG.debug('Creating swiftoperator role.')
     keystone.roles.create('swiftoperator')
@@ -148,16 +151,20 @@ def initialize_for_swift(host, admin_token):
     keystone.roles.create('ResellerAdmin')
 
 
-def initialize_for_heat(host, admin_token, domain_admin_password):
+def initialize_for_heat(host, admin_token, domain_admin_password,
+                        ssl=None, public=None):
     """Create Heat domain and an admin user for it.
 
     :param host: ip/hostname of node where Keystone is running
     :param admin_token: admin token to use with Keystone's admin endpoint
     :param domain_admin_password: heat domain admin's password to be set
+    :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param public: ip/hostname to use as the public endpoint, if the default
+        is not suitable
     """
     LOG.warn('This function is deprecated.')
 
-    keystone = _create_admin_client(host, admin_token)
+    keystone = _create_admin_client(host, admin_token, ssl, public)
     admin_role = keystone.roles.find(name='admin')
 
     LOG.debug('Creating heat domain.')
@@ -368,13 +375,20 @@ def _create_user_for_service(keystone, name, password):
             keystone.roles.add_user_role(user, admin_role, admin_tenant)
 
 
-def _create_admin_client(host, admin_token):
+def _create_admin_client(host, admin_token, ssl=None, public=None):
     """Create Keystone v2 client for admin endpoint.
 
     :param host: ip/hostname of node where Keystone is running
     :param admin_token: admin token to use with Keystone's admin endpoint
+    :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param public: ip/hostname to use as the public endpoint, if default is
+        not suitable
     """
-    admin_url = "http://%s:35357/v2.0" % host
+    admin_url = 'http://%s:35357/v2.0' % host
+    if ssl:
+        admin_url = 'https://%s:35357/v2.0' % ssl
+    elif public:
+        admin_url = 'http://%s:35357/v2.0' % public
     return ksclient.Client(endpoint=admin_url, token=admin_token)
 
 
