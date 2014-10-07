@@ -34,6 +34,11 @@ Features
 
   * Register services, such as Glance and Cinder with a configured Keystone.
 
+* setup-flavors:
+
+  * Creates flavors in Nova, either describing the distinct set of nodes the
+    cloud has registered, or a custom set of flavors that has been specified.
+
 * setup-neutron:
 
   * Configure Neutron at the cloud (not the host) level, setting up either a
