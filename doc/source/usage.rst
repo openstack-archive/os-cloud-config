@@ -203,3 +203,45 @@ default nameserver of 8.8.8.8, and the ext-net subnet has a CIDR of
 192.0.2.0/24, a gateway of 192.0.2.1 and allocates DHCP from 192.0.2.45 until
 192.0.2.64. setup-neutron will also create a router for the float network,
 setting the external network as the gateway.
+
+----------------
+Creating flavors
+----------------
+
+The setup-flavors command line utility creates flavors in Nova -- either using
+the nodes that have been registered to provide a distinct set of hardware that
+is provisioned, or by specifing the set of flavors that should be created.
+
+ .. note::
+
+    setup-flavors will delete the existing default flavors, such as m1.small
+    and m1.xlarge. For this use case, the cloud that is having flavors created
+    is a cloud only using baremetal hardware, so only needs to describe the
+    hardware available.
+
+Utilising the /tmp/one-node file specified in the register-nodes example
+above, create a flavor::
+
+    setup-flavors -n /tmp/one-node
+
+Which results in a flavor called "baremetal_2048_30_None_1".
+
+If the ROOT_DISK environment variable is set in the environment, that will be
+used as the disk size, leaving the remainder set as ephemeral storage, giving
+a flavor name of "baremetal_2048_10_20_1".
+
+Conversely, you can specify a JSON file describing the flavors to create::
+
+    setup-flavors -f /tmp/one-flavor
+
+Where /tmp/one-flavor contains::
+
+    [
+      {
+        "name": "controller",
+        "memory": "2048",
+        "disk": "30",
+        "arch": "i386",
+        "cpu": "1"
+      }
+    ]
