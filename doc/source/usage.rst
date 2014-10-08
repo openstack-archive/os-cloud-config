@@ -133,7 +133,7 @@ The setup-neutron command line utility allows setting up of a physical control
 plane network suitable for deployment clouds, or an external network with an
 internal floating network suitable for workload clouds.
 
-The network JSON argument allows specifying the network(s) to be created.
+The network JSON argument allows specifying the network(s) to be created::
 
     setup-neutron -n /tmp/ctlplane
 
@@ -155,7 +155,7 @@ with a CIDR of '192.0.2.0/24', a metadata server and gateway of '192.0.2.1',
 and will allocate DHCP leases in the range of '192.0.2.2' to '192.0.2.20', as
 well as adding a route for 169.254.169.254/32.
 
-setup-neutron also supports datacentre networks that require 802.1Q VLAN tags.
+setup-neutron also supports datacentre networks that require 802.1Q VLAN tags::
 
     setup-neutron -n /tmp/ctlplane-dc
 
@@ -176,7 +176,7 @@ Where /tmp/ctlplane-dc contains::
 This creates a Neutron datacentre 'net' using VLAN tag 25, with the same
 details as the flat network created above.
 
-setup-neutron can also create two networks suitable for workload clouds.
+setup-neutron can also create two networks suitable for workload clouds::
 
     setup-neutron -n /tmp/float
 
