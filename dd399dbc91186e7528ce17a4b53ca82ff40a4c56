@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Workflow+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Code-Review+2: greghaynes <greg@greghaynes.net>
+Code-Review+1: Motohiro 'Yuanying' Otsuka <ootsuka@mxs.nes.nec.co.jp>
+Submitted-by: Jenkins
+Submitted-at: Wed, 08 Oct 2014 09:07:15 +0000
+Reviewed-on: https://review.openstack.org/126773
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
