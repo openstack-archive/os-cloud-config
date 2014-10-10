@@ -15,7 +15,7 @@ import argparse
 import textwrap
 
 from os_cloud_config.cmd.utils import environment
-from os_cloud_config import ssl_pki
+from os_cloud_config import keystone_pki
 
 
 def parse_args():
@@ -60,6 +60,6 @@ def main():
     environment._configure_logging(args)
 
     if args.heatenv:
-        ssl_pki.generate_cert_into_json(args.heatenv, "keystone")
+        keystone_pki.generate_certs_into_json(args.heatenv, args.seed)
     else:
-        ssl_pki.create_and_write_ca_and_signing_pairs(args.directory)
+        keystone_pki.create_and_write_ca_and_signing_pairs(args.directory)
