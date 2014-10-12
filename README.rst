@@ -4,10 +4,14 @@ os-cloud-config
 
 Configuration for OpenStack clouds.
 
-os-cloud-config grew out of the need to call common cloud bring-up tasks, such
-as initializing Keystone, or configuring Neutron from different code bases.
-The original code was written in shell, and poorly tested, which led to the
-need to rewriting it in Python and provided by a distinct module.
+When first installing an OpenStack cloud there are a number of common
+up-front configuration tasks that need to be performed. To alleviate
+the need for different sets of tooling to reinvent solutions to these
+problems, these tasks are collated into this os-cloud-config python
+module.
+
+The tools in this repo are intended to be well-tested, and available
+as importable python modules and also as command-line tools.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/os-cloud-config
