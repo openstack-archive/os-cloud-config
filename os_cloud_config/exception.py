@@ -14,7 +14,7 @@
 
 import logging
 
-from os_cloud_config.openstack.common.gettextutils import _
+from os_cloud_config._i18n import _
 
 
 LOG = logging.getLogger(__name__)
