@@ -245,3 +245,19 @@ Where /tmp/one-flavor contains::
         "cpu": "1"
       }
     ]
+
+The JSON file can also contain an 'extra_specs' parameter, which is a JSON
+object describing the key-value pairs to add into the flavor metadata::
+
+    [
+      {
+        "name": "controller",
+        "memory": "2048",
+        "disk": "30",
+        "arch": "i386",
+        "cpu": "1",
+        "extra_specs": {
+          "key": "value"
+        }
+      }
+    ]
