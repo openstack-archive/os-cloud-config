@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import print_function
+
 import logging
 from six.moves.urllib.parse import urlparse
 import subprocess
@@ -129,6 +131,8 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_admin_user(keystone, admin_email, admin_password)
     _create_keystone_endpoint(keystone, host, region, ssl, public)
     if pki_setup:
+        print("PKI initialization in init-keystone is deprecated and will be "
+              "removed.")
         _perform_pki_initialization(host, user)
 
 
