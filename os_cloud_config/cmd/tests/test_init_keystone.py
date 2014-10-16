@@ -31,4 +31,4 @@ class InitKeystoneTest(base.TestCase):
         init_keystone.main()
         initialize_mock.assert_called_once_with(
             'hostname', 'token', 'admin@example.com', 'password', 'regionOne',
-            None, None, 'root', 600, 10)
+            None, None, 'root', 600, 10, True)
