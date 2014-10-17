@@ -203,10 +203,12 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
                 client.node.update(ironic_node.uuid, node_patch)
                 break
             except ironicexp.Conflict:
-                LOG.debug('Node locked for updating.')
+                LOG.debug('Node %s locked for updating.' %
+                          ironic_node.uuid)
                 time.sleep(5)
         else:
-            raise ironicexp.Conflict()
+            LOG.error("Could not update node %s due to conflict" %
+                      ironic_node.uuid)
     return ironic_node.uuid
 
 
@@ -245,9 +247,13 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False,
     node_map = _populate_node_mapping(ironic_in_use, client)
     seen = set()
     for node in nodes_list:
-        new_node = register_func(service_host, node, node_map, client=client,
-                                 blocking=blocking)
-        seen.add(new_node)
+        try:
+            new_node = register_func(service_host, node, node_map, client=client,
+                                     blocking=blocking)
+            seen.add(new_node)
+        except ironicexp.Conflict:
+            LOG.debug("Could not update node, moving to next host")
+            seen.add(node)
     _clean_up_extra_nodes(ironic_in_use, seen, client, remove=remove)
 
 
