@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import argparse
 import textwrap
 
@@ -55,8 +57,9 @@ def parse_args():
     endpoint_group.add_argument('--public', dest='public',
                                 help="ip/hostname to use as the public "
                                 "endpoint, if the default is not suitable")
-    parser.add_argument('-u', '--user', dest='user', required=True,
-                        help="user to connect to the Keystone node via ssh")
+    parser.add_argument('-u', '--user', dest='user',
+                        help="user to connect to the Keystone node via ssh, "
+                        "required with --pki-setup")
     parser.add_argument('--timeout', dest='timeout', default=600, type=int,
                         help="Total seconds to wait for keystone to be ready")
     parser.add_argument('--poll-interval', dest='pollinterval',
@@ -77,6 +80,9 @@ def main():
     args = parse_args()
     environment._configure_logging(args)
 
+    if args.pkisetup and not args.user:
+        print("User is required if PKI setup will be performed.")
+        return 1
     initialize(args.host, args.admin_token, args.admin_email,
                args.admin_password, args.region, args.ssl, args.public,
                args.user, args.timeout, args.pollinterval, args.pkisetup)
