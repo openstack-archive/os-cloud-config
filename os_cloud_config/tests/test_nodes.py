@@ -108,15 +108,69 @@ class NodesTest(base.TestCase):
         node["pm_password"] = ""
         self.assert_nova_bm_call_with_no_pm_password(node)
 
+    def test_extract_driver_info_ipmi(self):
+        node = self._get_node()
+        node["pm_type"] = "ipmi"
+        expected = {"ipmi_address": "foo.bar",
+                    "ipmi_username": "test",
+                    "ipmi_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_ssh(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_ssh"
+        expected = {"ssh_address": "foo.bar",
+                    "ssh_username": "test",
+                    "ssh_key_contents": "random",
+                    "ssh_virt_type": "virsh"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_ssh_with_pm_virt_type(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_ssh"
+        node["pm_virt_type"] = "vbox"
+        expected = {"ssh_address": "foo.bar",
+                    "ssh_username": "test",
+                    "ssh_key_contents": "random",
+                    "ssh_virt_type": "vbox"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_iboot(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_iboot"
+        expected = {"iboot_address": "foo.bar",
+                    "iboot_username": "test",
+                    "iboot_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_iboot_with_pm_relay_id(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_iboot"
+        node["pm_relay_id"] = "pxe_iboot_id"
+        expected = {"iboot_address": "foo.bar",
+                    "iboot_username": "test",
+                    "iboot_password": "random",
+                    "iboot_relay_id": "pxe_iboot_id"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_iboot_with_pm_port(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_iboot"
+        node["pm_port"] = "8080"
+        expected = {"iboot_address": "foo.bar",
+                    "iboot_username": "test",
+                    "iboot_password": "random",
+                    "iboot_port": "8080"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_unknown_type(self):
+        node = self._get_node()
+        node["pm_type"] = "unknown_type"
+        self.assertRaises(ValueError, nodes._extract_driver_info, node)
+
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
     def test_register_all_nodes_ironic(self, using_ironic):
-        node_list = [self._get_node(), self._get_node(),
-                     self._get_node(), self._get_node()]
-        node_list[1]["pm_type"] = "ipmi"
-        node_list[2]["pm_type"] = "pxe_iboot"
-        node_list[2]["pm_relay_id"] = "pxe_iboot_id"
-        node_list[2]["pm_port"] = "8080"
-        node_list[3]["pm_virt_type"] = "vbox"
+        node_list = [self._get_node()]
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
                            "local_gb": "30",
@@ -127,41 +181,15 @@ class NodesTest(base.TestCase):
                                 "ssh_username": "test",
                                 "ssh_key_contents": "random",
                                 "ssh_virt_type": "virsh"}
-        ipmi_node_driver_info = {"ipmi_address": "foo.bar",
-                                 "ipmi_username": "test",
-                                 "ipmi_password": "random"}
-        iboot_node_driver_info = {"iboot_address": "foo.bar",
-                                  "iboot_username": "test",
-                                  "iboot_password": "random",
-                                  "iboot_relay_id": "pxe_iboot_id",
-                                  "iboot_port": "8080"}
-        pxe_node_driver_info_vbox = {"ssh_address": "foo.bar",
-                                     "ssh_username": "test",
-                                     "ssh_key_contents": "random",
-                                     "ssh_virt_type": "vbox"}
         pxe_node = mock.call(driver="pxe_ssh",
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
         port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
                               address='aaa')
         power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
-        ipmi_node = mock.call(driver="ipmi",
-                              driver_info=ipmi_node_driver_info,
-                              properties=node_properties)
-        iboot_node = mock.call(driver="pxe_iboot",
-                               driver_info=iboot_node_driver_info,
-                               properties=node_properties)
-        pxe_vbox_node = mock.call(driver="pxe_ssh",
-                                  driver_info=pxe_node_driver_info_vbox,
-                                  properties=node_properties)
-        ironic.node.create.assert_has_calls([pxe_node, mock.ANY,
-                                             ipmi_node, mock.ANY,
-                                             iboot_node, mock.ANY,
-                                             pxe_vbox_node, mock.ANY])
-        ironic.port.create.assert_has_calls(
-            [port_call, port_call, port_call, port_call])
-        ironic.node.set_power_state.assert_has_calls(
-            [power_off_call, power_off_call, power_off_call, power_off_call])
+        ironic.node.create.assert_has_calls([pxe_node, mock.ANY])
+        ironic.port.create.assert_has_calls([port_call])
+        ironic.node.set_power_state.assert_has_calls([power_off_call])
 
     @mock.patch('time.sleep')
     def test_register_ironic_node_retry(self, sleep):
