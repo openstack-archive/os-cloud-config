@@ -61,11 +61,7 @@ def register_nova_bm_node(service_host, node, client=None, blocking=True):
     return bm_node
 
 
-def register_ironic_node(service_host, node, client=None, blocking=True):
-    properties = {"cpus": node["cpu"],
-                  "memory_mb": node["memory"],
-                  "local_gb": node["disk"],
-                  "cpu_arch": node["arch"]}
+def _extract_driver_info(node):
     if "ipmi" in node["pm_type"]:
         driver_info = {"ipmi_address": node["pm_addr"],
                        "ipmi_username": node["pm_user"],
@@ -87,7 +83,16 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
         if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
     else:
-        raise Exception("Unknown pm_type: %s" % node["pm_type"])
+        raise ValueError("Unknown pm_type: %s" % node["pm_type"])
+    return driver_info
+
+
+def register_ironic_node(service_host, node, client=None, blocking=True):
+    properties = {"cpus": node["cpu"],
+                  "memory_mb": node["memory"],
+                  "local_gb": node["disk"],
+                  "cpu_arch": node["arch"]}
+    driver_info = _extract_driver_info(node)
 
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
