@@ -206,7 +206,8 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
                 LOG.debug('Node locked for updating.')
                 time.sleep(5)
         else:
-            raise ironicexp.Conflict()
+            LOG.error("Could not update node %s due to conflict" %
+                      ironic_node.uuid)
     return ironic_node.uuid
 
 
