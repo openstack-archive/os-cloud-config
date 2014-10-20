@@ -74,4 +74,6 @@ def _create_flavor(client, flavor_desc):
     flavor_metadata = {'cpu_arch': flavor_desc['arch'],
                        '%s_kernel_id' % bm_prefix: flavor_desc['kernel'],
                        '%s_ramdisk_id' % bm_prefix: flavor_desc['ramdisk']}
+    if flavor_desc.get('extra_specs'):
+        flavor_metadata.update(flavor_desc['extra_specs'])
     flavor.set_keys(metadata=flavor_metadata)
