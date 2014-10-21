@@ -19,6 +19,7 @@ import time
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 from novaclient.openstack.common.apiclient import exceptions as novaexc
 from os_cloud_config.cmd.utils import _clients as clients
+import six
 
 LOG = logging.getLogger(__name__)
 
@@ -62,9 +63,9 @@ def register_nova_bm_node(service_host, node, client=None, blocking=True):
 
 
 def register_ironic_node(service_host, node, client=None, blocking=True):
-    properties = {"cpus": node["cpu"],
-                  "memory_mb": node["memory"],
-                  "local_gb": node["disk"],
+    properties = {"cpus": six.u(str(node["cpu"])),
+                  "memory_mb": six.u(str(node["memory"])),
+                  "local_gb": six.u(str(node["disk"])),
                   "cpu_arch": node["arch"]}
     if "ipmi" in node["pm_type"]:
         driver_info = {"ipmi_address": node["pm_addr"],
@@ -196,8 +197,10 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
             ironic_node.uuid))
         node_patch = []
         for key, value in massage_map.items():
-            node_patch.append({'path': value, 'value': node[key],
+            node_patch.append({'path': value,
+                               'value': six.u(str(node[key])),
                                'op': 'replace'})
+
         for count in range(2):
             try:
                 client.node.update(ironic_node.uuid, node_patch)
