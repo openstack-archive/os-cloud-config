@@ -63,7 +63,6 @@ def main(stdout=None):
     args = parse_args()
     environment._configure_logging(args)
 
-    sys.stderr.write(args.services)
     if os.path.isfile(args.services):
         with open(args.services, 'r') as service_file:
             services = simplejson.load(service_file)
