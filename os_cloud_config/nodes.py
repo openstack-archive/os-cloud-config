@@ -19,6 +19,7 @@ import time
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 from novaclient.openstack.common.apiclient import exceptions as novaexc
 from os_cloud_config.cmd.utils import _clients as clients
+import six
 
 LOG = logging.getLogger(__name__)
 
@@ -40,8 +41,10 @@ def register_nova_bm_node(service_host, node, client=None, blocking=True):
         LOG.debug('Registering %s node with nova-baremetal, try #%d.' %
                   (node["pm_addr"], count))
         try:
-            bm_node = client.baremetal.create(service_host, node["cpu"],
-                                              node["memory"], node["disk"],
+            bm_node = client.baremetal.create(service_host,
+                                              six.text_type(node["cpu"]),
+                                              six.text_type(node["memory"]),
+                                              six.text_type(node["disk"]),
                                               node["mac"][0], **kwargs)
             break
         except (novaexc.ConnectionRefused, novaexc.ServiceUnavailable):
@@ -62,9 +65,9 @@ def register_nova_bm_node(service_host, node, client=None, blocking=True):
 
 
 def register_ironic_node(service_host, node, client=None, blocking=True):
-    properties = {"cpus": node["cpu"],
-                  "memory_mb": node["memory"],
-                  "local_gb": node["disk"],
+    properties = {"cpus": six.text_type(node["cpu"]),
+                  "memory_mb": six.text_type(node["memory"]),
+                  "local_gb": six.text_type(node["disk"]),
                   "cpu_arch": node["arch"]}
     if "ipmi" in node["pm_type"]:
         driver_info = {"ipmi_address": node["pm_addr"],
@@ -196,7 +199,8 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
             ironic_node.uuid))
         node_patch = []
         for key, value in massage_map.items():
-            node_patch.append({'path': value, 'value': node[key],
+            node_patch.append({'path': value,
+                               'value': six.text_type(node[key]),
                                'op': 'replace'})
         for count in range(2):
             try:
