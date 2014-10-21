@@ -108,6 +108,20 @@ class NodesTest(base.TestCase):
         node["pm_password"] = ""
         self.assert_nova_bm_call_with_no_pm_password(node)
 
+    def test_register_nova_bm_node_int_values(self):
+        node = self._get_node()
+        node['cpu'] = 1
+        node['memory'] = 2048
+        node['disk'] = 30
+        client = mock.MagicMock()
+        nodes.register_nova_bm_node('service_host', node, client=client)
+        client.baremetal.create.assert_called_once_with('service_host', '1',
+                                                        '2048', '30',
+                                                        node["mac"][0],
+                                                        pm_password='random',
+                                                        pm_address='foo.bar',
+                                                        pm_user='test')
+
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
     def test_register_all_nodes_ironic(self, using_ironic):
         node_list = [self._get_node(), self._get_node(),
@@ -219,6 +233,47 @@ class NodesTest(base.TestCase):
         self.assertRaises(ironicexp.Conflict,
                           nodes._update_or_register_ironic_node, None, node,
                           node_map, client=ironic)
+
+    def test_register_ironic_node_int_values(self):
+        node_properties = {"cpus": "1",
+                           "memory_mb": "2048",
+                           "local_gb": "30",
+                           "cpu_arch": "amd64"}
+        node = self._get_node()
+        node['cpu'] = 1
+        node['memory'] = 2048
+        node['disk'] = 30
+        client = mock.MagicMock()
+        nodes.register_ironic_node('service_host', node, client=client)
+        client.node.create.assert_called_once_with(driver=mock.ANY,
+                                                   properties=node_properties,
+                                                   driver_info=mock.ANY)
+
+    def test_register_ironic_node_update_int_values(self):
+        node = self._get_node()
+        ironic = mock.MagicMock()
+        node['cpu'] = 1
+        node['memory'] = 2048
+        node['disk'] = 30
+        node_map = {'mac': {'aaa': 1}}
+
+        def side_effect(*args, **kwargs):
+            update_patch = [
+                {'path': '/driver_info/ssh_key_contents', 'value': 'random'},
+                {'path': '/driver_info/ssh_address', 'value': 'foo.bar'},
+                {'path': '/properties/memory_mb', 'value': '2048'},
+                {'path': '/properties/local_gb', 'value': '30'},
+                {'path': '/properties/cpu_arch', 'value': 'amd64'},
+                {'path': '/properties/cpus', 'value': '1'},
+                {'path': '/driver_info/ssh_username', 'value': 'test'}]
+            for key in update_patch:
+                key['op'] = 'replace'
+            self.assertThat(update_patch,
+                            matchers.MatchesSetwise(*(map(matchers.Equals,
+                            args[1]))))
+        ironic.node.update.side_effect = side_effect
+        nodes._update_or_register_ironic_node(None, node, node_map,
+                                              client=ironic)
 
     def test_populate_node_mapping_nova_bm(self):
         client = mock.MagicMock()
