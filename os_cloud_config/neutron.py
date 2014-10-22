@@ -118,6 +118,8 @@ def _create_subnet(neutron, net, network_desc, network_type, admin_tenant):
         subnet['dns_nameservers'] = [network_desc[network_type]['nameserver']]
     elif network_type == 'float':
         subnet['dns_nameservers'] = ['8.8.8.8']
+    if 'enable_dhcp' in network_desc[network_type]:
+        subnet['enable_dhcp'] = network_desc[network_type]['enable_dhcp']
     if (network_desc[network_type].get('allocation_start') and
         network_desc[network_type].get('allocation_end')):
         allocation_start = network_desc[network_type]['allocation_start']
