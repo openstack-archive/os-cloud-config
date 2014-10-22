@@ -76,14 +76,14 @@ class NeutronTest(base.TestCase):
                                 'cidr': '10.0.0.0/24',
                                 'metadata_server': '10.0.0.1'}}
         neutron._create_subnet(client, net, network, 'physical',
-                               'admin_tetant')
+                               'admin_tenant')
         host_routes = [{'nexthop': '10.0.0.1',
                         'destination': '169.254.169.254/32'}]
         physical_call = {'subnet': {'ip_version': 4,
                                     'network_id': 'abcd',
                                     'cidr': '10.0.0.0/24',
                                     'host_routes': host_routes,
-                                    'tenant_id': 'admin_tetant'}}
+                                    'tenant_id': 'admin_tenant'}}
         client.create_subnet.assert_called_once_with(physical_call)
 
     def test_create_subnet_float(self):
@@ -152,6 +152,24 @@ class NeutronTest(base.TestCase):
                                  'cidr': '172.16.5.0/24',
                                  'dns_nameservers': ['172.16.5.254']}}
         client.create_subnet.assert_called_once_with(float_call)
+
+    def test_create_subnet_with_vlan(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        network = {'physical': {'name': 'ctlplane',
+                                'cidr': '10.0.0.0/24',
+                                'metadata_server': '10.0.0.1',
+                                'segmentation_id': '123'}}
+        neutron._create_subnet(client, net, network, 'physical', 'tenant')
+        host_routes = [{'nexthop': '10.0.0.1',
+                        'destination': '169.254.169.254/32'}]
+        physical_call = {'subnet': {'ip_version': 4,
+                                    'enable_dhcp': False,
+                                    'network_id': 'abcd',
+                                    'cidr': '10.0.0.0/24',
+                                    'host_routes': host_routes,
+                                    'tenant_id': 'tenant'}}
+        client.create_subnet.assert_called_once_with(physical_call)
 
     @mock.patch('os_cloud_config.cmd.utils._clients.get_neutron_client')
     @mock.patch('os_cloud_config.cmd.utils._clients.get_keystone_client')

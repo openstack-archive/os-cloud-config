@@ -118,6 +118,9 @@ def _create_subnet(neutron, net, network_desc, network_type, admin_tenant):
         subnet['dns_nameservers'] = [network_desc[network_type]['nameserver']]
     elif network_type == 'float':
         subnet['dns_nameservers'] = ['8.8.8.8']
+    # We don't want DHCP on vlan subnets.
+    if network_desc[network_type].get('segmentation_id'):
+        subnet['enable_dhcp'] = False
     if (network_desc[network_type].get('allocation_start') and
         network_desc[network_type].get('allocation_end')):
         allocation_start = network_desc[network_type]['allocation_start']
