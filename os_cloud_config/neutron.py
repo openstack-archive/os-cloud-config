@@ -114,6 +114,11 @@ def _create_subnet(neutron, net, network_desc, network_type, admin_tenant):
         subnet['enable_dhcp'] = False
     if network_desc[network_type].get('gateway'):
         subnet['gateway_ip'] = network_desc[network_type]['gateway']
+    if network_desc[network_type].get('extra_routes'):
+        routes = network_desc[network_type]['extra_routes']
+        if 'host_routes' not in subnet:
+            subnet['host_routes'] = []
+        subnet['host_routes'].extend(routes)
     if network_desc[network_type].get('nameserver'):
         subnet['dns_nameservers'] = [network_desc[network_type]['nameserver']]
     elif network_type == 'float':

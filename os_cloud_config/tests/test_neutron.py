@@ -140,6 +140,40 @@ class NeutronTest(base.TestCase):
                                                        'end': '172.16.5.40'}]}}
         client.create_subnet.assert_called_once_with(float_call)
 
+    def test_create_physical_subnet_with_extra_routes(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        routes = [{'destination': '2.3.4.0/24', 'nexthop': '172.16.6.253'}]
+        network = {'physical': {'name': 'ctlplane',
+                                'cidr': '10.0.0.0/24',
+                                'metadata_server': '10.0.0.1',
+                                'extra_routes': routes}}
+        neutron._create_subnet(client, net, network, 'physical',
+                               'admin_tenant')
+        host_routes = [{'nexthop': '10.0.0.1',
+                        'destination': '169.254.169.254/32'}] + routes
+        physical_call = {'subnet': {'ip_version': 4,
+                                    'network_id': 'abcd',
+                                    'cidr': '10.0.0.0/24',
+                                    'host_routes': host_routes,
+                                    'tenant_id': 'admin_tenant'}}
+        client.create_subnet.assert_called_once_with(physical_call)
+
+    def test_create_float_subnet_with_extra_routes(self):
+        client = mock.MagicMock()
+        net = {'network': {'id': 'abcd'}}
+        routes = [{'destination': '2.3.4.0/24', 'nexthop': '172.16.6.253'}]
+        network = {'float': {'name': 'default-net',
+                             'cidr': '172.16.6.0/24',
+                             'extra_routes': routes}}
+        neutron._create_subnet(client, net, network, 'float', None)
+        float_call = {'subnet': {'ip_version': 4,
+                                 'network_id': 'abcd',
+                                 'cidr': '172.16.6.0/24',
+                                 'dns_nameservers': ['8.8.8.8'],
+                                 'host_routes': routes}}
+        client.create_subnet.assert_called_once_with(float_call)
+
     def test_create_subnet_with_nameserver(self):
         client = mock.MagicMock()
         net = {'network': {'id': 'abcd'}}
