@@ -93,6 +93,8 @@ def _try_ironic_node_registration(node, driver_info, client, blocking):
                   "memory_mb": six.text_type(node["memory"]),
                   "local_gb": six.text_type(node["disk"]),
                   "cpu_arch": node["arch"]}
+    if "capabilities" in node:
+        properties["capabilities"] = node["capabilities"]
 
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
