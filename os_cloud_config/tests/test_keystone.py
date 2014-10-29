@@ -27,10 +27,10 @@ class KeystoneTest(base.TestCase):
             'keystone', 'identity', description='Keystone Identity Service')
         if public_endpoint is None:
             public_endpoint = 'http://%s:5000/v2.0' % host
+        admin_endpoint = public_endpoint.replace(':5000', ':35357')
         self.client.endpoints.create.assert_called_once_with(
             region, self.client.services.create.return_value.id,
-            public_endpoint, 'http://%s:35357/v2.0' % host,
-            'http://192.0.0.3:5000/v2.0')
+            public_endpoint, admin_endpoint, public_endpoint)
 
     def assert_calls_in_create_user(self):
         self.client.tenants.find.assert_called_once_with(name='admin')
@@ -190,7 +190,7 @@ class KeystoneTest(base.TestCase):
         keystone._create_keystone_endpoint(
             self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
             None)
-        public_endpoint = 'https://keystone.example.com:13000/v2.0'
+        public_endpoint = 'https://keystone.example.com:5000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
 
     def test_create_keystone_endpoint_public(self):
@@ -213,7 +213,7 @@ class KeystoneTest(base.TestCase):
         keystone._create_keystone_endpoint(
             self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
             'keystone.internal')
-        public_endpoint = 'https://keystone.example.com:13000/v2.0'
+        public_endpoint = 'https://keystone.example.com:5000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
 
     def test_create_keystone_endpoint_region(self):
@@ -273,8 +273,8 @@ class KeystoneTest(base.TestCase):
             'region',
             self.client.services.create.return_value.id,
             'https://192.0.0.4:1234/v2/$(tenant_id)s',
-            'http://192.0.0.3:8774/v2/$(tenant_id)s',
-            'http://192.0.0.3:8774/v2/$(tenant_id)s')
+            'https://192.0.0.3:1234/v2/$(tenant_id)s',
+            'https://192.0.0.3:1234/v2/$(tenant_id)s')
 
     def test_idempotent_register_endpoint(self):
         self.client = mock.MagicMock()
