@@ -309,17 +309,18 @@ def _register_endpoint(keystone, service, data, region=None):
     """
     path = data.get('path', '/')
     internal_host = data.get('internal_host')
-    port = data.get('port')
-    internal_uri = 'http://{host}:{port}{path}'.format(
-        host=internal_host, port=port, path=path)
-
+    public_port = data.get('ssl_port', data.get('port'))
     public_host = data.get('public_host')
     if public_host:
-        public_port = data.get('ssl_port', port)
         public_protocol = 'https'
     else:
         public_protocol = 'http'
-        public_port = port
+
+    internal_uri = '{protocol}://{host}:{port}{path}'.format(
+        protocol=public_protocol,
+        host=internal_host,
+        port=public_port,
+        path=path)
 
     public_uri = '{protocol}://{host}:{port}{path}'.format(
         protocol=public_protocol,
@@ -327,9 +328,10 @@ def _register_endpoint(keystone, service, data, region=None):
         port=public_port,
         path=path)
 
-    admin_uri = 'http://{host}:{port}{path}'.format(
+    admin_uri = '{protocol}://{host}:{port}{path}'.format(
+        protocol=public_protocol,
         host=internal_host,
-        port=data.get('admin_port', port),
+        port=data.get('admin_port', public_port),
         path=data.get('admin_path', path))
 
     name = data.get('name', service)
@@ -375,6 +377,19 @@ def _create_user_for_service(keystone, name, password):
             keystone.roles.add_user_role(user, admin_role, admin_tenant)
 
 
+def _keystone_url(ssl_host, public_host, port):
+    """Get the keystone url.
+    :param ssl_host: ip/hostname of the ssl endpoint, if required
+    :param public_host: ip/hostname of the node where keystone is running
+    :param port: port where keystone is running
+    """
+    protocol = 'https' if ssl_host else 'http'
+    return "{protocol}://{host}:{port}/v2.0".format(
+        protocol=protocol,
+        host=ssl_host or public_host,
+        port=port)
+
+
 def _create_admin_client(host, admin_token, ssl=None, public=None):
     """Create Keystone v2 client for admin endpoint.
 
@@ -384,11 +399,7 @@ def _create_admin_client(host, admin_token, ssl=None, public=None):
     :param public: ip/hostname to use as the public endpoint, if default is
         not suitable
     """
-    admin_url = 'http://%s:35357/v2.0' % host
-    if ssl:
-        admin_url = 'https://%s:35357/v2.0' % ssl
-    elif public:
-        admin_url = 'http://%s:35357/v2.0' % public
+    admin_url = _keystone_url(ssl_host=ssl, public_host=host, port=35357)
     return ksclient.Client(endpoint=admin_url, token=admin_token)
 
 
@@ -433,14 +444,15 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public):
     LOG.debug('Create keystone public endpoint')
     service = _create_service(keystone, 'keystone', 'identity',
                               description='Keystone Identity Service')
-    public_url = 'http://%s:5000/v2.0' % host
-    if ssl:
-        public_url = 'https://%s:13000/v2.0' % ssl
-    elif public:
-        public_url = 'http://%s:5000/v2.0' % public
-    _create_endpoint(keystone, region, service.id, public_url,
-                     'http://%s:35357/v2.0' % host,
-                     'http://%s:5000/v2.0' % host)
+    public_url = _keystone_url(ssl_host=ssl, public_host=public or host,
+                               port=5000)
+    internal_url = _keystone_url(ssl_host=ssl, public_host=public or host,
+                                 port=5000)
+    admin_url = _keystone_url(ssl_host=ssl, public_host=public or host,
+                              port=35357)
+
+    _create_endpoint(keystone, region, service.id, public_url, admin_url,
+                     internal_url)
 
 
 def _perform_pki_initialization(host, user):
