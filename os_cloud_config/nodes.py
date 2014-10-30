@@ -64,22 +64,16 @@ def register_nova_bm_node(service_host, node, client=None, blocking=True):
     return bm_node
 
 
-def register_ironic_node(service_host, node, client=None, blocking=True):
-    properties = {"cpus": six.text_type(node["cpu"]),
-                  "memory_mb": six.text_type(node["memory"]),
-                  "local_gb": six.text_type(node["disk"]),
-                  "cpu_arch": node["arch"]}
+def _get_ironic_driver_info(node):
     if "ipmi" in node["pm_type"]:
-        driver_info = {"ipmi_address": node["pm_addr"],
-                       "ipmi_username": node["pm_user"],
-                       "ipmi_password": node["pm_password"]}
+        return {"ipmi_address": node["pm_addr"],
+                "ipmi_username": node["pm_user"],
+                "ipmi_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_ssh":
-        if "pm_virt_type" not in node:
-            node["pm_virt_type"] = "virsh"
-        driver_info = {"ssh_address": node["pm_addr"],
-                       "ssh_username": node["pm_user"],
-                       "ssh_key_contents": node["pm_password"],
-                       "ssh_virt_type": node["pm_virt_type"]}
+        return {"ssh_address": node["pm_addr"],
+                "ssh_username": node["pm_user"],
+                "ssh_key_contents": node["pm_password"],
+                "ssh_virt_type": node["pm_virt_type"]}
     elif node["pm_type"] == "pxe_iboot":
         driver_info = {"iboot_address": node["pm_addr"],
                        "iboot_username": node["pm_user"],
@@ -89,8 +83,16 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
             driver_info["iboot_relay_id"] = node["pm_relay_id"]
         if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
+        return driver_info
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
+
+
+def _try_ironic_node_registration(node, driver_info, client, blocking):
+    properties = {"cpus": six.text_type(node["cpu"]),
+                  "memory_mb": six.text_type(node["memory"]),
+                  "local_gb": six.text_type(node["disk"]),
+                  "cpu_arch": node["arch"]}
 
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
@@ -99,7 +101,7 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
             ironic_node = client.node.create(driver=node["pm_type"],
                                              driver_info=driver_info,
                                              properties=properties)
-            break
+            return ironic_node
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
             if blocking:
                 LOG.debug('Service not available, sleeping for 10 seconds.')
@@ -113,15 +115,31 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
             LOG.debug('Service unavailable after 60 tries, giving up.')
         raise ironicexp.ServiceUnavailable()
 
+
+def _register_ironic_node_macs(node, ironic_node, client):
+    # Ironic should do this directly, see bug 1315225.
     for mac in node["mac"]:
         client.port.create(address=mac, node_uuid=ironic_node.uuid)
-    # Ironic should do this directly, see bug 1315225.
+
+
+def register_ironic_node(service_host, node, client=None, blocking=True):
+
+    if node["pm_type"] == "pxe_ssh" and "pm_virt_type" not in node:
+            node["pm_virt_type"] = "virsh"
+    driver_info = _get_ironic_driver_info(node)
+
+    ironic_node = _try_ironic_node_registration(node, driver_info,
+                                                client, blocking)
+
+    _register_ironic_node_macs(node, ironic_node, client)
+
     try:
         client.node.set_power_state(ironic_node.uuid, 'off')
     except ironicexp.Conflict:
         # Conflict means the Ironic conductor got there first, so we can
         # ignore the exception.
         pass
+
     return ironic_node
 
 
