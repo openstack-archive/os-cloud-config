@@ -63,23 +63,16 @@ def register_nova_bm_node(service_host, node, client=None, blocking=True):
         client.baremetal.add_interface(bm_node, mac)
     return bm_node
 
-
-def register_ironic_node(service_host, node, client=None, blocking=True):
-    properties = {"cpus": six.text_type(node["cpu"]),
-                  "memory_mb": six.text_type(node["memory"]),
-                  "local_gb": six.text_type(node["disk"]),
-                  "cpu_arch": node["arch"]}
+def _get_ironic_driver_info(node):
     if "ipmi" in node["pm_type"]:
-        driver_info = {"ipmi_address": node["pm_addr"],
-                       "ipmi_username": node["pm_user"],
-                       "ipmi_password": node["pm_password"]}
+        return {"ipmi_address": node["pm_addr"],
+                "ipmi_username": node["pm_user"],
+                "ipmi_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_ssh":
-        if "pm_virt_type" not in node:
-            node["pm_virt_type"] = "virsh"
-        driver_info = {"ssh_address": node["pm_addr"],
-                       "ssh_username": node["pm_user"],
-                       "ssh_key_contents": node["pm_password"],
-                       "ssh_virt_type": node["pm_virt_type"]}
+        return {"ssh_address": node["pm_addr"],
+                "ssh_username": node["pm_user"],
+                "ssh_key_contents": node["pm_password"],
+                "ssh_virt_type": node["pm_virt_type"]}
     elif node["pm_type"] == "pxe_iboot":
         driver_info = {"iboot_address": node["pm_addr"],
                        "iboot_username": node["pm_user"],
@@ -89,8 +82,19 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
             driver_info["iboot_relay_id"] = node["pm_relay_id"]
         if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
+        return driver_info
     else:
         raise Exception("Unknown pm_type: %s" % node["pm_type"])
+
+def register_ironic_node(service_host, node, client=None, blocking=True):
+    properties = {"cpus": six.text_type(node["cpu"]),
+                  "memory_mb": six.text_type(node["memory"]),
+                  "local_gb": six.text_type(node["disk"]),
+                  "cpu_arch": node["arch"]}
+
+    if node["pm_type"] == "pxe_ssh" and "pm_virt_type" not in node:
+            node["pm_virt_type"] = "virsh"
+    driver_info = _get_ironic_driver_info(node)
 
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
