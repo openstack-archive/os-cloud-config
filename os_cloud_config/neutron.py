@@ -75,8 +75,9 @@ def _create_net(neutron, network_desc, network_type, admin_tenant):
     :param admin_tenant: The admin tenant id in Keystone.
     """
     LOG.debug("Creating %s network." % network_type)
+    type_desc = network_desc[network_type]
     network = {'admin_state_up': True,
-               'name': network_desc[network_type]['name']}
+               'name': type_desc['name']}
     if network_type == 'physical':
         network.update({'tenant_id': admin_tenant,
                         'provider:network_type': 'flat',
@@ -85,8 +86,8 @@ def _create_net(neutron, network_desc, network_type, admin_tenant):
         network['shared'] = True
     elif network_type == 'external':
         network['router:external'] = True
-    if network_desc[network_type].get('segmentation_id'):
-        vlan_tag = network_desc[network_type]['segmentation_id']
+    if type_desc.get('segmentation_id'):
+        vlan_tag = type_desc['segmentation_id']
         network.update({'provider:network_type': 'vlan',
                         'provider:segmentation_id': vlan_tag,
                         'provider:physical_network': 'datacentre'})
@@ -101,7 +102,8 @@ def _create_subnet(neutron, net, network_desc, network_type, admin_tenant):
     :param network_type: The type of network to create.
     :param admin_tenant: The admin tenant id in Keystone.
     """
-    cidr = network_desc[network_type]['cidr']
+    type_desc = network_desc[network_type]
+    cidr = type_desc['cidr']
     LOG.debug("Creating %s subnet, with CIDR %s." % (network_type, cidr))
     subnet = {'ip_version': 4, 'network_id': net['network']['id'],
               'cidr': cidr}
@@ -112,23 +114,23 @@ def _create_subnet(neutron, net, network_desc, network_type, admin_tenant):
                                        'nexthop': metadata}]})
     elif network_type == 'external':
         subnet['enable_dhcp'] = False
-    if network_desc[network_type].get('gateway'):
-        subnet['gateway_ip'] = network_desc[network_type]['gateway']
-    if network_desc[network_type].get('extra_routes'):
-        routes = network_desc[network_type]['extra_routes']
+    if type_desc.get('gateway'):
+        subnet['gateway_ip'] = type_desc['gateway']
+    if type_desc.get('extra_routes'):
+        routes = type_desc['extra_routes']
         if 'host_routes' not in subnet:
             subnet['host_routes'] = []
         subnet['host_routes'].extend(routes)
-    if network_desc[network_type].get('nameserver'):
-        subnet['dns_nameservers'] = [network_desc[network_type]['nameserver']]
+    if type_desc.get('nameserver'):
+        subnet['dns_nameservers'] = [type_desc['nameserver']]
     elif network_type == 'float':
         subnet['dns_nameservers'] = ['8.8.8.8']
-    if 'enable_dhcp' in network_desc[network_type]:
-        subnet['enable_dhcp'] = network_desc[network_type]['enable_dhcp']
-    if (network_desc[network_type].get('allocation_start') and
-        network_desc[network_type].get('allocation_end')):
-        allocation_start = network_desc[network_type]['allocation_start']
-        allocation_end = network_desc[network_type]['allocation_end']
+    if 'enable_dhcp' in type_desc:
+        subnet['enable_dhcp'] = type_desc['enable_dhcp']
+    if (type_desc.get('allocation_start') and
+            type_desc.get('allocation_end')):
+        allocation_start = type_desc['allocation_start']
+        allocation_end = type_desc['allocation_end']
         subnet['allocation_pools'] = [{'start': allocation_start,
                                        'end': allocation_end}]
     return neutron.create_subnet({'subnet': subnet})
