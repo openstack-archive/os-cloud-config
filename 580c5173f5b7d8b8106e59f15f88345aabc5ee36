@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Workflow+1: Ladislav Smola <lsmola@redhat.com>
+Code-Review+2: greghaynes <greg@greghaynes.net>
+Submitted-by: Jenkins
+Submitted-at: Fri, 31 Oct 2014 14:06:11 +0000
+Reviewed-on: https://review.openstack.org/126456
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
