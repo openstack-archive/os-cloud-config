@@ -29,7 +29,8 @@ class ClientsTest(base.TestCase):
             1, os_username='username',
             os_password='password',
             os_auth_url='auth_url',
-            os_tenant_name='tenant_name')
+            os_tenant_name='tenant_name',
+            ca_file=None)
 
     @mock.patch('novaclient.v1_1.client.Client')
     def test_get_nova_bm_client(self, client_mock):
@@ -39,6 +40,7 @@ class ClientsTest(base.TestCase):
                                             'password',
                                             'tenant_name',
                                             'auth_url',
+                                            cacert=None,
                                             extensions=[mock.ANY])
 
     @mock.patch('keystoneclient.v2_0.client.Client')
@@ -49,7 +51,8 @@ class ClientsTest(base.TestCase):
             username='username',
             password='password',
             auth_url='auth_url',
-            tenant_name='tenant_name')
+            tenant_name='tenant_name',
+            cacert=None)
 
     @mock.patch('neutronclient.neutron.client.Client')
     def test_get_client(self, client_mock):
@@ -59,4 +62,5 @@ class ClientsTest(base.TestCase):
             '2.0', username='username',
             password='password',
             auth_url='auth_url',
-            tenant_name='tenant_name')
+            tenant_name='tenant_name',
+            ca_cert=None)

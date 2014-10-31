@@ -25,40 +25,56 @@ from novaclient.v1_1.contrib import baremetal
 LOG = logging.getLogger(__name__)
 
 
-def get_nova_bm_client(username, password, tenant_name, auth_url):
+def get_nova_bm_client(username, password, tenant_name, auth_url, cacert=None):
     LOG.debug('Creating nova client.')
     baremetal_extension = Extension('baremetal', baremetal)
     return novav11client.Client(username,
                                 password,
                                 tenant_name,
                                 auth_url,
-                                extensions=[baremetal_extension])
+                                extensions=[baremetal_extension],
+                                cacert=cacert)
 
 
-def get_ironic_client(username, password, tenant_name, auth_url):
+def get_ironic_client(username, password, tenant_name, auth_url, cacert=None):
     LOG.debug('Creating ironic client.')
     kwargs = {'os_username': username,
               'os_password': password,
               'os_auth_url': auth_url,
-              'os_tenant_name': tenant_name}
+              'os_tenant_name': tenant_name,
+              'ca_file': cacert}
+
     return ironicclient.get_client(1, **kwargs)
 
 
-def get_keystone_client(username, password, tenant_name, auth_url):
+def get_keystone_client(username,
+                        password,
+                        tenant_name,
+                        auth_url,
+                        cacert=None):
+
     LOG.debug('Creating keystone client.')
     kwargs = {'username': username,
               'password': password,
               'tenant_name': tenant_name,
-              'auth_url': auth_url}
+              'auth_url': auth_url,
+              'cacert': cacert}
+
     return ksclient.Client(**kwargs)
 
 
-def get_neutron_client(username, password, tenant_name, auth_url):
+def get_neutron_client(username,
+                       password,
+                       tenant_name,
+                       auth_url,
+                       cacert=None):
     LOG.debug('Creating neutron client.')
     kwargs = {'username': username,
               'password': password,
               'tenant_name': tenant_name,
-              'auth_url': auth_url}
+              'auth_url': auth_url,
+              'ca_cert': cacert}
+
     neutron = neutronclient.Client('2.0', **kwargs)
     neutron.format = 'json'
     return neutron

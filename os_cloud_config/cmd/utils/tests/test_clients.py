@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import mock
-
 from os_cloud_config.cmd.utils import _clients as clients
 from os_cloud_config.tests import base
 
@@ -29,7 +28,8 @@ class CMDClientsTest(base.TestCase):
             1, os_username=environ["OS_USERNAME"],
             os_password=environ["OS_PASSWORD"],
             os_auth_url=environ["OS_AUTH_URL"],
-            os_tenant_name=environ["OS_TENANT_NAME"])
+            os_tenant_name=environ["OS_TENANT_NAME"],
+            ca_file=environ.get("OS_CACERT"))
 
     @mock.patch('os.environ')
     @mock.patch('novaclient.v1_1.client.Client')
@@ -39,6 +39,7 @@ class CMDClientsTest(base.TestCase):
                                             environ["OS_PASSWORD"],
                                             environ["OS_AUTH_URL"],
                                             environ["OS_TENANT_NAME"],
+                                            cacert=environ.get("OS_CACERT"),
                                             extensions=[mock.ANY])
 
     @mock.patch('os.environ')
@@ -49,7 +50,8 @@ class CMDClientsTest(base.TestCase):
             username=environ["OS_USERNAME"],
             password=environ["OS_PASSWORD"],
             auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
+            tenant_name=environ["OS_TENANT_NAME"],
+            cacert=environ.get("OS_CACERT"))
 
     @mock.patch('os.environ')
     @mock.patch('neutronclient.neutron.client.Client')
@@ -59,4 +61,5 @@ class CMDClientsTest(base.TestCase):
             '2.0', username=environ["OS_USERNAME"],
             password=environ["OS_PASSWORD"],
             auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
+            tenant_name=environ["OS_TENANT_NAME"],
+            ca_cert=environ.get("OS_CACERT"))
