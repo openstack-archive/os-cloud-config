@@ -21,6 +21,16 @@ from os_cloud_config.tests import base
 
 class CMDClientsTest(base.TestCase):
 
+    @mock.patch.dict('os.environ', {'OS_USERNAME': 'username',
+                                    'OS_PASSWORD': 'password',
+                                    'OS_TENANT_NAME': 'tenant',
+                                    'OS_AUTH_URL': 'auth_url',
+                                    'OS_CACERT': 'cacert'})
+    def test___get_client_args(self):
+        result = clients._get_client_args()
+        expected = ("username", "password", "tenant", "auth_url", "cacert")
+        self.assertEqual(result, expected)
+
     @mock.patch('os.environ')
     @mock.patch('ironicclient.client.get_client')
     def test_get_ironic_client(self, client_mock, environ):
@@ -29,7 +39,8 @@ class CMDClientsTest(base.TestCase):
             1, os_username=environ["OS_USERNAME"],
             os_password=environ["OS_PASSWORD"],
             os_auth_url=environ["OS_AUTH_URL"],
-            os_tenant_name=environ["OS_TENANT_NAME"])
+            os_tenant_name=environ["OS_TENANT_NAME"],
+            ca_file=environ.get("OS_CACERT"))
 
     @mock.patch('os.environ')
     @mock.patch('novaclient.v1_1.client.Client')
@@ -39,6 +50,7 @@ class CMDClientsTest(base.TestCase):
                                             environ["OS_PASSWORD"],
                                             environ["OS_AUTH_URL"],
                                             environ["OS_TENANT_NAME"],
+                                            cacert=environ.get("OS_CACERT"),
                                             extensions=[mock.ANY])
 
     @mock.patch('os.environ')
@@ -49,7 +61,8 @@ class CMDClientsTest(base.TestCase):
             username=environ["OS_USERNAME"],
             password=environ["OS_PASSWORD"],
             auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
+            tenant_name=environ["OS_TENANT_NAME"],
+            cacert=environ.get("OS_CACERT"))
 
     @mock.patch('os.environ')
     @mock.patch('neutronclient.neutron.client.Client')
@@ -59,4 +72,5 @@ class CMDClientsTest(base.TestCase):
             '2.0', username=environ["OS_USERNAME"],
             password=environ["OS_PASSWORD"],
             auth_url=environ["OS_AUTH_URL"],
-            tenant_name=environ["OS_TENANT_NAME"])
+            tenant_name=environ["OS_TENANT_NAME"],
+            ca_cert=environ.get("OS_CACERT"))
