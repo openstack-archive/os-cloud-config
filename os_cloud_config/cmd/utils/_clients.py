@@ -19,36 +19,29 @@ from os_cloud_config.utils import clients
 LOG = logging.getLogger(__name__)
 
 
+def _get_client_args():
+    return (os.environ["OS_USERNAME"],
+            os.environ["OS_PASSWORD"],
+            os.environ["OS_TENANT_NAME"],
+            os.environ["OS_AUTH_URL"],
+            os.environ.get("OS_CACERT"))
+
+
 def get_nova_bm_client():
-    return clients.get_nova_bm_client(os.environ["OS_USERNAME"],
-                                      os.environ["OS_PASSWORD"],
-                                      os.environ["OS_TENANT_NAME"],
-                                      os.environ["OS_AUTH_URL"])
+    return clients.get_nova_bm_client(*_get_client_args())
 
 
 def get_ironic_client():
-    return clients.get_ironic_client(os.environ["OS_USERNAME"],
-                                     os.environ["OS_PASSWORD"],
-                                     os.environ["OS_TENANT_NAME"],
-                                     os.environ["OS_AUTH_URL"])
+    return clients.get_ironic_client(*_get_client_args())
 
 
 def get_keystone_client():
-    return clients.get_keystone_client(os.environ["OS_USERNAME"],
-                                       os.environ["OS_PASSWORD"],
-                                       os.environ["OS_TENANT_NAME"],
-                                       os.environ["OS_AUTH_URL"])
+    return clients.get_keystone_client(*_get_client_args())
 
 
 def get_keystone_v3_client():
-    return clients.get_keystone_v3_client(os.environ["OS_USERNAME"],
-                                          os.environ["OS_PASSWORD"],
-                                          os.environ["OS_TENANT_NAME"],
-                                          os.environ["OS_AUTH_URL"])
+    return clients.get_keystone_v3_client(*_get_client_args())
 
 
 def get_neutron_client():
-    return clients.get_neutron_client(os.environ["OS_USERNAME"],
-                                      os.environ["OS_PASSWORD"],
-                                      os.environ["OS_TENANT_NAME"],
-                                      os.environ["OS_AUTH_URL"])
+    return clients.get_neutron_client(*_get_client_args())
