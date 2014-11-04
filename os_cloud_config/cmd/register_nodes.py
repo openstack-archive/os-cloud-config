@@ -71,7 +71,7 @@ def main():
 
         nodes.register_all_nodes(
             args.service_host, nodes_list, client=client, remove=args.remove,
-            blocking=True)
+            blocking=True, keystone_client=keystone_client)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1

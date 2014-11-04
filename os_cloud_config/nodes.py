@@ -231,9 +231,9 @@ def _clean_up_extra_nodes(ironic_in_use, seen, client, remove=False):
 
 
 def register_all_nodes(service_host, nodes_list, client=None, remove=False,
-                       blocking=True):
+                       blocking=True, keystone_client=None):
     LOG.debug('Registering all nodes.')
-    ironic_in_use = using_ironic(keystone=None)
+    ironic_in_use = using_ironic(keystone=keystone_client)
     if ironic_in_use:
         if client is None:
             LOG.warn('Creating ironic client inline is deprecated, please '

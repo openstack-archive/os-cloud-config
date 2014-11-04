@@ -168,6 +168,7 @@ class NodesTest(base.TestCase):
         pxe_vbox_node = mock.call(driver="pxe_ssh",
                                   driver_info=pxe_node_driver_info_vbox,
                                   properties=node_properties)
+        using_ironic.assert_called_once_with(keystone=None)
         ironic.node.create.assert_has_calls([pxe_node, mock.ANY,
                                              ipmi_node, mock.ANY,
                                              iboot_node, mock.ANY,
