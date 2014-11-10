@@ -378,6 +378,12 @@ def _create_user_for_service(keystone, name, password):
             admin_tenant = keystone.tenants.find(name='admin')
             keystone.roles.add_user_role(user, admin_role, admin_tenant)
 
+            # Swift polling requires ResellerAdmin role to be added to the
+            # Ceilometer user
+            reseller_admin_role = keystone.roles.find(name='ResellerAdmin')
+            keystone.roles.add_user_role(
+                user, reseller_admin_role, admin_tenant)
+
 
 def _create_admin_client(host, admin_token, ssl=None, public=None):
     """Create Keystone v2 client for admin endpoint.
