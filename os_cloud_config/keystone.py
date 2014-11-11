@@ -471,6 +471,7 @@ def _create_admin_user(keystone, admin_email, admin_password):
     """
     admin_tenant = keystone.tenants.find(name='admin')
     admin_role = keystone.roles.find(name='admin')
+    default_domain = keystone.domains.find(name='default')
 
     try:
         admin_user = keystone.users.find(name='admin')
@@ -480,8 +481,19 @@ def _create_admin_user(keystone, admin_email, admin_password):
         admin_user = keystone.users.create('admin', email=admin_email,
                                            password=admin_password,
                                            tenant_id=admin_tenant.id)
-    if admin_role in keystone.roles.roles_for_user(admin_user, admin_tenant):
+
+    if admin_role in keystone.roles.list(user=admin_user,
+                                         project=admin_tenant):
         LOG.debug('Admin user is already granted admin role with admin tenant')
     else:
         LOG.debug('Granting admin role to admin user on admin tenant.')
-        keystone.roles.add_user_role(admin_user, admin_role, admin_tenant)
+        keystone.roles.grant(admin_role, user=admin_user, project=admin_tenant)
+
+    if admin_role in keystone.roles.list(user=admin_user,
+                                         domain=default_domain):
+        LOG.debug('Admin user is already granted admin role with default '
+                  'domain')
+    else:
+        LOG.debug('Granting admin role to admin user on default domain.')
+        keystone.roles.grant(admin_role, user=admin_user,
+                             domain=default_domain)

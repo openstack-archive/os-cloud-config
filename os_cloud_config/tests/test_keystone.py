@@ -36,7 +36,6 @@ class KeystoneTest(base.TestCase):
         self.client.tenants.find.assert_called_once_with(name='admin')
         self.client.roles.find.assert_called_once_with(name='admin')
         self.client.users.find.assert_called_once_with(name='admin')
-        self.client.roles.roles_for_user.assert_called_once()
 
     @mock.patch('subprocess.check_call')
     def test_initialize(self, check_call_mock):
@@ -345,20 +344,24 @@ class KeystoneTest(base.TestCase):
 
     def test_create_admin_user_role_assigned(self):
         self._patch_client()
-        self.client.roles.roles_for_user.return_value = [self.client.roles
-                                                         .find.return_value]
+        self.client.roles.list.return_value = [self.client.roles
+                                               .find.return_value]
         keystone._create_admin_user(self.client, 'admin@example.org',
                                     'adminpasswd')
         self.assert_calls_in_create_user()
-        self.client.roles.add_user_role.assert_not_called()
+        self.client.roles.grant.assert_not_called()
 
     def test_create_admin_user_role_not_assigned(self):
         self._patch_client()
-        self.client.roles.roles_for_user.return_value = []
+        self.client.roles.list.return_value = []
         keystone._create_admin_user(self.client, 'admin@example.org',
                                     'adminpasswd')
         self.assert_calls_in_create_user()
-        self.client.roles.add_user_role.assert_called_once_with(
-            self.client.users.find.return_value,
-            self.client.roles.find.return_value,
-            self.client.tenants.find.return_value)
+
+        self.client.roles.grant.assert_has_calls([
+            mock.call(self.client.roles.find.return_value,
+                      user=self.client.users.find.return_value,
+                      project=self.client.tenants.find.return_value),
+            mock.call(self.client.roles.find.return_value,
+                      user=self.client.users.find.return_value,
+                      domain=self.client.domains.find.return_value)])
