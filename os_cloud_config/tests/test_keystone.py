@@ -32,15 +32,18 @@ class KeystoneTest(base.TestCase):
             public_endpoint, 'http://%s:35357/v2.0' % host,
             'http://192.0.0.3:5000/v2.0')
 
-    def assert_calls_in_create_user(self):
-        self.client.tenants.find.assert_called_once_with(name='admin')
-        self.client.roles.find.assert_called_once_with(name='admin')
-        self.client.users.find.assert_called_once_with(name='admin')
-        self.client.roles.roles_for_user.assert_called_once()
+    def assert_calls_in_grant_admin_user_roles(self):
+        self.client_v3.roles.list.assert_has_calls([mock.call(name='admin')])
+        self.client_v3.domains.list.assert_called_once_with(name='default')
+        self.client_v3.users.list.assert_called_once_with(
+            domain=self.client_v3.domains.list.return_value[0], name='admin')
+        self.client_v3.projects.list.assert_called_once_with(
+            domain=self.client_v3.domains.list.return_value[0], name='admin')
 
     @mock.patch('subprocess.check_call')
     def test_initialize(self, check_call_mock):
         self._patch_client()
+        self._patch_client_v3()
 
         self.client.services.findall.return_value = []
         self.client.endpoints.findall.return_value = []
@@ -53,7 +56,7 @@ class KeystoneTest(base.TestCase):
         self.client.tenants.create.assert_has_calls(
             [mock.call('admin', None), mock.call('service', None)])
 
-        self.assert_calls_in_create_user()
+        self.assert_calls_in_grant_admin_user_roles()
 
         self.assert_endpoint('192.0.0.3')
 
@@ -94,6 +97,7 @@ class KeystoneTest(base.TestCase):
     @mock.patch('subprocess.check_call')
     def test_idempotent_initialize(self, check_call_mock):
         self._patch_client()
+        self._patch_client_v3()
 
         self.client.services.findall.return_value = mock.MagicMock()
         self.client.endpoints.findall.return_value = mock.MagicMock()
@@ -112,7 +116,7 @@ class KeystoneTest(base.TestCase):
         self.assertFalse(self.client.tenants.create('admin', None).called)
         self.assertFalse(self.client.tenants.create('service', None).called)
 
-        self.assert_calls_in_create_user()
+        self.assert_calls_in_grant_admin_user_roles()
 
         check_call_mock.assert_called_once_with(
             ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
@@ -326,11 +330,31 @@ class KeystoneTest(base.TestCase):
         self.create_admin_client_patcher.stop()
         self.client = None
 
+    @mock.patch('os_cloud_config.keystone.ksclient_v3.Client')
+    def test_create_admin_client_v3(self, client_v3):
+        self.assertEqual(
+            client_v3.return_value,
+            keystone._create_admin_client_v3('192.0.0.3', 'mytoken'))
+        client_v3.assert_called_once_with(endpoint='http://192.0.0.3:35357/v3',
+                                          token='mytoken')
+
+    def _patch_client_v3(self):
+        self.client_v3 = mock.MagicMock()
+        self.create_admin_client_patcher_v3 = mock.patch(
+            'os_cloud_config.keystone._create_admin_client_v3')
+        create_admin_client_v3 = self.create_admin_client_patcher_v3.start()
+        self.addCleanup(self._patch_client_cleanup_v3)
+        create_admin_client_v3.return_value = self.client_v3
+
+    def _patch_client_cleanup_v3(self):
+        self.create_admin_client_patcher_v3.stop()
+        self.client_v3 = None
+
     def test_create_admin_user_user_exists(self):
         self._patch_client()
         keystone._create_admin_user(self.client, 'admin@example.org',
                                     'adminpasswd')
-        self.assert_calls_in_create_user()
+        self.client.tenants.find.assert_called_once_with(name='admin')
         self.client.users.create.assert_not_called()
 
     def test_create_admin_user_user_does_not_exist(self):
@@ -338,27 +362,32 @@ class KeystoneTest(base.TestCase):
         self.client.users.find.side_effect = exceptions.NotFound()
         keystone._create_admin_user(self.client, 'admin@example.org',
                                     'adminpasswd')
-        self.assert_calls_in_create_user()
+        self.client.tenants.find.assert_called_once_with(name='admin')
         self.client.users.create.assert_called_once_with(
             'admin', email='admin@example.org', password='adminpasswd',
             tenant_id=self.client.tenants.find.return_value.id)
 
-    def test_create_admin_user_role_assigned(self):
-        self._patch_client()
-        self.client.roles.roles_for_user.return_value = [self.client.roles
-                                                         .find.return_value]
-        keystone._create_admin_user(self.client, 'admin@example.org',
-                                    'adminpasswd')
-        self.assert_calls_in_create_user()
-        self.client.roles.add_user_role.assert_not_called()
+    def test_grant_admin_user_roles_idempotent(self):
+        self._patch_client_v3()
+        keystone._grant_admin_user_roles(self.client_v3)
+        self.assert_calls_in_grant_admin_user_roles()
+        self.client_v3.roles.grant.assert_not_called()
 
-    def test_create_admin_user_role_not_assigned(self):
-        self._patch_client()
-        self.client.roles.roles_for_user.return_value = []
-        keystone._create_admin_user(self.client, 'admin@example.org',
-                                    'adminpasswd')
-        self.assert_calls_in_create_user()
-        self.client.roles.add_user_role.assert_called_once_with(
-            self.client.users.find.return_value,
-            self.client.roles.find.return_value,
-            self.client.tenants.find.return_value)
+    def list_roles_side_effect(self, *args, **kwargs):
+        if kwargs.get('name') == 'admin':
+            return [self.client_v3.roles.list.return_value[0]]
+        else:
+            return []
+
+    def test_grant_admin_user_roles(self):
+        self._patch_client_v3()
+        self.client_v3.roles.list.side_effect = self.list_roles_side_effect
+        keystone._grant_admin_user_roles(self.client_v3)
+        self.assert_calls_in_grant_admin_user_roles()
+        self.client_v3.roles.grant.assert_has_calls([
+            mock.call(self.client_v3.roles.list.return_value[0],
+                      user=self.client_v3.users.list.return_value[0],
+                      project=self.client_v3.projects.list.return_value[0]),
+            mock.call(self.client_v3.roles.list.return_value[0],
+                      user=self.client_v3.users.list.return_value[0],
+                      domain=self.client_v3.domains.list.return_value[0])])
