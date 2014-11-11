@@ -21,6 +21,7 @@ import time
 
 from keystoneclient.openstack.common.apiclient import exceptions
 import keystoneclient.v2_0.client as ksclient
+import keystoneclient.v3.client as ksclient_v3
 from os_cloud_config.utils import clients
 
 LOG = logging.getLogger(__name__)
@@ -127,10 +128,12 @@ def initialize(host, admin_token, admin_email, admin_password,
     """
 
     keystone = _create_admin_client(host, admin_token, ssl, public)
+    keystone_v3 = _create_admin_client_v3(host, admin_token, ssl, public)
 
     _create_roles(keystone, timeout, poll_interval)
     _create_tenants(keystone)
     _create_admin_user(keystone, admin_email, admin_password)
+    _grant_admin_user_roles(keystone_v3)
     _create_keystone_endpoint(keystone, host, region, ssl, public)
     if pki_setup:
         print("PKI initialization in init-keystone is deprecated and will be "
@@ -398,6 +401,23 @@ def _create_admin_client(host, admin_token, ssl=None, public=None):
     return ksclient.Client(endpoint=admin_url, token=admin_token)
 
 
+def _create_admin_client_v3(host, admin_token, ssl=None, public=None):
+    """Create Keystone v3 client for admin endpoint.
+
+    :param host: ip/hostname of node where Keystone is running
+    :param admin_token: admin token to use with Keystone's admin endpoint
+    :param ssl: ip/hostname to use as the ssl endpoint, if required
+    :param public: ip/hostname to use as the public endpoint, if default is
+        not suitable
+    """
+    admin_url = 'http://%s:35357/v3' % host
+    if ssl:
+        admin_url = 'https://%s:35357/v3' % ssl
+    elif public:
+        admin_url = 'http://%s:35357/v3' % public
+    return ksclient_v3.Client(endpoint=admin_url, token=admin_token)
+
+
 def _create_roles(keystone, timeout=600, poll_interval=10):
     """Create initial roles in Keystone.
 
@@ -470,18 +490,40 @@ def _create_admin_user(keystone, admin_email, admin_password):
     :param admin_password: admin user's password to be set
     """
     admin_tenant = keystone.tenants.find(name='admin')
-    admin_role = keystone.roles.find(name='admin')
 
     try:
-        admin_user = keystone.users.find(name='admin')
-        LOG.debug('Admin user already exists, skip creation')
+        keystone.users.find(name='admin')
+        LOG.info('Admin user already exists, skip creation')
     except exceptions.NotFound:
-        LOG.debug('Creating admin user.')
-        admin_user = keystone.users.create('admin', email=admin_email,
-                                           password=admin_password,
-                                           tenant_id=admin_tenant.id)
-    if admin_role in keystone.roles.roles_for_user(admin_user, admin_tenant):
-        LOG.debug('Admin user is already granted admin role with admin tenant')
+        LOG.info('Creating admin user.')
+        keystone.users.create('admin', email=admin_email,
+                              password=admin_password,
+                              tenant_id=admin_tenant.id)
+
+
+def _grant_admin_user_roles(keystone_v3):
+    """Grant admin user roles with admin project and default domain.
+
+    :param keystone_v3: keystone v3 client
+    """
+    admin_project = keystone_v3.projects.list(name='admin')[0]
+    admin_role = keystone_v3.roles.list(name='admin')[0]
+    default_domain = keystone_v3.domains.list(name='default')[0]
+    admin_user = keystone_v3.users.list(name='admin')[0]
+
+    if admin_role in keystone_v3.roles.list(user=admin_user,
+                                            project=admin_project):
+        LOG.info('Admin user is already granted admin role with admin project')
     else:
-        LOG.debug('Granting admin role to admin user on admin tenant.')
-        keystone.roles.add_user_role(admin_user, admin_role, admin_tenant)
+        LOG.info('Granting admin role to admin user on admin project.')
+        keystone_v3.roles.grant(admin_role, user=admin_user,
+                                project=admin_project)
+
+    if admin_role in keystone_v3.roles.list(user=admin_user,
+                                            domain=default_domain):
+        LOG.info('Admin user is already granted admin role with default '
+                 'domain')
+    else:
+        LOG.info('Granting admin role to admin user on default domain.')
+        keystone_v3.roles.grant(admin_role, user=admin_user,
+                                domain=default_domain)
