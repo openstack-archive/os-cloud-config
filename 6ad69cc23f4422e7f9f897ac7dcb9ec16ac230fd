@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+2: Alexis Lee <lxsli@hp.com>
+Workflow+1: Alexis Lee <lxsli@hp.com>
+Code-Review+2: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 12 Nov 2014 15:57:48 +0000
+Reviewed-on: https://review.openstack.org/129157
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
