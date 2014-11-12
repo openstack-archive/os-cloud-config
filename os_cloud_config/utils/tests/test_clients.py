@@ -51,8 +51,18 @@ class ClientsTest(base.TestCase):
             auth_url='auth_url',
             tenant_name='tenant_name')
 
+    @mock.patch('keystoneclient.v3.client.Client')
+    def test_get_keystone_v3_client(self, client_mock):
+        clients.get_keystone_v3_client('username', 'password', 'tenant_name',
+                                       'auth_url/v2.0')
+        client_mock.assert_called_once_with(
+            username='username',
+            password='password',
+            auth_url='auth_url/v3',
+            tenant_name='tenant_name')
+
     @mock.patch('neutronclient.neutron.client.Client')
-    def test_get_client(self, client_mock):
+    def test_get_neutron_client(self, client_mock):
         clients.get_neutron_client('username', 'password', 'tenant_name',
                                    'auth_url')
         client_mock.assert_called_once_with(

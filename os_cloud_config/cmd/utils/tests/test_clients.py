@@ -52,8 +52,18 @@ class CMDClientsTest(base.TestCase):
             tenant_name=environ["OS_TENANT_NAME"])
 
     @mock.patch('os.environ')
+    @mock.patch('keystoneclient.v3.client.Client')
+    def test_get_keystone_client(self, client_mock, environ):
+        clients.get_keystone_v3_client()
+        client_mock.assert_called_once_with(
+            username=environ["OS_USERNAME"],
+            password=environ["OS_PASSWORD"],
+            auth_url=environ["OS_AUTH_URL"].replace('v2.0', 'v3'),
+            tenant_name=environ["OS_TENANT_NAME"])
+
+    @mock.patch('os.environ')
     @mock.patch('neutronclient.neutron.client.Client')
-    def test_get_client(self, client_mock, environ):
+    def test_get_neutron_client(self, client_mock, environ):
         clients.get_neutron_client()
         client_mock.assert_called_once_with(
             '2.0', username=environ["OS_USERNAME"],
