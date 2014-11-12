@@ -17,6 +17,7 @@ import logging
 
 from ironicclient import client as ironicclient
 from keystoneclient.v2_0 import client as ksclient
+from keystoneclient.v3 import client as ks3client
 from neutronclient.neutron import client as neutronclient
 from novaclient.extension import Extension
 from novaclient.v1_1 import client as novav11client
@@ -51,6 +52,15 @@ def get_keystone_client(username, password, tenant_name, auth_url):
               'tenant_name': tenant_name,
               'auth_url': auth_url}
     return ksclient.Client(**kwargs)
+
+
+def get_keystone_v3_client(username, password, tenant_name, auth_url):
+    LOG.debug('Creating keystone v3 client.')
+    kwargs = {'username': username,
+              'password': password,
+              'tenant_name': tenant_name,
+              'auth_url': auth_url.replace('v2.0', 'v3')}
+    return ks3client.Client(**kwargs)
 
 
 def get_neutron_client(username, password, tenant_name, auth_url):

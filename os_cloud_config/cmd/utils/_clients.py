@@ -40,6 +40,13 @@ def get_keystone_client():
                                        os.environ["OS_AUTH_URL"])
 
 
+def get_keystone_v3_client():
+    return clients.get_keystone_v3_client(os.environ["OS_USERNAME"],
+                                          os.environ["OS_PASSWORD"],
+                                          os.environ["OS_TENANT_NAME"],
+                                          os.environ["OS_AUTH_URL"])
+
+
 def get_neutron_client():
     return clients.get_neutron_client(os.environ["OS_USERNAME"],
                                       os.environ["OS_PASSWORD"],
