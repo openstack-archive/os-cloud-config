@@ -158,20 +158,12 @@ def initialize_for_swift(host, admin_token, ssl=None, public=None):
     keystone.roles.create('ResellerAdmin')
 
 
-def initialize_for_heat(host, admin_token, domain_admin_password,
-                        ssl=None, public=None):
+def initialize_for_heat(keystone, domain_admin_password):
     """Create Heat domain and an admin user for it.
 
-    :param host: ip/hostname of node where Keystone is running
-    :param admin_token: admin token to use with Keystone's admin endpoint
+    :param keystone: A keystone v3 client
     :param domain_admin_password: heat domain admin's password to be set
-    :param ssl: ip/hostname to use as the ssl endpoint, if required
-    :param public: ip/hostname to use as the public endpoint, if the default
-        is not suitable
     """
-    LOG.warn('This function is deprecated.')
-
-    keystone = _create_admin_client(host, admin_token, ssl, public)
     admin_role = keystone.roles.find(name='admin')
 
     LOG.debug('Creating heat domain.')
