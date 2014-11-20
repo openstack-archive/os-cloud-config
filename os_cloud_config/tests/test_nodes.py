@@ -252,6 +252,32 @@ class NodesTest(base.TestCase):
         ironic.node.update.assert_called_once_with(
             ironic.node.get.return_value.uuid, mock.ANY)
 
+    def test_register_ironic_node_update_uppercase_mac(self):
+        node = self._get_node()
+        node['mac'][0] = node['mac'][0].upper()
+        ironic = mock.MagicMock()
+        node_map = {'mac': {'aaa': 1}}
+
+        def side_effect(*args, **kwargs):
+            update_patch = [
+                {'path': '/driver_info/ssh_key_contents', 'value': 'random'},
+                {'path': '/driver_info/ssh_address', 'value': 'foo.bar'},
+                {'path': '/properties/memory_mb', 'value': '2048'},
+                {'path': '/properties/local_gb', 'value': '30'},
+                {'path': '/properties/cpu_arch', 'value': 'amd64'},
+                {'path': '/properties/cpus', 'value': '1'},
+                {'path': '/driver_info/ssh_username', 'value': 'test'}]
+            for key in update_patch:
+                key['op'] = 'replace'
+            self.assertThat(update_patch,
+                            matchers.MatchesSetwise(*(map(matchers.Equals,
+                                                          args[1]))))
+        ironic.node.update.side_effect = side_effect
+        nodes._update_or_register_ironic_node(None, node, node_map,
+                                              client=ironic)
+        ironic.node.update.assert_called_once_with(
+            ironic.node.get.return_value.uuid, mock.ANY)
+
     @mock.patch('time.sleep')
     def test_register_ironic_node_update_locked_node(self, sleep):
         node = self._get_node()

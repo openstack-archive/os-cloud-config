@@ -156,8 +156,8 @@ def _populate_node_mapping(ironic_in_use, client):
 def _get_node_id(node, node_map):
     if node['pm_type'] == 'pxe_ssh':
         for mac in node['mac']:
-            if mac in node_map['mac']:
-                return node_map['mac'][mac]
+            if mac.lower() in node_map['mac']:
+                return node_map['mac'][mac.lower()]
     else:
         if node['pm_addr'] in node_map['pm_addr']:
             return node_map['pm_addr'][node['pm_addr']]
