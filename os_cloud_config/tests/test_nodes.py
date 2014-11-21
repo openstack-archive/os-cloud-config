@@ -201,6 +201,7 @@ class NodesTest(base.TestCase):
         port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
                               address='aaa')
         power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
+        using_ironic.assert_called_once_with(keystone=None)
         ironic.node.create.assert_has_calls([pxe_node, mock.ANY])
         ironic.port.create.assert_has_calls([port_call])
         ironic.node.set_power_state.assert_has_calls([power_off_call])
