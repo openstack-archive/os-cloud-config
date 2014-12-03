@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import mock
 import testtools
 
@@ -22,6 +24,20 @@ from os_cloud_config.tests import base
 
 
 class CMDEnviromentTest(base.TestCase):
+
+    def setUp(self):
+        super(CMDEnviromentTest, self).setUp()
+        self.current_environ = {}
+        for key in ('OS_AUTH_URL', 'OS_PASSWORD', 'OS_TENANT_NAME',
+                    'OS_USERNAME'):
+            if os.environ.get(key):
+                self.current_environ[key] = os.environ[key]
+                del os.environ[key]
+
+    def tearDown(self):
+        super(CMDEnviromentTest, self).tearDown()
+        for key in self.current_environ:
+            os.environ[key] = self.current_environ[key]
 
     @mock.patch.dict('os.environ', {})
     def test_ensure_environment_missing_all(self):
