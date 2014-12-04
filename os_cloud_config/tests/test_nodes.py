@@ -186,6 +186,14 @@ class NodesTest(base.TestCase):
                     "iboot_port": "8080"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_ilo(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_ilo"
+        expected = {"ilo_address": "foo.bar",
+                    "ilo_username": "test",
+                    "ilo_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_unknown_type(self):
         node = self._get_node()
         node["pm_type"] = "unknown_type"
@@ -261,6 +269,23 @@ class NodesTest(base.TestCase):
                                               client=ironic)
         ironic.node.update.assert_called_once_with(
             ironic.node.get.return_value.uuid, mock.ANY)
+
+    def _update_by_type(self, pm_type):
+        ironic = mock.MagicMock()
+        node_map = {'mac': {}, 'pm_addr': {}}
+        node = self._get_node()
+        node['pm_type'] = pm_type
+        node_map['pm_addr']['foo.bar'] = ironic.node.get.return_value.uuid
+        nodes._update_or_register_ironic_node('servicehost', node,
+                                              node_map, client=ironic)
+        ironic.node.update.assert_called_once_with(
+            ironic.node.get.return_value.uuid, mock.ANY)
+
+    def test_update_node_ironic_pxe_ipmitool(self):
+        self._update_by_type('pxe_ipmitool')
+
+    def test_update_node_ironic_pxe_ilo(self):
+        self._update_by_type('pxe_ilo')
 
     def test_register_ironic_node_update_uppercase_mac(self):
         node = self._get_node()

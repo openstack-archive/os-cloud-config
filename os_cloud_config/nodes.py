@@ -77,6 +77,10 @@ def _extract_driver_info(node):
                        "ssh_username": node["pm_user"],
                        "ssh_key_contents": node["pm_password"],
                        "ssh_virt_type": node["pm_virt_type"]}
+    elif node["pm_type"] == "pxe_ilo":
+        driver_info = {"ilo_address": node["pm_addr"],
+                       "ilo_username": node["pm_user"],
+                       "ilo_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_iboot":
         driver_info = {"iboot_address": node["pm_addr"],
                        "iboot_username": node["pm_user"],
@@ -144,6 +148,9 @@ def _populate_node_mapping(ironic_in_use, client):
             elif 'ipmi' in node_details.driver:
                 pm_addr = node_details.driver_info['ipmi_address']
                 node_map['pm_addr'][pm_addr] = node['uuid']
+            elif node_details.driver == 'pxe_ilo':
+                pm_addr = node_details.driver_info['ilo_address']
+                node_map['pm_addr'][pm_addr] = node['uuid']
     else:
         nodes = [bmn.to_dict() for bmn in client.baremetal.list()]
         for node in nodes:
@@ -193,6 +200,10 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
         massage_map.update({'pm_addr': '/driver_info/ssh_address',
                             'pm_user': '/driver_info/ssh_username',
                             'pm_password': '/driver_info/ssh_key_contents'})
+    elif node['pm_type'] == 'pxe_ilo':
+        massage_map.update({'pm_addr': '/driver_info/ilo_address',
+                            'pm_user': '/driver_info/ilo_username',
+                            'pm_password': '/driver_info/ilo_password'})
     if node_uuid:
         ironic_node = client.node.get(node_uuid)
     else:
