@@ -177,6 +177,14 @@ class NodesTest(base.TestCase):
                     "iboot_port": "8080"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_ilo(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_ilo"
+        expected = {"ilo_address": "foo.bar",
+                    "ilo_username": "test",
+                    "ilo_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_unknown_type(self):
         node = self._get_node()
         node["pm_type"] = "unknown_type"

@@ -77,6 +77,10 @@ def _extract_driver_info(node):
                        "ssh_username": node["pm_user"],
                        "ssh_key_contents": node["pm_password"],
                        "ssh_virt_type": node["pm_virt_type"]}
+    elif node["pm_type"] == "pxe_ilo":
+        return {"ilo_address": node["pm_addr"],
+                "ilo_username": node["pm_user"],
+                "ilo_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_iboot":
         driver_info = {"iboot_address": node["pm_addr"],
                        "iboot_username": node["pm_user"],
