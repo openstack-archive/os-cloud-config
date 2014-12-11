@@ -92,6 +92,11 @@ def _extract_driver_info(node):
             driver_info["iboot_port"] = node["pm_port"]
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
+    if "pxe" in node["pm_type"]:
+        if "kernel_id" in node:
+            driver_info["pxe_deploy_kernel"] = node["kernel_id"]
+        if "ramdisk_id" in node:
+            driver_info["pxe_deploy_ramdisk"] = node["ramdisk_id"]
     return driver_info
 
 
@@ -249,9 +254,15 @@ def _clean_up_extra_nodes(ironic_in_use, seen, client, remove=False):
 
 
 def _register_list_of_nodes(register_func, node_map, client, nodes_list,
-                            blocking, service_host):
+                            blocking, service_host, kernel_id, ramdisk_id):
     seen = set()
     for node in nodes_list:
+        if kernel_id:
+            if 'kernel_id' not in node:
+                node['kernel_id'] = kernel_id
+        if ramdisk_id:
+            if 'ramdisk_id' not in node:
+                node['ramdisk_id'] = ramdisk_id
         try:
             new_node = register_func(service_host, node, node_map,
                                      client=client, blocking=blocking)
@@ -263,7 +274,8 @@ def _register_list_of_nodes(register_func, node_map, client, nodes_list,
 
 
 def register_all_nodes(service_host, nodes_list, client=None, remove=False,
-                       blocking=True, keystone_client=None):
+                       blocking=True, keystone_client=None, kernel_id=None,
+                       ramdisk_id=None):
     LOG.debug('Registering all nodes.')
     ironic_in_use = using_ironic(keystone=keystone_client)
     if ironic_in_use:
@@ -280,7 +292,8 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False,
         register_func = _update_or_register_bm_node
     node_map = _populate_node_mapping(ironic_in_use, client)
     seen = _register_list_of_nodes(register_func, node_map, client,
-                                   nodes_list, blocking, service_host)
+                                   nodes_list, blocking, service_host,
+                                   kernel_id, ramdisk_id)
     _clean_up_extra_nodes(ironic_in_use, seen, client, remove=remove)
 
 

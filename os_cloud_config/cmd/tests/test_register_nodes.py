@@ -46,7 +46,8 @@ class RegisterNodesTest(base.TestCase):
 
         register_mock.assert_called_once_with(
             "seed", {}, client='nova_bm_client_mock', remove=False,
-            blocking=True, keystone_client='keystone_client_mock')
+            blocking=True, keystone_client='keystone_client_mock',
+            kernel_id=None, ramdisk_id=None)
         using_ironic_mock.assert_called_once_with(
             keystone='keystone_client_mock')
         get_keystone_client_mock.assert_called_once_with()
@@ -63,7 +64,8 @@ class RegisterNodesTest(base.TestCase):
     @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
                      'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
     @mock.patch.object(sys, 'argv', ['register-nodes', '--service-host',
-                       'seed', '--nodes'])
+                                     'seed', '--ramdisk-id', 'ramdisk-987',
+                                     '--kernel-id', 'kernel-abc', '--nodes'])
     def test_with_arguments_ironic(self, register_mock,
                                    using_ironic_mock,
                                    get_keystone_client_mock,
@@ -76,7 +78,8 @@ class RegisterNodesTest(base.TestCase):
 
         register_mock.assert_called_once_with(
             "seed", {}, client='ironic_client_mock', remove=False,
-            blocking=True, keystone_client='keystone_client_mock')
+            blocking=True, keystone_client='keystone_client_mock',
+            kernel_id='kernel-abc', ramdisk_id='ramdisk-987')
         using_ironic_mock.assert_called_once_with(
             keystone='keystone_client_mock')
         get_keystone_client_mock.assert_called_once_with()

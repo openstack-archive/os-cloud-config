@@ -50,6 +50,12 @@ def parse_args():
     parser.add_argument('-r', '--remove', dest='remove', action='store_true',
                         help='Remove all unspecified nodes from the baremetal '
                         'service. Use with extreme caution!')
+    parser.add_argument('-k', '--kernel-id', dest='kernel_id',
+                        help='Default kernel image ID for nodes that do not '
+                             'specify one.')
+    parser.add_argument('-d', '--ramdisk-id', dest='ramdisk_id',
+                        help='Default ramdisk image ID for nodes that do not '
+                             'specify one.')
     environment._add_logging_arguments(parser)
     return parser.parse_args()
 
@@ -71,7 +77,8 @@ def main():
 
         nodes.register_all_nodes(
             args.service_host, nodes_list, client=client, remove=args.remove,
-            blocking=True, keystone_client=keystone_client)
+            blocking=True, keystone_client=keystone_client,
+            kernel_id=args.kernel_id, ramdisk_id=args.ramdisk_id)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
