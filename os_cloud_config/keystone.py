@@ -394,8 +394,9 @@ def _create_admin_client_v2(host, admin_token, ssl=None, public=None):
     :param public: ip/hostname to use as the public endpoint, if default is
         not suitable
     """
-    admin_url = '%s://%s:35357/v2.0' % ('https' if ssl else 'http', ssl or
-                                        public or host)
+    # It may not be readily obvious that admin v2 is never available
+    # via https. The SSL parameter is just the DNS name to use.
+    admin_url = 'http://%s:35357/v2.0' % (ssl or public or host)
     return ksclient_v2.Client(endpoint=admin_url, token=admin_token)
 
 
