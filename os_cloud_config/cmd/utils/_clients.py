@@ -52,3 +52,10 @@ def get_neutron_client():
                                       os.environ["OS_PASSWORD"],
                                       os.environ["OS_TENANT_NAME"],
                                       os.environ["OS_AUTH_URL"])
+
+
+def get_glance_client():
+    return clients.get_glance_client(os.environ["OS_USERNAME"],
+                                     os.environ["OS_PASSWORD"],
+                                     os.environ["OS_TENANT_NAME"],
+                                     os.environ["OS_AUTH_URL"])
