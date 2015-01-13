@@ -77,22 +77,24 @@ class KeystoneTest(base.TestCase):
             [mock.call('swiftoperator'), mock.call('ResellerAdmin')])
 
     def test_initialize_for_heat(self):
-        self._patch_client()
+        client = mock.MagicMock()
+        client.domains.find.side_effect = exceptions.NotFound
+        client.users.find.side_effect = exceptions.NotFound
 
-        keystone.initialize_for_heat('192.0.0.3', 'mytoken', 'heatadminpasswd')
+        keystone.initialize_for_heat(client, 'heatadminpasswd')
 
-        self.client.domains.create.assert_called_once_with(
+        client.domains.create.assert_called_once_with(
             'heat', description='Owns users and tenants created by heat')
-        self.client.users.create.assert_called_once_with(
+        client.users.create.assert_called_once_with(
             'heat_domain_admin',
             description='Manages users and tenants created by heat',
-            domain=self.client.domains.create.return_value,
+            domain=client.domains.create.return_value,
             password='heatadminpasswd')
-        self.client.roles.find.assert_called_once_with(name='admin')
-        self.client.roles.grant.assert_called_once_with(
-            self.client.roles.find.return_value,
-            user=self.client.users.create.return_value,
-            domain=self.client.domains.create.return_value)
+        client.roles.find.assert_called_once_with(name='admin')
+        client.roles.grant.assert_called_once_with(
+            client.roles.find.return_value,
+            user=client.users.create.return_value,
+            domain=client.domains.create.return_value)
 
     @mock.patch('subprocess.check_call')
     def test_idempotent_initialize(self, check_call_mock):
