@@ -43,6 +43,15 @@ class NodesTest(base.TestCase):
         client.baremetal.create.has_calls([nova_bm_call, nova_bm_call])
         client.baremetal.add_interface.assert_called_once_with(mock.ANY, "bbb")
 
+    def test_register_list_of_nodes(self):
+        nodes_list = ['aaa', 'bbb']
+        return_node = nodes_list[0]
+        register_func = mock.MagicMock()
+        register_func.side_effect = [return_node, ironicexp.Conflict]
+        seen = nodes._register_list_of_nodes(register_func, {}, None,
+                                             nodes_list, False, 'servicehost')
+        self.assertEqual(seen, set(nodes_list))
+
     @mock.patch('time.sleep')
     def test_register_nova_bm_node_retry(self, sleep):
         client = mock.MagicMock()
@@ -273,6 +282,7 @@ class NodesTest(base.TestCase):
             self.assertThat(update_patch,
                             matchers.MatchesSetwise(*(map(matchers.Equals,
                                                           args[1]))))
+
         ironic.node.update.side_effect = side_effect
         nodes._update_or_register_ironic_node(None, node, node_map,
                                               client=ironic)
