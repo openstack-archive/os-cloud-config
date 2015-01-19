@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Workflow+1: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: James Polley <jp@jamezpolley.com>
+Code-Review+1: Stephanie Miller <stephane@alum.mit.edu>
+Submitted-by: Jenkins
+Submitted-at: Mon, 19 Jan 2015 10:33:17 +0000
+Reviewed-on: https://review.openstack.org/137998
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
