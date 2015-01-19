@@ -45,3 +45,7 @@ def get_keystone_v3_client():
 
 def get_neutron_client():
     return clients.get_neutron_client(*_get_client_args())
+
+
+def get_glance_client():
+    return clients.get_glance_client(*_get_client_args())

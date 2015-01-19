@@ -15,7 +15,10 @@
 
 import logging
 
+import glanceclient
 from ironicclient import client as ironicclient
+from keystoneclient.auth.identity import v2
+from keystoneclient import session
 from keystoneclient.v2_0 import client as ksclient
 from keystoneclient.v3 import client as ks3client
 from neutronclient.neutron import client as neutronclient
@@ -95,3 +98,18 @@ def get_neutron_client(username,
     neutron = neutronclient.Client('2.0', **kwargs)
     neutron.format = 'json'
     return neutron
+
+
+def get_glance_client(username, password, tenant_name, auth_url, cacert=None,
+                      region_name='regionOne'):
+    LOG.debug('Creating Keystone session to fetch Glance endpoint.')
+    auth = v2.Password(auth_url=auth_url, username=username, password=password,
+                       tenant_name=tenant_name)
+    ks_session = session.Session(auth=auth)
+    endpoint = ks_session.get_endpoint(service_type='image',
+                                       interface='public',
+                                       region_name=region_name)
+    token = ks_session.get_token()
+    LOG.debug('Creating glance client.')
+    return glanceclient.Client('1', endpoint=endpoint, token=token,
+                               cacert=cacert)
