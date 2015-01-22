@@ -168,13 +168,19 @@ Where /tmp/ctlplane-dc contains::
         "cidr": "192.0.2.0/24",
         "allocation_end": "192.0.2.20",
         "allocation_start": "192.0.2.2",
-        "name": "ctlplane",
+        "name": "public",
+        "physical_network": "ctlplane",
         "segmentation_id": 25
       }
     }
 
-This creates a Neutron datacentre 'net' using VLAN tag 25, with the same
-details as the flat network created above.
+This creates a Neutron 'net' called "public" using VLAN tag 25, that backs onto
+an existing 'net' called "ctlplane".
+
+ .. note::
+
+    The key "physical_network" is required when creating a network that
+    specifies a "segmentation_id", and it must reference an existing net.
 
 setup-neutron can also create two networks suitable for workload clouds::
 
