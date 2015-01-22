@@ -41,12 +41,14 @@ class NeutronTest(base.TestCase):
 
     def test_create_net_physical_vlan_tag(self):
         client = mock.MagicMock()
-        network = {'physical': {'name': 'ctlplane', 'segmentation_id': '123'}}
+        network = {'physical': {'name': 'public',
+                                'segmentation_id': '123',
+                                'physical_network': 'ctlplane'}}
         neutron._create_net(client, network, 'physical', 'admin_tenant')
         physical_call = {'network': {'tenant_id': 'admin_tenant',
                                      'provider:network_type': 'vlan',
-                                     'name': 'ctlplane',
-                                     'provider:physical_network': 'datacentre',
+                                     'name': 'public',
+                                     'provider:physical_network': 'ctlplane',
                                      'provider:segmentation_id': '123',
                                      'admin_state_up': True}}
         client.create_network.assert_called_once_with(physical_call)
