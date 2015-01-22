@@ -88,9 +88,10 @@ def _create_net(neutron, network_desc, network_type, admin_tenant):
         network['router:external'] = True
     if type_desc.get('segmentation_id'):
         vlan_tag = type_desc['segmentation_id']
+        physical_network = type_desc['physical_network']
         network.update({'provider:network_type': 'vlan',
                         'provider:segmentation_id': vlan_tag,
-                        'provider:physical_network': 'datacentre'})
+                        'provider:physical_network': physical_network})
     return neutron.create_network({'network': network})
 
 
