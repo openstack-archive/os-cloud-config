@@ -35,27 +35,22 @@ def create_or_find_kernel_and_ramdisk(glanceclient, kernel_name, ramdisk_name,
 
     :returns: A dictionary mapping kernel or ramdisk to the ID in Glance.
     """
-    try:
-        kernel_image = glanceclient.images.find(name=kernel_name,
-                                                disk_format='aki')
-    except exceptions.NotFound:
-        if kernel_path:
-            kernel_image = glanceclient.images.create(
-                name=kernel_name, disk_format='aki', is_public=True,
-                data=open(kernel_path, 'rb'))
-        else:
-            raise ValueError("Kernel image not found in Glance, and no path "
-                             "specified.")
-    try:
-        ramdisk_image = glanceclient.images.find(name=ramdisk_name,
-                                                 disk_format='ari')
-    except exceptions.NotFound:
-        if ramdisk_path:
-            # public, type=ari
-            ramdisk_image = glanceclient.images.create(
-                name=ramdisk_name, disk_format='ari', is_public=True,
-                data=open(ramdisk_path, 'rb'))
-        else:
-            raise ValueError("Ramdisk image not found in Glance, and no path "
-                             "specified.")
+    kernel_image = _upload_file(glanceclient, kernel_name, kernel_path,
+                                'aki', 'Kernel')
+    ramdisk_image = _upload_file(glanceclient, ramdisk_name, ramdisk_path,
+                                 'ari', 'Ramdisk')
     return {'kernel': kernel_image.id, 'ramdisk': ramdisk_image.id}
+
+
+def _upload_file(glanceclient, name, path, disk_format, type_name):
+    try:
+        image = glanceclient.images.find(name=name, disk_format=disk_format)
+    except exceptions.NotFound:
+        if path:
+            image = glanceclient.images.create(
+                name=name, disk_format=disk_format, is_public=True,
+                data=open(path, 'rb'))
+        else:
+            raise ValueError("%s image not found in Glance, and no path "
+                             "specified." % type_name)
+    return image
