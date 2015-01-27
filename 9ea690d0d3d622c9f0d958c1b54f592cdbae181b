@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: James Polley <jp@jamezpolley.com>
+Workflow+1: James Polley <jp@jamezpolley.com>
+Code-Review+1: Stephanie Miller <stephane@alum.mit.edu>
+Submitted-by: Jenkins
+Submitted-at: Tue, 27 Jan 2015 13:00:18 +0000
+Reviewed-on: https://review.openstack.org/149135
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
