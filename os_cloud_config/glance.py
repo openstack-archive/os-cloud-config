@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import logging
 
 from glanceclient.openstack.common.apiclient import exceptions
@@ -21,7 +22,8 @@ LOG = logging.getLogger(__name__)
 
 
 def create_or_find_kernel_and_ramdisk(glanceclient, kernel_name, ramdisk_name,
-                                      kernel_path=None, ramdisk_path=None):
+                                      kernel_path=None, ramdisk_path=None,
+                                      skip_missing=False):
     """Find or create a given kernel and ramdisk in Glance.
 
     If either kernel_path or ramdisk_path is None, they will not be created,
@@ -32,17 +34,21 @@ def create_or_find_kernel_and_ramdisk(glanceclient, kernel_name, ramdisk_name,
     :param ramdisk_name: Name to search for or create for the ramdisk.
     :param kernel_path: Path to the kernel on disk.
     :param ramdisk_path: Path to the ramdisk on disk.
+    :param skip_missing: If `True', do not raise an exception if either the
+                         kernel or ramdisk image is not found.
 
     :returns: A dictionary mapping kernel or ramdisk to the ID in Glance.
     """
     kernel_image = _upload_file(glanceclient, kernel_name, kernel_path,
-                                'aki', 'Kernel')
+                                'aki', 'Kernel', skip_missing=skip_missing)
     ramdisk_image = _upload_file(glanceclient, ramdisk_name, ramdisk_path,
-                                 'ari', 'Ramdisk')
+                                 'ari', 'Ramdisk', skip_missing=skip_missing)
     return {'kernel': kernel_image.id, 'ramdisk': ramdisk_image.id}
 
 
-def _upload_file(glanceclient, name, path, disk_format, type_name):
+def _upload_file(glanceclient, name, path, disk_format, type_name,
+                 skip_missing=False):
+    image_tuple = collections.namedtuple('image', ['id'])
     try:
         image = glanceclient.images.find(name=name, disk_format=disk_format)
     except exceptions.NotFound:
@@ -51,6 +57,9 @@ def _upload_file(glanceclient, name, path, disk_format, type_name):
                 name=name, disk_format=disk_format, is_public=True,
                 data=open(path, 'rb'))
         else:
-            raise ValueError("%s image not found in Glance, and no path "
-                             "specified." % type_name)
+            if skip_missing:
+                image = image_tuple(None)
+            else:
+                raise ValueError("%s image not found in Glance, and no path "
+                                 "specified." % type_name)
     return image
