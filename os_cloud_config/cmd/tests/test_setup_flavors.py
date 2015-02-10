@@ -82,6 +82,83 @@ class RegisterNodesTest(base.TestCase):
 
         self.assertEqual(0, return_code)
 
+    @mock.patch('os_cloud_config.glance.create_or_find_kernel_and_ramdisk')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_glance_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_nova_bm_client')
+    @mock.patch('os_cloud_config.flavors.create_flavors_from_nodes')
+    @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
+                                    'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
+    @mock.patch.object(sys, 'argv', ['setup-flavors', '--nodes',
+                       '--kernel-name', 'bm-aaa', '--ramdisk-name', 'bm-zzz'])
+    def test_with_kernel_and_ramdisk_name(self, create_flavors_mock,
+                                          get_nova_bm_client_mock,
+                                          get_glance_client_mock,
+                                          create_or_find_mock):
+        create_or_find_mock.return_value = {'kernel': 'aaa', 'ramdisk': 'zzz'}
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(u'{}\n'.encode('utf-8'))
+            f.flush()
+            sys.argv.insert(2, f.name)
+            return_code = setup_flavors.main()
+
+        create_or_find_mock.assert_called_once_with(
+            get_glance_client_mock(), 'bm-aaa', 'bm-zzz', skip_missing=True)
+        create_flavors_mock.assert_called_once_with(
+            get_nova_bm_client_mock(), {}, 'aaa', 'zzz', None)
+
+        self.assertEqual(0, return_code)
+
+    @mock.patch('os_cloud_config.glance.create_or_find_kernel_and_ramdisk')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_glance_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_nova_bm_client')
+    @mock.patch('os_cloud_config.flavors.create_flavors_from_nodes')
+    @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
+                                    'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
+    @mock.patch.object(sys, 'argv', ['setup-flavors', '--nodes',
+                       '--kernel-name', 'bm-aaa', '-r', 'zzz'])
+    def test_with_kernel_name_ramdisk_id(self, create_flavors_mock,
+                                         get_nova_bm_client_mock,
+                                         get_glance_client_mock,
+                                         create_or_find_mock):
+        create_or_find_mock.return_value = {'kernel': 'aaa', 'ramdisk': None}
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(u'{}\n'.encode('utf-8'))
+            f.flush()
+            sys.argv.insert(2, f.name)
+            return_code = setup_flavors.main()
+
+        create_or_find_mock.assert_called_once_with(
+            get_glance_client_mock(), 'bm-aaa', None, skip_missing=True)
+        create_flavors_mock.assert_called_once_with(
+            get_nova_bm_client_mock(), {}, 'aaa', 'zzz', None)
+
+        self.assertEqual(0, return_code)
+
+    @mock.patch('os_cloud_config.glance.create_or_find_kernel_and_ramdisk')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_glance_client')
+    @mock.patch('os_cloud_config.cmd.utils._clients.get_nova_bm_client')
+    @mock.patch('os_cloud_config.flavors.create_flavors_from_nodes')
+    @mock.patch.dict('os.environ', {'OS_USERNAME': 'a', 'OS_PASSWORD': 'a',
+                                    'OS_TENANT_NAME': 'a', 'OS_AUTH_URL': 'a'})
+    @mock.patch.object(sys, 'argv', ['setup-flavors', '--nodes',
+                       '--kernel-name', 'bm-aaa', '--ramdisk-name', 'bm-zzz'])
+    def test_with_no_kernel_or_ramdisk(self, create_flavors_mock,
+                                         get_nova_bm_client_mock,
+                                         get_glance_client_mock,
+                                         create_or_find_mock):
+        create_or_find_mock.return_value = {'kernel': None, 'ramdisk': None}
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(u'{}\n'.encode('utf-8'))
+            f.flush()
+            sys.argv.insert(2, f.name)
+            return_code = setup_flavors.main()
+
+        create_or_find_mock.assert_called_once_with(
+            get_glance_client_mock(), 'bm-aaa', 'bm-zzz', skip_missing=True)
+        create_flavors_mock.assert_not_called()
+
+        self.assertEqual(1, return_code)
+
     @mock.patch('os_cloud_config.cmd.utils._clients.get_nova_bm_client',
                 return_value='nova_bm_client_mock')
     @mock.patch('os_cloud_config.flavors.create_flavors_from_nodes')
