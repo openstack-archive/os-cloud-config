@@ -24,13 +24,6 @@ from os_cloud_config.tests import base
 
 class CMDEnviromentTest(base.TestCase):
 
-    def setUp(self):
-        super(CMDEnviromentTest, self).setUp()
-        for key in ('OS_AUTH_URL', 'OS_PASSWORD', 'OS_TENANT_NAME',
-                    'OS_USERNAME', 'OS_CACERT'):
-            fixture = fixtures.EnvironmentVariable(key)
-            self.useFixture(fixture)
-
     @mock.patch.dict('os.environ', {})
     def test_ensure_environment_missing_all(self):
         message = ("OS_AUTH_URL, OS_PASSWORD, OS_TENANT_NAME, OS_USERNAME "

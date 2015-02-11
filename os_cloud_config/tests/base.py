@@ -51,3 +51,8 @@ class TestCase(testtools.TestCase):
             self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
 
         self.log_fixture = self.useFixture(fixtures.FakeLogger())
+
+        for key in ('OS_AUTH_URL', 'OS_PASSWORD', 'OS_TENANT_NAME',
+                    'OS_USERNAME', 'OS_CACERT', 'ROOT_DISK'):
+            fixture = fixtures.EnvironmentVariable(key)
+            self.useFixture(fixture)
