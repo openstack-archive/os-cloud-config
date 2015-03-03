@@ -502,7 +502,7 @@ def _grant_admin_user_roles(keystone_v3):
     :param keystone_v3: keystone v3 client
     """
     admin_role = keystone_v3.roles.list(name='admin')[0]
-    default_domain = keystone_v3.domains.list(name='default')[0]
+    default_domain = keystone_v3.domains.list(id='default')[0]
     admin_user = keystone_v3.users.list(domain=default_domain, name='admin')[0]
     admin_project = keystone_v3.projects.list(domain=default_domain,
                                               name='admin')[0]
