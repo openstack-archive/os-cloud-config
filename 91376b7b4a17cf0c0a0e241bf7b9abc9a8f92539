@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Clint 'SpamapS' Byrum <clint@fewbar.com>
+Workflow+1: Clint 'SpamapS' Byrum <clint@fewbar.com>
+Code-Review+1: Giulio Fidente <gfidente@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 17 Mar 2015 19:01:40 +0000
+Reviewed-on: https://review.openstack.org/160888
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
