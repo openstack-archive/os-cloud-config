@@ -70,6 +70,10 @@ def _extract_driver_info(node):
         driver_info = {"ipmi_address": node["pm_addr"],
                        "ipmi_username": node["pm_user"],
                        "ipmi_password": node["pm_password"]}
+    elif node["pm_type"] == "pxe_drac":
+        driver_info = {"drac_host": node["pm_addr"],
+                       "drac_username": node["pm_user"],
+                       "drac_password": node["pm_password"]}
     elif node["pm_type"] == "pxe_ssh":
         if "pm_virt_type" not in node:
             node["pm_virt_type"] = "virsh"
