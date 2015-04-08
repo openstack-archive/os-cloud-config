@@ -148,6 +148,14 @@ class NodesTest(base.TestCase):
                     "ssh_virt_type": "virsh"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_drac(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_drac"
+        expected = {"drac_host": "foo.bar",
+                    "drac_username": "test",
+                    "drac_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_pxe_ssh_with_pm_virt_type(self):
         node = self._get_node()
         node["pm_type"] = "pxe_ssh"
