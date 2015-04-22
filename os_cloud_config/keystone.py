@@ -104,6 +104,7 @@ SERVICES = {
     'tuskar': {
         'description': 'Tuskar Service',
         'type': 'management',
+        'path': '/v2',
         'port': 8585
     }
 }
