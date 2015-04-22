@@ -33,6 +33,7 @@ SERVICES = {
         'type': 'orchestration',
         'path': '/v1/%(tenant_id)s',
         'port': 8004,
+        'ssl_port': 13004,
     },
     'neutron': {
         'description': 'Neutron Service',
