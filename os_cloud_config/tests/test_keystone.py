@@ -282,6 +282,27 @@ class KeystoneTest(base.TestCase):
             'http://192.0.0.3:8774/v2/$(tenant_id)s',
             'http://192.0.0.3:8774/v2/$(tenant_id)s')
 
+    @mock.patch('os_cloud_config.keystone._create_service')
+    def test_create_ssl_endpoint_no_ssl_port(self, mock_create_service):
+        client = mock.Mock()
+        client.endpoints.findall.return_value = []
+        data = {'nouser': True,
+                'internal_host': 'internal',
+                'public_host': 'public',
+                'port': 1234,
+                'password': 'password',
+                'type': 'compute',
+                }
+        mock_service = mock.Mock()
+        mock_service.id = 1
+        mock_create_service.return_value = mock_service
+        keystone._register_endpoint(client, 'fake', data)
+        client.endpoints.create.assert_called_once_with(
+            'regionOne', 1,
+            'http://public:1234/',
+            'http://internal:1234/',
+            'http://internal:1234/')
+
     def test_idempotent_register_endpoint(self):
         self.client = mock.MagicMock()
 
