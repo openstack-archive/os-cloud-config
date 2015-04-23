@@ -104,3 +104,39 @@ class FlavorsTest(base.TestCase):
                     'baremetal:deploy_ramdisk_id': 'bbb', 'key': 'value'}
         client.flavors.create.return_value.set_keys.assert_called_once_with(
             metadata=metadata)
+
+    @mock.patch('os_cloud_config.flavors._create_flavor')
+    def test_create_flavor_from_ironic(self, create_flavor):
+        node = mock.MagicMock()
+        node.uuid = 'uuid'
+        node.properties = {'cpus': '1', 'memory_mb': '2048', 'local_gb': '30',
+                           'cpu_arch': 'i386'}
+        client = mock.MagicMock()
+        ironic_client = mock.MagicMock()
+        ironic_client.node.list.return_value = [node]
+        flavors.create_flavors_from_ironic(client, ironic_client, 'aaa', 'bbb',
+                                           '10')
+        self.assertTrue(ironic_client.node.list.called)
+
+        expected_flavor = {'disk': '10', 'ephemeral': '20',
+                           'kernel': 'aaa', 'ramdisk': 'bbb',
+                           'name': 'baremetal_2048_10_20_1',
+                           'memory': '2048', 'arch': 'i386',
+                           'cpu': '1'}
+        create_flavor.assert_called_once_with(client, expected_flavor)
+
+    def test_check_node_properties(self):
+        node = mock.MagicMock()
+        properties = {'memory_mb': '1024',
+                      'local_gb': '10',
+                      'cpus': '1',
+                      'cpu_arch': 'i386'}
+        node.properties = properties
+
+        self.assertTrue(flavors.check_node_properties(node))
+
+        properties['memory_mb'] = None
+        self.assertFalse(flavors.check_node_properties(node))
+
+        del properties['memory_mb']
+        self.assertFalse(flavors.check_node_properties(node))
