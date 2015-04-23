@@ -15,6 +15,7 @@
 
 import logging
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -24,6 +25,29 @@ def cleanup_flavors(client, names=('m1.tiny', 'm1.small', 'm1.medium',
     for flavor in client.flavors.list():
         if flavor.name in names:
             client.flavors.delete(flavor.id)
+
+
+def check_node_properties(node):
+    for node_property in 'memory_mb', 'local_gb', 'cpus', 'cpu_arch':
+        if not node.properties.get(node_property, None):
+            LOG.warning('node %s does not have %s set. Not creating flavor'
+                        'from node.' % (node.uuid, node_property))
+            return False
+    return True
+
+
+def create_flavors_from_ironic(client, ironic_client, kernel, ramdisk,
+                               root_disk):
+    node_list = []
+    for node in ironic_client.node.list(detail=True):
+        if not check_node_properties(node):
+            continue
+        node_list.append({
+            'memory': node.properties['memory_mb'],
+            'disk': node.properties['local_gb'],
+            'cpu': node.properties['cpus'],
+            'arch': node.properties['cpu_arch']})
+    create_flavors_from_nodes(client, node_list, kernel, ramdisk, root_disk)
 
 
 def create_flavors_from_nodes(client, node_list, kernel, ramdisk, root_disk):

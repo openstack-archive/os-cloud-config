@@ -48,6 +48,10 @@ def parse_args():
     group.add_argument('-f', '--flavors', dest='flavors',
                        help='A JSON file containing a list of flavors to '
                        'create directly')
+    group.add_argument('-i', '--ironic', action='store_true',
+                       help='Pull the registered list of nodes from Ironic '
+                       'that distinct flavors will be generated and created '
+                       'from')
     parser.add_argument('-k', '--kernel', dest='kernel',
                         help='ID of the kernel in Glance', required=True)
     parser.add_argument('-r', '--ramdisk', dest='ramdisk',
@@ -74,6 +78,10 @@ def main():
                 flavors_list = json.load(flavors_file)
             flavors.create_flavors_from_list(
                 client, flavors_list, args.kernel, args.ramdisk)
+        elif args.ironic:
+            ironic_client = clients.get_ironic_client()
+            flavors.create_flavors_from_ironic(
+                client, ironic_client, args.kernel, args.ramdisk, root_disk)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1
