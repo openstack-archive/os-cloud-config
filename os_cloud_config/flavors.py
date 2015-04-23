@@ -15,6 +15,7 @@
 
 import logging
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -24,6 +25,19 @@ def cleanup_flavors(client, names=('m1.tiny', 'm1.small', 'm1.medium',
     for flavor in client.flavors.list():
         if flavor.name in names:
             client.flavors.delete(flavor.id)
+
+
+def create_flavors_from_ironic(client, ironic_client, kernel, ramdisk,
+                               root_disk):
+    node_list = []
+    for node in ironic_client.node.list():
+        node_properties = ironic_client.node.get(node.uuid).properties
+        node_list.append({
+            'memory': node_properties['memory_mb'],
+            'disk': node_properties['local_gb'],
+            'cpu': node_properties['cpus'],
+            'arch': node_properties['cpu_arch']})
+    create_flavors_from_nodes(client, node_list, kernel, ramdisk, root_disk)
 
 
 def create_flavors_from_nodes(client, node_list, kernel, ramdisk, root_disk):
