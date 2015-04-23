@@ -69,16 +69,12 @@ def main():
             nodes_list = json.load(node_file)
         environment._ensure()
 
-        keystone_client = _clients.get_keystone_client()
         glance_client = _clients.get_glance_client()
-        if nodes.using_ironic(keystone=keystone_client):
-            client = _clients.get_ironic_client()
-        else:
-            client = _clients.get_nova_bm_client()
+        client = _clients.get_ironic_client()
 
         nodes.register_all_nodes(
             args.service_host, nodes_list, client=client, remove=args.remove,
-            blocking=True, keystone_client=keystone_client,
+            blocking=True,
             glance_client=glance_client, kernel_name=args.kernel_name,
             ramdisk_name=args.ramdisk_name)
     except Exception:
