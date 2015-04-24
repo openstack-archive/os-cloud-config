@@ -50,6 +50,12 @@ def parse_args():
     parser.add_argument('-r', '--remove', dest='remove', action='store_true',
                         help='Remove all unspecified nodes from the baremetal '
                         'service. Use with extreme caution!')
+    parser.add_argument('-k', '--kernel-name', dest='kernel_name',
+                        help='Default kernel name (in Glance) for nodes that '
+                             'do not specify one.')
+    parser.add_argument('-d', '--ramdisk-name', dest='ramdisk_name',
+                        help='Default ramdisk name (in Glance) for nodes that '
+                             'do not specify one.')
     environment._add_logging_arguments(parser)
     return parser.parse_args()
 
@@ -64,6 +70,7 @@ def main():
         environment._ensure()
 
         keystone_client = _clients.get_keystone_client()
+        glance_client = _clients.get_glance_client()
         if nodes.using_ironic(keystone=keystone_client):
             client = _clients.get_ironic_client()
         else:
@@ -71,7 +78,9 @@ def main():
 
         nodes.register_all_nodes(
             args.service_host, nodes_list, client=client, remove=args.remove,
-            blocking=True, keystone_client=keystone_client)
+            blocking=True, keystone_client=keystone_client,
+            glance_client=glance_client, kernel_name=args.kernel_name,
+            ramdisk_name=args.ramdisk_name)
     except Exception:
         logging.exception("Unexpected error during command execution")
         return 1

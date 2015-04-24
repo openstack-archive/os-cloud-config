@@ -49,7 +49,8 @@ class NodesTest(base.TestCase):
         register_func = mock.MagicMock()
         register_func.side_effect = [return_node, ironicexp.Conflict]
         seen = nodes._register_list_of_nodes(register_func, {}, None,
-                                             nodes_list, False, 'servicehost')
+                                             nodes_list, False, 'servicehost',
+                                             None, None)
         self.assertEqual(seen, set(nodes_list))
 
     @mock.patch('time.sleep')
@@ -186,12 +187,16 @@ class NodesTest(base.TestCase):
                     "iboot_port": "8080"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
-    def test_extract_driver_info_pxe_ilo(self):
+    def test_extract_driver_info_pxe_ipmi_with_kernel_ramdisk(self):
         node = self._get_node()
-        node["pm_type"] = "pxe_ilo"
-        expected = {"ilo_address": "foo.bar",
-                    "ilo_username": "test",
-                    "ilo_password": "random"}
+        node["pm_type"] = "pxe_ipmi"
+        node["kernel_id"] = "kernel-abc"
+        node["ramdisk_id"] = "ramdisk-foo"
+        expected = {"ipmi_address": "foo.bar",
+                    "ipmi_username": "test",
+                    "ipmi_password": "random",
+                    "pxe_deploy_kernel": "kernel-abc",
+                    "pxe_deploy_ramdisk": "ramdisk-foo"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
     def test_extract_driver_info_unknown_type(self):
@@ -212,6 +217,38 @@ class NodesTest(base.TestCase):
                                 "ssh_username": "test",
                                 "ssh_key_contents": "random",
                                 "ssh_virt_type": "virsh"}
+        pxe_node = mock.call(driver="pxe_ssh",
+                             driver_info=pxe_node_driver_info,
+                             properties=node_properties)
+        port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
+                              address='aaa')
+        power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
+        using_ironic.assert_called_once_with(keystone=None)
+        ironic.node.create.assert_has_calls([pxe_node, mock.ANY])
+        ironic.port.create.assert_has_calls([port_call])
+        ironic.node.set_power_state.assert_has_calls([power_off_call])
+
+    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
+    def test_register_all_nodes_ironic_kernel_ramdisk(self, using_ironic):
+        node_list = [self._get_node()]
+        node_properties = {"cpus": "1",
+                           "memory_mb": "2048",
+                           "local_gb": "30",
+                           "cpu_arch": "amd64"}
+        ironic = mock.MagicMock()
+        glance = mock.MagicMock()
+        image = collections.namedtuple('image', ['id'])
+        glance.images.find.side_effect = (image('kernel-123'),
+                                          image('ramdisk-999'))
+        nodes.register_all_nodes('servicehost', node_list, client=ironic,
+                                 glance_client=glance, kernel_name='bm-kernel',
+                                 ramdisk_name='bm-ramdisk')
+        pxe_node_driver_info = {"ssh_address": "foo.bar",
+                                "ssh_username": "test",
+                                "ssh_key_contents": "random",
+                                "ssh_virt_type": "virsh",
+                                "pxe_deploy_kernel": "kernel-123",
+                                "pxe_deploy_ramdisk": "ramdisk-999"}
         pxe_node = mock.call(driver="pxe_ssh",
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
