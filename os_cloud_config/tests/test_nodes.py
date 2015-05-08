@@ -203,8 +203,8 @@ class NodesTest(base.TestCase):
         expected = {"ipmi_address": "foo.bar",
                     "ipmi_username": "test",
                     "ipmi_password": "random",
-                    "pxe_deploy_kernel": "kernel-abc",
-                    "pxe_deploy_ramdisk": "ramdisk-foo"}
+                    "deploy_kernel": "kernel-abc",
+                    "deploy_ramdisk": "ramdisk-foo"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
     def test_extract_driver_info_unknown_type(self):
@@ -255,8 +255,8 @@ class NodesTest(base.TestCase):
                                 "ssh_username": "test",
                                 "ssh_key_contents": "random",
                                 "ssh_virt_type": "virsh",
-                                "pxe_deploy_kernel": "kernel-123",
-                                "pxe_deploy_ramdisk": "ramdisk-999"}
+                                "deploy_kernel": "kernel-123",
+                                "deploy_ramdisk": "ramdisk-999"}
         pxe_node = mock.call(driver="pxe_ssh",
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
