@@ -99,9 +99,9 @@ def _extract_driver_info(node):
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
         if "kernel_id" in node:
-            driver_info["pxe_deploy_kernel"] = node["kernel_id"]
+            driver_info["deploy_kernel"] = node["kernel_id"]
         if "ramdisk_id" in node:
-            driver_info["pxe_deploy_ramdisk"] = node["ramdisk_id"]
+            driver_info["deploy_ramdisk"] = node["ramdisk_id"]
     return driver_info
 
 
