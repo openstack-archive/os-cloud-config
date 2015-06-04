@@ -86,6 +86,8 @@ def _create_net(neutron, network_desc, network_type, admin_tenant):
         network['shared'] = True
     elif network_type == 'external':
         network['router:external'] = True
+        network.update({'provider:network_type': 'flat',
+                        'provider:physical_network': network['name']})
     if type_desc.get('segmentation_id'):
         vlan_tag = type_desc['segmentation_id']
         physical_network = type_desc['physical_network']
