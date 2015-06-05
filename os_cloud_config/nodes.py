@@ -95,6 +95,20 @@ def _extract_driver_info(node):
             driver_info["iboot_relay_id"] = node["pm_relay_id"]
         if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
+    elif node["pm_type"] == "pxe_irmc":
+        driver_info = {"irmc_address": node["pm_addr"],
+                       "irmc_username": node["pm_user"],
+                       "irmc_password": node["pm_password"]}
+        # irmc_port, irmc_auth_method, irmc_client_timeout, and
+        # irmc_sensor_method are optional
+        if "pm_port" in node:
+            driver_info["irmc_port"] = node["pm_port"]
+        if "pm_auth_method" in node:
+            driver_info["irmc_auth_method"] = node["pm_auth_method"]
+        if "pm_client_timeout" in node:
+            driver_info["irmc_client_timeout"] = node["pm_client_timeout"]
+        if "pm_sensor_method" in node:
+            driver_info["irmc_sensor_method"] = node["pm_sensor_method"]
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
@@ -164,6 +178,9 @@ def _populate_node_mapping(ironic_in_use, client):
             elif node_details.driver == 'pxe_drac':
                 pm_addr = node_details.driver_info['drac_host']
                 node_map['pm_addr'][pm_addr] = node['uuid']
+            elif node_details.driver == 'pxe_irmc':
+                pm_addr = node_details.driver_info['irmc_address']
+                node_map['pm_addr'][pm_addr] = node['uuid']
     else:
         nodes = [bmn.to_dict() for bmn in client.baremetal.list()]
         for node in nodes:
@@ -221,6 +238,10 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
         massage_map.update({'pm_addr': '/driver_info/drac_host',
                             'pm_user': '/driver_info/drac_username',
                             'pm_password': '/driver_info/drac_password'})
+    elif node['pm_type'] == 'pxe_irmc':
+        massage_map.update({'pm_addr': '/driver_info/irmc_address',
+                            'pm_user': '/driver_info/irmc_username',
+                            'pm_password': '/driver_info/irmc_password'})
     if node_uuid:
         ironic_node = client.node.get(node_uuid)
     else:

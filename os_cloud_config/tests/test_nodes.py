@@ -195,6 +195,54 @@ class NodesTest(base.TestCase):
                     "iboot_port": "8080"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_irmc(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_irmc"
+        expected = {"irmc_address": "foo.bar",
+                    "irmc_username": "test",
+                    "irmc_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_irmc_with_irmc_port(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_irmc"
+        node["pm_port"] = "443"
+        expected = {"irmc_address": "foo.bar",
+                    "irmc_username": "test",
+                    "irmc_password": "random",
+                    "irmc_port": "443"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_irmc_with_irmc_auth_method(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_irmc"
+        node["pm_auth_method"] = "baz_auth_method"
+        expected = {"irmc_address": "foo.bar",
+                    "irmc_username": "test",
+                    "irmc_password": "random",
+                    "irmc_auth_method": "baz_auth_method"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_irmc_with_irmc_client_timeout(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_irmc"
+        node["pm_client_timeout"] = "60"
+        expected = {"irmc_address": "foo.bar",
+                    "irmc_username": "test",
+                    "irmc_password": "random",
+                    "irmc_client_timeout": "60"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_pxe_irmc_with_irmc_sensor_method(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_irmc"
+        node["pm_sensor_method"] = "ipmitool"
+        expected = {"irmc_address": "foo.bar",
+                    "irmc_username": "test",
+                    "irmc_password": "random",
+                    "irmc_sensor_method": "ipmitool"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_pxe_ipmi_with_kernel_ramdisk(self):
         node = self._get_node()
         node["pm_type"] = "pxe_ipmi"
@@ -334,6 +382,9 @@ class NodesTest(base.TestCase):
 
     def test_update_node_ironic_pxe_ilo(self):
         self._update_by_type('pxe_ilo')
+
+    def test_update_node_ironic_pxe_irmc(self):
+        self._update_by_type('pxe_irmc')
 
     def test_register_ironic_node_update_uppercase_mac(self):
         node = self._get_node()
