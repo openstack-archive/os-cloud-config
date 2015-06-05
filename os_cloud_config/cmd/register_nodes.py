@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import argparse
 import json
 import logging
+import sys
 import textwrap
 
 from os_cloud_config.cmd.utils import _clients
@@ -81,7 +84,9 @@ def main():
             blocking=True, keystone_client=keystone_client,
             glance_client=glance_client, kernel_name=args.kernel_name,
             ramdisk_name=args.ramdisk_name)
-    except Exception:
-        logging.exception("Unexpected error during command execution")
+    except Exception as e:
+        error_msg = "Unexpected error during command execution. Error: %s" % e
+        logging.exception(error_msg)
+        print(error_msg, file=sys.stderr)
         return 1
     return 0
