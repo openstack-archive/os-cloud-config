@@ -323,12 +323,11 @@ def _register_endpoint(keystone, service, data, region=None):
         host=internal_host, port=port, path=path)
 
     public_host = data.get('public_host')
-    if public_host:
-        public_port = data.get('ssl_port', port)
+    public_protocol = 'http'
+    public_port = port
+    if public_host and 'ssl_port' in data:
+        public_port = data.get('ssl_port')
         public_protocol = 'https'
-    else:
-        public_protocol = 'http'
-        public_port = port
 
     public_uri = '{protocol}://{host}:{port}{path}'.format(
         protocol=public_protocol,
