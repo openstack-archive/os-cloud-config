@@ -32,7 +32,7 @@ class ClientsTest(base.TestCase):
             os_tenant_name='tenant_name',
             ca_file=None)
 
-    @mock.patch('novaclient.v1_1.client.Client')
+    @mock.patch('novaclient.v2.client.Client')
     def test_get_nova_bm_client(self, client_mock):
         clients.get_nova_bm_client('username', 'password', 'tenant_name',
                                    'auth_url')
