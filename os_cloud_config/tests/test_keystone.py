@@ -34,7 +34,7 @@ class KeystoneTest(base.TestCase):
 
     def assert_calls_in_grant_admin_user_roles(self):
         self.client_v3.roles.list.assert_has_calls([mock.call(name='admin')])
-        self.client_v3.domains.list.assert_called_once_with(id='default')
+        self.client_v3.domains.list.assert_called_once_with(name='default')
         self.client_v3.users.list.assert_called_once_with(
             domain=self.client_v3.domains.list.return_value[0], name='admin')
         self.client_v3.projects.list.assert_called_once_with(
