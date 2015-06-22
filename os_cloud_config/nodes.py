@@ -173,6 +173,15 @@ def _populate_node_mapping(ironic_in_use, client):
             elif node_details.driver == 'pxe_drac':
                 pm_addr = node_details.driver_info['drac_host']
                 node_map['pm_addr'][pm_addr] = node['uuid']
+            elif node_details.driver == 'pxe_iboot':
+                iboot_addr = node_details.driver_info['iboot_address']
+                if "iboot_port" in node_details.driver_info:
+                    iboot_addr += (':%s' %
+                                   node_details.driver_info['iboot_port'])
+                if "iboot_relay_id" in node_details.driver_info:
+                    iboot_addr += ('#%s' %
+                                   node_details.driver_info['iboot_relay_id'])
+                node_map['pm_addr'][iboot_addr] = node['uuid']
     else:
         nodes = [bmn.to_dict() for bmn in client.baremetal.list()]
         for node in nodes:
@@ -187,6 +196,14 @@ def _get_node_id(node, node_map):
         for mac in node['mac']:
             if mac.lower() in node_map['mac']:
                 return node_map['mac'][mac.lower()]
+    elif node['pm_type'] == 'pxe_iboot':
+        iboot_addr = node["pm_addr"]
+        if "pm_port" in node:
+            iboot_addr += ':%s' % node["pm_port"]
+        if "pm_relay_id" in node:
+            iboot_addr += '#%s' % node["pm_relay_id"]
+        if iboot_addr in node_map['pm_addr']:
+            return node_map['pm_addr'][iboot_addr]
     else:
         if node['pm_addr'] in node_map['pm_addr']:
             return node_map['pm_addr'][node['pm_addr']]
