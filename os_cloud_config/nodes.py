@@ -112,6 +112,10 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
                   "cpu_arch": node["arch"]}
     driver_info = _extract_driver_info(node)
 
+    if 'capabilities' in node:
+        properties.update({"capabilities":
+                          six.text_type(node.get('capabilities'))})
+
     create_map = {"driver": node["pm_type"],
                   "properties": properties,
                   "driver_info": driver_info}
@@ -229,6 +233,9 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
 
     if "name" in node:
         massage_map.update({'name': '/name'})
+
+    if "capabilities" in node:
+        massage_map.update({'capabilities': '/properties/capabilities'})
 
     if node_uuid:
         ironic_node = client.node.get(node_uuid)

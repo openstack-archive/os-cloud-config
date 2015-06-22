@@ -29,7 +29,8 @@ class NodesTest(base.TestCase):
     def _get_node(self):
         return {'cpu': '1', 'memory': '2048', 'disk': '30', 'arch': 'amd64',
                 'mac': ['aaa'], 'pm_addr': 'foo.bar', 'pm_user': 'test',
-                'pm_password': 'random', 'pm_type': 'pxe_ssh', 'name': 'node1'}
+                'pm_password': 'random', 'pm_type': 'pxe_ssh', 'name': 'node1',
+                'capabilities': 'num_nics:6'}
 
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
     def test_register_all_nodes_nova_bm(self, ironic_mock):
@@ -218,7 +219,8 @@ class NodesTest(base.TestCase):
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
                            "local_gb": "30",
-                           "cpu_arch": "amd64"}
+                           "cpu_arch": "amd64",
+                           "capabilities": "num_nics:6"}
         ironic = mock.MagicMock()
         nodes.register_all_nodes('servicehost', node_list, client=ironic)
         pxe_node_driver_info = {"ssh_address": "foo.bar",
@@ -243,7 +245,8 @@ class NodesTest(base.TestCase):
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
                            "local_gb": "30",
-                           "cpu_arch": "amd64"}
+                           "cpu_arch": "amd64",
+                           "capabilities": "num_nics:6"}
         ironic = mock.MagicMock()
         glance = mock.MagicMock()
         image = collections.namedtuple('image', ['id'])
@@ -307,6 +310,7 @@ class NodesTest(base.TestCase):
                 {'path': '/properties/local_gb', 'value': '30'},
                 {'path': '/properties/cpu_arch', 'value': 'amd64'},
                 {'path': '/properties/cpus', 'value': '1'},
+                {'path': '/properties/capabilities', 'value': 'num_nics:6'},
                 {'path': '/driver_info/ssh_username', 'value': 'test'}]
             for key in update_patch:
                 key['op'] = 'replace'
@@ -354,6 +358,7 @@ class NodesTest(base.TestCase):
                 {'path': '/properties/local_gb', 'value': '30'},
                 {'path': '/properties/cpu_arch', 'value': 'amd64'},
                 {'path': '/properties/cpus', 'value': '1'},
+                {'path': '/properties/capabilities', 'value': 'num_nics:6'},
                 {'path': '/driver_info/ssh_username', 'value': 'test'}]
             for key in update_patch:
                 key['op'] = 'replace'
@@ -381,7 +386,8 @@ class NodesTest(base.TestCase):
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
                            "local_gb": "30",
-                           "cpu_arch": "amd64"}
+                           "cpu_arch": "amd64",
+                           "capabilities": "num_nics:6"}
         node = self._get_node()
         node['cpu'] = 1
         node['memory'] = 2048
@@ -410,6 +416,7 @@ class NodesTest(base.TestCase):
                 {'path': '/properties/local_gb', 'value': '30'},
                 {'path': '/properties/cpu_arch', 'value': 'amd64'},
                 {'path': '/properties/cpus', 'value': '1'},
+                {'path': '/properties/capabilities', 'value': 'num_nics:6'},
                 {'path': '/driver_info/ssh_username', 'value': 'test'}]
             for key in update_patch:
                 key['op'] = 'replace'
