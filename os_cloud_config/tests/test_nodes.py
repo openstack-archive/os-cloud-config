@@ -17,7 +17,6 @@ import collections
 
 from ironicclient.openstack.common.apiclient import exceptions as ironicexp
 import mock
-from novaclient.openstack.common.apiclient import exceptions as novaexc
 from testtools import matchers
 
 from os_cloud_config import nodes
@@ -32,18 +31,6 @@ class NodesTest(base.TestCase):
                 'pm_password': 'random', 'pm_type': 'pxe_ssh', 'name': 'node1',
                 'capabilities': 'num_nics:6'}
 
-    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
-    def test_register_all_nodes_nova_bm(self, ironic_mock):
-        node_list = [self._get_node(), self._get_node()]
-        node_list[0]["mac"].append("bbb")
-        client = mock.MagicMock()
-        nodes.register_all_nodes('servicehost', node_list, client=client)
-        nova_bm_call = mock.call(
-            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
-            pm_user="test", pm_password="random")
-        client.baremetal.create.has_calls([nova_bm_call, nova_bm_call])
-        client.baremetal.add_interface.assert_called_once_with(mock.ANY, "bbb")
-
     def test_register_list_of_nodes(self):
         nodes_list = ['aaa', 'bbb']
         return_node = nodes_list[0]
@@ -53,85 +40,6 @@ class NodesTest(base.TestCase):
                                              nodes_list, False, 'servicehost',
                                              None, None)
         self.assertEqual(seen, set(nodes_list))
-
-    @mock.patch('time.sleep')
-    def test_register_nova_bm_node_retry(self, sleep):
-        client = mock.MagicMock()
-        side_effect = (novaexc.ConnectionRefused,
-                       novaexc.ServiceUnavailable, mock.DEFAULT)
-        client.baremetal.create.side_effect = side_effect
-        nodes.register_nova_bm_node('servicehost',
-                                    self._get_node(), client=client)
-        sleep.assert_has_calls([mock.call(10), mock.call(10)])
-        nova_bm_call = mock.call(
-            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
-            pm_user="test", pm_password="random")
-        client.has_calls([nova_bm_call])
-
-    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
-    @mock.patch('os_cloud_config.nodes.register_nova_bm_node')
-    def test_register_nova_bm_node_no_update(self, ironic_mock, register_mock):
-        client = mock.MagicMock()
-        node_map = {'mac': {'aaa': 1}}
-        nodes._update_or_register_bm_node('servicehost', self._get_node(),
-                                          node_map, client=client)
-        client.baremetal.get.assert_called_once_with(1)
-        register_mock.assert_not_called()
-
-    @mock.patch('time.sleep')
-    def test_register_nova_bm_node_failure(self, sleep):
-        client = mock.MagicMock()
-        client.baremetal.create.side_effect = novaexc.ConnectionRefused
-        self.assertRaises(novaexc.ServiceUnavailable,
-                          nodes.register_nova_bm_node, 'servicehost',
-                          self._get_node(), client=client)
-
-    def test_register_nova_bm_node_ignore_long_pm_password(self):
-        client = mock.MagicMock()
-        node = self._get_node()
-        node["pm_password"] = 'abc' * 100
-        nodes.register_nova_bm_node('servicehost', node, client=client)
-        nova_bm_call = mock.call(
-            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
-            pm_user="test")
-        client.has_calls([nova_bm_call])
-
-    def assert_nova_bm_call_with_no_pm_password(self, node):
-        client = mock.MagicMock()
-        nodes.register_nova_bm_node('servicehost', node, client=client)
-        nova_bm_call = mock.call(
-            "servicehost", "1", "2048", "30", "aaa", pm_address="foo.bar",
-            pm_user="test")
-        client.has_calls([nova_bm_call])
-
-    def test_register_nova_bm_node_no_pm_password(self):
-        node = self._get_node()
-        del node["pm_password"]
-        self.assert_nova_bm_call_with_no_pm_password(node)
-
-    def test_register_nova_bm_node_pm_password_of_none(self):
-        node = self._get_node()
-        node["pm_password"] = None
-        self.assert_nova_bm_call_with_no_pm_password(node)
-
-    def test_register_nova_bm_node_pm_password_of_empty_string(self):
-        node = self._get_node()
-        node["pm_password"] = ""
-        self.assert_nova_bm_call_with_no_pm_password(node)
-
-    def test_register_nova_bm_node_int_values(self):
-        node = self._get_node()
-        node['cpu'] = 1
-        node['memory'] = 2048
-        node['disk'] = 30
-        client = mock.MagicMock()
-        nodes.register_nova_bm_node('service_host', node, client=client)
-        client.baremetal.create.assert_called_once_with('service_host', '1',
-                                                        '2048', '30',
-                                                        node["mac"][0],
-                                                        pm_password='random',
-                                                        pm_address='foo.bar',
-                                                        pm_user='test')
 
     def test_extract_driver_info_ipmi(self):
         node = self._get_node()
@@ -213,8 +121,7 @@ class NodesTest(base.TestCase):
         node["pm_type"] = "unknown_type"
         self.assertRaises(ValueError, nodes._extract_driver_info, node)
 
-    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
-    def test_register_all_nodes_ironic(self, using_ironic):
+    def test_register_all_nodes_ironic(self):
         node_list = [self._get_node()]
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
@@ -234,13 +141,11 @@ class NodesTest(base.TestCase):
         port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
                               address='aaa')
         power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
-        using_ironic.assert_called_once_with(keystone=None)
         ironic.node.create.assert_has_calls([pxe_node, mock.ANY])
         ironic.port.create.assert_has_calls([port_call])
         ironic.node.set_power_state.assert_has_calls([power_off_call])
 
-    @mock.patch('os_cloud_config.nodes.using_ironic', return_value=True)
-    def test_register_all_nodes_ironic_kernel_ramdisk(self, using_ironic):
+    def test_register_all_nodes_ironic_kernel_ramdisk(self):
         node_list = [self._get_node()]
         node_properties = {"cpus": "1",
                            "memory_mb": "2048",
@@ -268,7 +173,6 @@ class NodesTest(base.TestCase):
         port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
                               address='aaa')
         power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
-        using_ironic.assert_called_once_with(keystone=None)
         ironic.node.create.assert_has_calls([pxe_node, mock.ANY])
         ironic.port.create.assert_has_calls([port_call])
         ironic.node.set_power_state.assert_has_calls([power_off_call])
@@ -428,20 +332,6 @@ class NodesTest(base.TestCase):
         nodes._update_or_register_ironic_node(None, node, node_map,
                                               client=ironic)
 
-    def test_populate_node_mapping_nova_bm(self):
-        client = mock.MagicMock()
-        node1 = mock.MagicMock()
-        node1.to_dict.return_value = {'id': '1',
-                                      'interfaces': [{'address': 'aaa'}],
-                                      'pm_address': '10.0.1.5'}
-        node4 = mock.MagicMock()
-        node4.to_dict.return_value = {'id': '4', 'interfaces': [],
-                                      'pm_address': '10.0.1.2'}
-        client.baremetal.list.return_value = [node1, node4]
-        expected = {'mac': {'aaa': '1'},
-                    'pm_addr': {'10.0.1.2': '4', '10.0.1.5': '1'}}
-        self.assertEqual(expected, nodes._populate_node_mapping(False, client))
-
     def test_populate_node_mapping_ironic(self):
         client = mock.MagicMock()
         node1 = mock.MagicMock()
@@ -459,25 +349,11 @@ class NodesTest(base.TestCase):
         client.node.list.return_value = [node1, node2]
         expected = {'mac': {'aaa': 'abcdef'},
                     'pm_addr': {'10.0.1.2': 'fedcba'}}
-        self.assertEqual(expected, nodes._populate_node_mapping(True, client))
-
-    def test_clean_up_extra_nodes_nova_bm(self):
-        node = collections.namedtuple('node', ['id'])
-        client = mock.MagicMock()
-        client.baremetal.list.return_value = [node('4')]
-        nodes._clean_up_extra_nodes(False, set((1,)), client, remove=True)
-        client.baremetal.delete.assert_called_once_with('4')
+        self.assertEqual(expected, nodes._populate_node_mapping(client))
 
     def test_clean_up_extra_nodes_ironic(self):
         node = collections.namedtuple('node', ['uuid'])
         client = mock.MagicMock()
         client.node.list.return_value = [node('foobar')]
-        nodes._clean_up_extra_nodes(True, set(('abcd',)), client, remove=True)
+        nodes._clean_up_extra_nodes(set(('abcd',)), client, remove=True)
         client.node.delete.assert_called_once_with('foobar')
-
-    def test_using_ironic(self):
-        keystone = mock.MagicMock()
-        service = collections.namedtuple('servicelist', ['name'])
-        keystone.services.list.return_value = [service('compute')]
-        self.assertFalse(nodes.using_ironic(keystone=keystone))
-        self.assertEqual(1, keystone.services.list.call_count)

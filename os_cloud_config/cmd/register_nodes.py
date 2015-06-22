@@ -71,10 +71,7 @@ def main():
 
         keystone_client = _clients.get_keystone_client()
         glance_client = _clients.get_glance_client()
-        if nodes.using_ironic(keystone=keystone_client):
-            client = _clients.get_ironic_client()
-        else:
-            client = _clients.get_nova_bm_client()
+        client = _clients.get_ironic_client()
 
         nodes.register_all_nodes(
             args.service_host, nodes_list, client=client, remove=args.remove,
