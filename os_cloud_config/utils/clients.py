@@ -23,8 +23,8 @@ from keystoneclient.v2_0 import client as ksclient
 from keystoneclient.v3 import client as ks3client
 from neutronclient.neutron import client as neutronclient
 from novaclient.extension import Extension
-from novaclient.v1_1 import client as novav11client
-from novaclient.v1_1.contrib import baremetal
+from novaclient.v2 import client as novav11client
+from novaclient.v2.contrib import baremetal
 
 LOG = logging.getLogger(__name__)
 

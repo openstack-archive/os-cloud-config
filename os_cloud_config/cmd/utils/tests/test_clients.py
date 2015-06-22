@@ -43,7 +43,7 @@ class CMDClientsTest(base.TestCase):
             ca_file=environ.get("OS_CACERT"))
 
     @mock.patch('os.environ')
-    @mock.patch('novaclient.v1_1.client.Client')
+    @mock.patch('novaclient.v2.client.Client')
     def test_get_nova_bm_client(self, client_mock, environ):
         clients.get_nova_bm_client()
         client_mock.assert_called_once_with(environ["OS_USERNAME"],
