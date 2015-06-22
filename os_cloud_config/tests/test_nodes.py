@@ -29,7 +29,7 @@ class NodesTest(base.TestCase):
     def _get_node(self):
         return {'cpu': '1', 'memory': '2048', 'disk': '30', 'arch': 'amd64',
                 'mac': ['aaa'], 'pm_addr': 'foo.bar', 'pm_user': 'test',
-                'pm_password': 'random', 'pm_type': 'pxe_ssh'}
+                'pm_password': 'random', 'pm_type': 'pxe_ssh', 'name': 'node1'}
 
     @mock.patch('os_cloud_config.nodes.using_ironic', return_value=False)
     def test_register_all_nodes_nova_bm(self, ironic_mock):
@@ -226,6 +226,7 @@ class NodesTest(base.TestCase):
                                 "ssh_key_contents": "random",
                                 "ssh_virt_type": "virsh"}
         pxe_node = mock.call(driver="pxe_ssh",
+                             name='node1',
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
         port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
@@ -258,6 +259,7 @@ class NodesTest(base.TestCase):
                                 "deploy_kernel": "kernel-123",
                                 "deploy_ramdisk": "ramdisk-999"}
         pxe_node = mock.call(driver="pxe_ssh",
+                             name='node1',
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
         port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
@@ -278,6 +280,7 @@ class NodesTest(base.TestCase):
         nodes.register_ironic_node(None, self._get_node(), client=ironic)
         sleep.assert_has_calls([mock.call(10), mock.call(10)])
         node_create = mock.call(driver='pxe_ssh',
+                                name='node1',
                                 driver_info=mock.ANY,
                                 properties=mock.ANY)
         ironic.node.create.assert_has_calls(node_create)
@@ -297,6 +300,7 @@ class NodesTest(base.TestCase):
 
         def side_effect(*args, **kwargs):
             update_patch = [
+                {'path': '/name', 'value': 'node1'},
                 {'path': '/driver_info/ssh_key_contents', 'value': 'random'},
                 {'path': '/driver_info/ssh_address', 'value': 'foo.bar'},
                 {'path': '/properties/memory_mb', 'value': '2048'},
@@ -343,6 +347,7 @@ class NodesTest(base.TestCase):
 
         def side_effect(*args, **kwargs):
             update_patch = [
+                {'path': '/name', 'value': 'node1'},
                 {'path': '/driver_info/ssh_key_contents', 'value': 'random'},
                 {'path': '/driver_info/ssh_address', 'value': 'foo.bar'},
                 {'path': '/properties/memory_mb', 'value': '2048'},
@@ -384,6 +389,7 @@ class NodesTest(base.TestCase):
         client = mock.MagicMock()
         nodes.register_ironic_node('service_host', node, client=client)
         client.node.create.assert_called_once_with(driver=mock.ANY,
+                                                   name='node1',
                                                    properties=node_properties,
                                                    driver_info=mock.ANY)
 
@@ -397,6 +403,7 @@ class NodesTest(base.TestCase):
 
         def side_effect(*args, **kwargs):
             update_patch = [
+                {'path': '/name', 'value': 'node1'},
                 {'path': '/driver_info/ssh_key_contents', 'value': 'random'},
                 {'path': '/driver_info/ssh_address', 'value': 'foo.bar'},
                 {'path': '/properties/memory_mb', 'value': '2048'},

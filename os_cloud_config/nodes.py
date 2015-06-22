@@ -112,13 +112,18 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
                   "cpu_arch": node["arch"]}
     driver_info = _extract_driver_info(node)
 
+    create_map = {"driver": node["pm_type"],
+                  "properties": properties,
+                  "driver_info": driver_info}
+
+    if 'name' in node:
+        create_map.update({"name": six.text_type(node.get('name'))})
+
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
                   (node["pm_addr"], count))
         try:
-            ironic_node = client.node.create(driver=node["pm_type"],
-                                             driver_info=driver_info,
-                                             properties=properties)
+            ironic_node = client.node.create(**create_map)
             break
         except (ironicexp.ConnectionRefused, ironicexp.ServiceUnavailable):
             if blocking:
@@ -221,6 +226,10 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
         massage_map.update({'pm_addr': '/driver_info/drac_host',
                             'pm_user': '/driver_info/drac_username',
                             'pm_password': '/driver_info/drac_password'})
+
+    if "name" in node:
+        massage_map.update({'name': '/name'})
+
     if node_uuid:
         ironic_node = client.node.get(node_uuid)
     else:
