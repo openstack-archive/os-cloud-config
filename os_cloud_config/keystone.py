@@ -82,6 +82,13 @@ SERVICES = {
         'port': 8776,
         'ssl_port': 13776,
     },
+    'cinderv2': {
+        'description': 'Cinder Volume Service v2',
+        'type': 'volumev2',
+        'path': '/v2/%(tenant_id)s',
+        'port': 8776,
+        'ssl_port': 13776,
+    },
     'swift': {
         'description': 'Swift Object Storage Service',
         'type': 'object-store',
