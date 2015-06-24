@@ -107,7 +107,8 @@ SERVICES = {
     'ironic': {
         'description': 'Ironic Service',
         'type': 'baremetal',
-        'port': 6385
+        'port': 6385,
+        'ssl_port': 13385,
     },
     'tuskar': {
         'description': 'Tuskar Service',
