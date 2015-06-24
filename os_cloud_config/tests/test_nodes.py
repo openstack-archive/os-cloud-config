@@ -329,7 +329,7 @@ class NodesTest(base.TestCase):
     def test_update_node_ironic_pxe_ipmitool(self):
         self._update_by_type('pxe_ipmitool')
 
-    def test_ipdate_node_ironic_pxe_drac(self):
+    def test_update_node_ironic_pxe_drac(self):
         self._update_by_type('pxe_drac')
 
     def test_update_node_ironic_pxe_ilo(self):
