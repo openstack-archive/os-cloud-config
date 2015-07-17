@@ -114,6 +114,13 @@ SERVICES = {
         'type': 'management',
         'path': '/v2',
         'port': 8585
+    },
+    'manila': {
+        'description': 'Manila Service',
+        'type': 'share',
+        'path': '/v1',
+        'port': 8786,
+        'ssl_port': 13786,
     }
 }
 
