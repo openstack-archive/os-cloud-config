@@ -131,9 +131,11 @@ class KeystonePKITest(base.TestCase):
         create_signing.return_value = ('mock_signing_key', 'mock_signing_cert')
         isfile.return_value = True
         mock_json_load.return_value = {
-            'KeystoneCACertificate': 'mock_ca_cert',
-            'KeystoneSigningKey': 'mock_signing_key',
-            'KeystoneSigningCertificate': 'mock_signing_cert'
+            'parameters': {
+                'KeystoneCACertificate': 'mock_ca_cert',
+                'KeystoneSigningKey': 'mock_signing_key',
+                'KeystoneSigningCertificate': 'mock_signing_cert'
+            }
         }
 
         keystone_pki.generate_certs_into_json('/jsonfile', False)
