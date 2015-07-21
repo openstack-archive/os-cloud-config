@@ -29,7 +29,6 @@ class FlavorsTest(base.TestCase):
         delete_calls = [mock.call(flavor) for flavor in to_del]
         flavors.cleanup_flavors(client=client)
         client.flavors.delete.has_calls(delete_calls)
-        client.flavors.delete.assert_not_called_with('baremetal')
 
     def test_filter_existing_flavors_none(self):
         client = mock.MagicMock()

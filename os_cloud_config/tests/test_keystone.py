@@ -392,6 +392,8 @@ class KeystoneTest(base.TestCase):
 
     def test_grant_admin_user_roles_idempotent(self):
         self._patch_client_v3()
+        self.client_v3.roles.list.return_value = (
+            [self.client_v3.roles.list.return_value['admin']])
         keystone._grant_admin_user_roles(self.client_v3)
         self.assert_calls_in_grant_admin_user_roles()
         self.client_v3.roles.grant.assert_not_called()
