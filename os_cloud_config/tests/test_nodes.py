@@ -280,7 +280,8 @@ class NodesTest(base.TestCase):
         node_create = mock.call(driver='pxe_ssh',
                                 driver_info=mock.ANY,
                                 properties=mock.ANY)
-        ironic.node.create.assert_has_calls(node_create)
+        ironic.node.create.assert_has_calls([node_create, node_create,
+                                             node_create])
 
     @mock.patch('time.sleep')
     def test_register_ironic_node_failure(self, sleep):
