@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Workflow+1: Dan Prince <dprince@redhat.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+1: Jiri Stransky <jistr@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 23 Jul 2015 00:48:46 +0000
+Reviewed-on: https://review.openstack.org/194136
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
