@@ -148,7 +148,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     if pki_setup:
         print("PKI initialization in init-keystone is deprecated and will be "
               "removed.")
-        _perform_pki_initialization(host, user)
+        _perform_pki_initialization(public or host, user)
 
 
 def initialize_for_swift(host, admin_token, ssl=None, public=None):
