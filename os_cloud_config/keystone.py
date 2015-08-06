@@ -144,7 +144,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param pki_setup: Boolean for running pki_setup conditionally
     """
 
-    keystone_v2 = _create_admin_client_v2(host, admin_token, ssl, public)
+    keystone_v2 = _create_admin_client_v2(host, admin_token, public)
     keystone_v3 = _create_admin_client_v3(host, admin_token, ssl, public)
 
     _create_roles(keystone_v2, timeout, poll_interval)
@@ -169,7 +169,7 @@ def initialize_for_swift(host, admin_token, ssl=None, public=None):
     """
     LOG.warn('This function is deprecated.')
 
-    keystone = _create_admin_client_v2(host, admin_token, ssl, public)
+    keystone = _create_admin_client_v2(host, admin_token, public)
 
     LOG.debug('Creating swiftoperator role.')
     keystone.roles.create('swiftoperator')
@@ -399,7 +399,7 @@ def _create_user_for_service(keystone, name, password):
             keystone.roles.add_user_role(user, admin_role, admin_tenant)
 
 
-def _create_admin_client_v2(host, admin_token, ssl=None, public=None):
+def _create_admin_client_v2(host, admin_token, public=None):
     """Create Keystone v2 client for admin endpoint.
 
     :param host: ip/hostname of node where Keystone is running
@@ -410,7 +410,7 @@ def _create_admin_client_v2(host, admin_token, ssl=None, public=None):
     """
     # It may not be readily obvious that admin v2 is never available
     # via https. The SSL parameter is just the DNS name to use.
-    admin_url = 'http://%s:35357/v2.0' % (ssl or public or host)
+    admin_url = 'http://%s:35357/v2.0' % (public or host)
     return ksclient_v2.Client(endpoint=admin_url, token=admin_token)
 
 
@@ -423,8 +423,10 @@ def _create_admin_client_v3(host, admin_token, ssl=None, public=None):
     :param public: ip/hostname to use as the public endpoint, if default is
         not suitable
     """
-    admin_url = '%s://%s:35357/v3' % ('https' if ssl else 'http', ssl or
-                                      public or host)
+    # TODO(bnemec): This should respect the ssl parameter, but right now we
+    # don't support running the admin endpoint behind ssl.  Once that is
+    # fixed, this should use ssl when available.
+    admin_url = '%s://%s:35357/v3' % ('http', public or host)
     return ksclient_v3.Client(endpoint=admin_url, token=admin_token)
 
 
