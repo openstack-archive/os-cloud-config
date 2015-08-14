@@ -30,6 +30,11 @@ def _extract_driver_info(node):
         driver_info = {"ipmi_address": node["pm_addr"],
                        "ipmi_username": node["pm_user"],
                        "ipmi_password": node["pm_password"]}
+        # Ipmi parameter for some chassis
+        for name in ('ipmi_bridging', 'ipmi_transit_address',
+                     'ipmi_transit_channel', 'ipmi_target_address',
+                     'ipmi_target_channel', 'ipmi_local_address'):
+               driver_info[name] = node.get(name)
     elif node["pm_type"] == "pxe_drac":
         driver_info = {"drac_host": node["pm_addr"],
                        "drac_username": node["pm_user"],
