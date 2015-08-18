@@ -54,6 +54,12 @@ def _extract_driver_info(node):
             driver_info["iboot_relay_id"] = node["pm_relay_id"]
         if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
+    elif node["pm_type"] == "pxe_wol":
+        driver_info = {}
+        if "pm_addr" in node:
+            driver_info["wol_host"] = node["pm_addr"]
+        if "pm_port" in node:
+            driver_info["wol_port"] = node["pm_port"]
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
