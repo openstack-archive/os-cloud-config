@@ -26,41 +26,41 @@ LOG = logging.getLogger(__name__)
 
 
 def _extract_driver_info(node):
-    if "ipmi" in node["pm_type"]:
-        driver_info = {"ipmi_address": node["pm_addr"],
-                       "ipmi_username": node["pm_user"],
-                       "ipmi_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_drac":
-        driver_info = {"drac_host": node["pm_addr"],
-                       "drac_username": node["pm_user"],
-                       "drac_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_ssh":
-        if "pm_virt_type" not in node:
-            node["pm_virt_type"] = "virsh"
-        driver_info = {"ssh_address": node["pm_addr"],
-                       "ssh_username": node["pm_user"],
-                       "ssh_key_contents": node["pm_password"],
-                       "ssh_virt_type": node["pm_virt_type"]}
-    elif node["pm_type"] == "pxe_ilo":
-        driver_info = {"ilo_address": node["pm_addr"],
-                       "ilo_username": node["pm_user"],
-                       "ilo_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_iboot":
-        driver_info = {"iboot_address": node["pm_addr"],
-                       "iboot_username": node["pm_user"],
-                       "iboot_password": node["pm_password"]}
-        # iboot_relay_id and iboot_port are optional
-        if "pm_relay_id" in node:
-            driver_info["iboot_relay_id"] = node["pm_relay_id"]
-        if "pm_port" in node:
-            driver_info["iboot_port"] = node["pm_port"]
-    else:
-        raise ValueError("Unknown pm_type: %s" % node["pm_type"])
-    if "pxe" in node["pm_type"]:
-        if "kernel_id" in node:
-            driver_info["deploy_kernel"] = node["kernel_id"]
-        if "ramdisk_id" in node:
-            driver_info["deploy_ramdisk"] = node["ramdisk_id"]
+    driver_info = {
+        "pxe_ipmi": {"ipmi_address": node.get("pm_addr"),
+                     "ipmi_username": node.get("pm_user"),
+                     "ipmi_password": node.get("pm_password")},
+        "ipmi": {"ipmi_address": node.get("pm_addr"),
+                 "ipmi_username": node.get("pm_user"),
+                 "ipmi_password": node.get("pm_password")},
+        "pxe_drac": {"drac_host": node.get("pm_addr"),
+                     "drac_username": node.get("pm_user"),
+                     "drac_password": node.get("pm_password")},
+        "pxe_ssh": {"ssh_address": node.get("pm_addr"),
+                    "ssh_username": node.get("pm_user"),
+                    "ssh_key_contents": node.get("pm_password"),
+                    "ssh_virt_type": node.get("pm_virt_type", "virsh")},
+        "pxe_ilo": {"ilo_address": node.get("pm_addr"),
+                    "ilo_username": node.get("pm_user"),
+                    "ilo_password": node.get("pm_password")},
+        "pxe_iboot": {"iboot_address": node.get("pm_addr"),
+                      "iboot_username": node.get("pm_user"),
+                      "iboot_password": node.get("pm_password")},
+        "pxe_wol": {"wol_host": node.get("pm_addr"),
+                    "wol_port": node.get("pm_port")},
+    }.get(node["pm_type"], {})
+    if not driver_info:
+        raise ValueError("Unknown pm_type: %s" % node.get("pm_type"))
+    # pxe_iboot
+    if node.get("pm_relay_id") and driver_info.get("iboot_address"):
+        driver_info["iboot_relay_id"] = node["pm_relay_id"]
+    if node.get("pm_port") and driver_info.get("iboot_address"):
+        driver_info["iboot_port"] = node["pm_port"]
+    if "pxe" in node.get("pm_type"):
+        driver_info["deploy_kernel"] = node.get("kernel_id")
+        driver_info["deploy_ramdisk"] = node.get("ramdisk_id")
+    # remove any keys that have empty values
+    driver_info = dict((k, v) for k, v in driver_info.items() if v)
     return driver_info
 
 
