@@ -69,6 +69,12 @@ def _extract_driver_info(node):
                        "ucs_username": node["pm_user"],
                        "ucs_password": node["pm_password"],
                        "ucs_service_profile": node["pm_service_profile"]}
+    elif node["pm_type"] == "pxe_wol":
+        driver_info = {}
+        if "pm_addr" in node:
+            driver_info["wol_host"] = node["pm_addr"]
+        if "pm_port" in node:
+            driver_info["wol_port"] = node["pm_port"]
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
