@@ -83,6 +83,12 @@ def _extract_driver_info(node):
             driver_info["irmc_client_timeout"] = node["pm_client_timeout"]
         if "pm_sensor_method" in node:
             driver_info["irmc_sensor_method"] = node["pm_sensor_method"]
+    elif node["pm_type"] == "pxe_wol":
+        driver_info = {}
+        if "pm_addr" in node:
+            driver_info["wol_host"] = node["pm_addr"]
+        if "pm_port" in node:
+            driver_info["wol_port"] = node["pm_port"]
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
