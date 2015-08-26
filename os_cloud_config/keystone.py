@@ -121,6 +121,12 @@ SERVICES = {
         'path': '/v1/%(tenant_id)s',
         'port': 8786,
         'ssl_port': 13786,
+    },
+    'sahara': {
+        'description': 'Sahara Service',
+        'type': 'data-processing',
+        'path': '/v1.1/%(tenant_id)s',
+        'port': 8386
     }
 }
 
