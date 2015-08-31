@@ -58,6 +58,11 @@ def _extract_driver_info(node):
         # The fake_pxe driver doesn't need any credentials since there's
         # no power management
         pass
+    elif node["pm_type"] == "pxe_ucs":
+        driver_info = {"ucs_hostname": node["pm_addr"],
+                       "ucs_username": node["pm_user"],
+                       "ucs_password": node["pm_password"],
+                       "ucs_service_profile": node["pm_service_profile"]}
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
