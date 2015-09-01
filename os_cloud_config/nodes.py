@@ -54,6 +54,10 @@ def _extract_driver_info(node):
             driver_info["iboot_relay_id"] = node["pm_relay_id"]
         if "pm_port" in node:
             driver_info["iboot_port"] = node["pm_port"]
+    elif node["pm_type"] == "fake_pxe":
+        # The fake_pxe driver doesn't need any credentials since there's
+        # no power management
+        pass
     else:
         raise ValueError("Unknown pm_type: %s" % node["pm_type"])
     if "pxe" in node["pm_type"]:
