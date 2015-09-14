@@ -26,6 +26,7 @@ LOG = logging.getLogger(__name__)
 
 
 def _extract_driver_info(node):
+    driver_info = {}
     if "ipmi" in node["pm_type"]:
         driver_info = {"ipmi_address": node["pm_addr"],
                        "ipmi_username": node["pm_user"],
@@ -34,7 +35,7 @@ def _extract_driver_info(node):
         driver_info = {"drac_host": node["pm_addr"],
                        "drac_username": node["pm_user"],
                        "drac_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_ssh":
+    elif node["pm_type"] in "pxe_ssh":
         if "pm_virt_type" not in node:
             node["pm_virt_type"] = "virsh"
         driver_info = {"ssh_address": node["pm_addr"],
@@ -88,7 +89,7 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
 
     for count in range(60):
         LOG.debug('Registering %s node with ironic, try #%d.' %
-                  (node["pm_addr"], count))
+                  (node.get("pm_addr", ''), count))
         try:
             ironic_node = client.node.create(**create_map)
             break
@@ -123,7 +124,7 @@ def _populate_node_mapping(client):
     nodes = [n.to_dict() for n in client.node.list()]
     for node in nodes:
         node_details = client.node.get(node['uuid'])
-        if node_details.driver == 'pxe_ssh':
+        if node_details.driver in ('pxe_ssh', 'fake_pxe'):
             for port in client.node.list_ports(node['uuid']):
                 node_map['mac'][port.address] = node['uuid']
         elif 'ipmi' in node_details.driver:
@@ -148,7 +149,7 @@ def _populate_node_mapping(client):
 
 
 def _get_node_id(node, node_map):
-    if node['pm_type'] == 'pxe_ssh':
+    if node['pm_type'] in ('pxe_ssh', 'fake_pxe'):
         for mac in node['mac']:
             if mac.lower() in node_map['mac']:
                 return node_map['mac'][mac.lower()]

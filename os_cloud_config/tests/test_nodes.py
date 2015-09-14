@@ -304,6 +304,23 @@ class NodesTest(base.TestCase):
                                                    properties=node_properties,
                                                    driver_info=mock.ANY)
 
+    def test_register_ironic_node_fake_pxe(self):
+        node_properties = {"cpus": "1",
+                           "memory_mb": "2048",
+                           "local_gb": "30",
+                           "cpu_arch": "amd64",
+                           "capabilities": "num_nics:6"}
+        node = self._get_node()
+        for v in ('pm_addr', 'pm_user', 'pm_password'):
+            del node[v]
+        node['pm_type'] = 'fake_pxe'
+        client = mock.MagicMock()
+        nodes.register_ironic_node('service_host', node, client=client)
+        client.node.create.assert_called_once_with(driver='fake_pxe',
+                                                   name='node1',
+                                                   properties=node_properties,
+                                                   driver_info={})
+
     def test_register_ironic_node_update_int_values(self):
         node = self._get_node()
         ironic = mock.MagicMock()
@@ -351,9 +368,29 @@ class NodesTest(base.TestCase):
                     'pm_addr': {'10.0.1.2': 'fedcba'}}
         self.assertEqual(expected, nodes._populate_node_mapping(client))
 
+    def test_populate_node_mapping_ironic_fake_pxe(self):
+        client = mock.MagicMock()
+        node = mock.MagicMock()
+        node.to_dict.return_value = {'uuid': 'abcdef'}
+        ironic_node = collections.namedtuple('node', ['uuid', 'driver',
+                                             'driver_info'])
+        ironic_port = collections.namedtuple('port', ['address'])
+        node_detail = ironic_node('abcdef', 'fake_pxe', None)
+        client.node.get.return_value = node_detail
+        client.node.list_ports.return_value = [ironic_port('aaa')]
+        client.node.list.return_value = [node]
+        expected = {'mac': {'aaa': 'abcdef'}, 'pm_addr': {}}
+        self.assertEqual(expected, nodes._populate_node_mapping(client))
+
     def test_clean_up_extra_nodes_ironic(self):
         node = collections.namedtuple('node', ['uuid'])
         client = mock.MagicMock()
         client.node.list.return_value = [node('foobar')]
         nodes._clean_up_extra_nodes(set(('abcd',)), client, remove=True)
         client.node.delete.assert_called_once_with('foobar')
+
+    def test__get_node_id_fake_pxe(self):
+        node = self._get_node()
+        node['pm_type'] = 'fake_pxe'
+        node_map = {'mac': {'aaa': 'abcdef'}, 'pm_addr': {}}
+        self.assertEqual('abcdef', nodes._get_node_id(node, node_map))
