@@ -62,6 +62,38 @@ class KeystoneTest(base.TestCase):
 
         check_call_mock.assert_called_once_with(
             ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
+             "-F", "~/.ssh/config",
+             "192.0.0.3", "sudo", "keystone-manage", "pki_setup",
+             "--keystone-user",
+             "$(getent passwd | grep '^keystone' | cut -d: -f1)",
+             "--keystone-group",
+             "$(getent group | grep '^keystone' | cut -d: -f1)"])
+
+    @mock.patch('subprocess.check_call')
+    def test_initialize_custom_ssh(self, check_call_mock):
+        self._patch_client()
+        self._patch_client_v3()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+        self.client.roles.findall.return_value = []
+        self.client.tenants.findall.return_value = []
+
+        keystone.initialize(
+            '192.0.0.3', 'mytoken', 'admin@example.org', 'adminpasswd',
+            ssh_config='/foo/.ssh/config'
+        )
+
+        self.client.tenants.create.assert_has_calls(
+            [mock.call('admin', None), mock.call('service', None)])
+
+        self.assert_calls_in_grant_admin_user_roles()
+
+        self.assert_endpoint('192.0.0.3')
+
+        check_call_mock.assert_called_once_with(
+            ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
+             "-F", "/foo/.ssh/config",
              "192.0.0.3", "sudo", "keystone-manage", "pki_setup",
              "--keystone-user",
              "$(getent passwd | grep '^keystone' | cut -d: -f1)",
@@ -122,6 +154,7 @@ class KeystoneTest(base.TestCase):
 
         check_call_mock.assert_called_once_with(
             ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
+             "-F", "~/.ssh/config",
              "192.0.0.3", "sudo", "keystone-manage", "pki_setup",
              "--keystone-user",
              "$(getent passwd | grep '^keystone' | cut -d: -f1)",

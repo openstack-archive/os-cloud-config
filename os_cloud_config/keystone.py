@@ -127,7 +127,8 @@ SERVICES = {
 
 def initialize(host, admin_token, admin_email, admin_password,
                region='regionOne', ssl=None, public=None, user='root',
-               timeout=600, poll_interval=10, pki_setup=True):
+               timeout=600, poll_interval=10, pki_setup=True,
+               ssh_config='~/.ssh/config'):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -155,7 +156,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     if pki_setup:
         print("PKI initialization in init-keystone is deprecated and will be "
               "removed.")
-        _perform_pki_initialization(public or host, user)
+        _perform_pki_initialization(public or host, user, ssh_config)
 
 
 def initialize_for_swift(host, admin_token, ssl=None, public=None):
@@ -481,17 +482,16 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public):
                      'http://%s:5000/v2.0' % host)
 
 
-def _perform_pki_initialization(host, user):
+def _perform_pki_initialization(host, user, ssh_home):
     """Perform PKI initialization on a host for Keystone.
 
     :param host: ip/hostname of node where Keystone is running
     """
-    subprocess.check_call(["ssh", "-o" "StrictHostKeyChecking=no", "-t",
-                           "-l", user, host, "sudo", "keystone-manage",
-                           "pki_setup", "--keystone-user",
-                           "$(getent passwd | grep '^keystone' | cut -d: -f1)",
-                           "--keystone-group",
-                           "$(getent group | grep '^keystone' | cut -d: -f1)"])
+    command = ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", user,
+               "-F", ssh_home, host, "sudo", "keystone-manage", "pki_setup",
+               "--keystone-user", "$(getent passwd | grep '^keystone' | cut -d: -f1)",
+               "--keystone-group", "$(getent group | grep '^keystone' | cut -d: -f1)"]
+    subprocess.check_call(command)
 
 
 def _create_admin_user(keystone, admin_email, admin_password):
