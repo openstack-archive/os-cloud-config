@@ -49,6 +49,27 @@ class NodesTest(base.TestCase):
                     "ipmi_password": "random"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_ipmi_extended(self):
+        node = self._get_node()
+        node["pm_type"] = "ipmi"
+        node["ipmi_bridging"] = "dual"
+        node["ipmi_transit_address"] = "0x42"
+        node["ipmi_transit_channel"] = "0"
+        node["ipmi_target_address"] = "0x41"
+        node["ipmi_target_channel"] = "1"
+        node["ipmi_local_address"] = "0"
+        expected = {"ipmi_address": "foo.bar",
+                    "ipmi_username": "test",
+                    "ipmi_password": "random",
+                    "ipmi_bridging": "dual",
+                    "ipmi_transit_address": "0x42",
+                    "ipmi_transit_channel": "0",
+                    "ipmi_target_address": "0x41",
+                    "ipmi_target_channel": "1",
+                    "ipmi_local_address": "0",
+                    }
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_pxe_ssh(self):
         node = self._get_node()
         node["pm_type"] = "pxe_ssh"
