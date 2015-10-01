@@ -127,6 +127,12 @@ SERVICES = {
         'type': 'data-processing',
         'path': '/v1.1/%(tenant_id)s',
         'port': 8386
+    },
+    'trove': {
+        'description': 'Trove Service',
+        'type': 'database',
+        'path': '/v1.0/%(tenant_id)s',
+        'port': 8779
     }
 }
 
