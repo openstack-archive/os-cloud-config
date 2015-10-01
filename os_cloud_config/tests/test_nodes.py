@@ -125,6 +125,16 @@ class NodesTest(base.TestCase):
                     "iboot_port": "8080"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_ucs(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_ucs"
+        node["pm_service_profile"] = "foo_profile"
+        expected = {"ucs_hostname": "foo.bar",
+                    "ucs_username": "test",
+                    "ucs_password": "random",
+                    "ucs_service_profile": "foo_profile"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_pxe_ipmi_with_kernel_ramdisk(self):
         node = self._get_node()
         node["pm_type"] = "pxe_ipmi"
