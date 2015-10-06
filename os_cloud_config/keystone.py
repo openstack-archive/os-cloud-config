@@ -389,14 +389,10 @@ def _create_user_for_service(keystone, name, password):
 
         admin_role = keystone.roles.find(name='admin')
         keystone.roles.add_user_role(user, admin_role, service_tenant)
-        # Add the admin tenant role for ceilometer user to enable polling
-        # services
-        # This is marked as a security hole and should be fixed in
-        # bug: #1358237. Right now this remains the only way, documented
-        # also by Ceilometer.
         if name == 'ceilometer':
-            admin_tenant = keystone.tenants.find(name='admin')
-            keystone.roles.add_user_role(user, admin_role, admin_tenant)
+            reselleradmin_role = keystone.roles.find(name='ResellerAdmin')
+            keystone.roles.add_user_role(user, reselleradmin_role,
+                                         service_tenant)
 
 
 def _create_admin_client_v2(host, admin_token, public=None):
