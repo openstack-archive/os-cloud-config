@@ -80,10 +80,13 @@ def _extract_driver_info(node):
 
 
 def register_ironic_node(service_host, node, client=None, blocking=True):
-    properties = {"cpus": six.text_type(node["cpu"]),
-                  "memory_mb": six.text_type(node["memory"]),
-                  "local_gb": six.text_type(node["disk"]),
-                  "cpu_arch": node["arch"]}
+    mapping = {'cpus': 'cpu',
+               'memory_mb': 'memory',
+               'local_gb': 'disk',
+               'cpu_arch': 'arch'}
+    properties = {k: six.text_type(node.get(v))
+                  for k, v in mapping.items()
+                  if node.get(v) is not None}
     driver_info = _extract_driver_info(node)
 
     if 'capabilities' in node:

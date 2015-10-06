@@ -79,6 +79,10 @@ Where ``/tmp/one-node`` contains::
       }
     ]
 
+ .. note::
+
+    The memory, disk, arch, and cpu fields are optional and can be omitted.
+
 ----------------------------------------------------------
 Generating keys and certificates for use with Keystone PKI
 ----------------------------------------------------------
