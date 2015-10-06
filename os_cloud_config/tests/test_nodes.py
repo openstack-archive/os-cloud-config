@@ -152,6 +152,40 @@ class NodesTest(base.TestCase):
         node["pm_type"] = "unknown_type"
         self.assertRaises(ValueError, nodes._extract_driver_info, node)
 
+    def test_register_all_nodes_ironic_no_hw_stats(self):
+        node_list = [self._get_node()]
+
+        # Remove the hardware stats from the node dictionary
+        node_list[0].pop("cpu")
+        node_list[0].pop("memory")
+        node_list[0].pop("disk")
+        node_list[0].pop("arch")
+
+        # Node properties should be created with empty string values for the
+        # hardware statistics
+        node_properties = {"cpus": "",
+                           "memory_mb": "",
+                           "local_gb": "",
+                           "cpu_arch": "",
+                           "capabilities": "num_nics:6"}
+
+        ironic = mock.MagicMock()
+        nodes.register_all_nodes('servicehost', node_list, client=ironic)
+        pxe_node_driver_info = {"ssh_address": "foo.bar",
+                                "ssh_username": "test",
+                                "ssh_key_contents": "random",
+                                "ssh_virt_type": "virsh"}
+        pxe_node = mock.call(driver="pxe_ssh",
+                             name='node1',
+                             driver_info=pxe_node_driver_info,
+                             properties=node_properties)
+        port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
+                              address='aaa')
+        power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
+        ironic.node.create.assert_has_calls([pxe_node, mock.ANY])
+        ironic.port.create.assert_has_calls([port_call])
+        ironic.node.set_power_state.assert_has_calls([power_off_call])
+
     def test_register_all_nodes_ironic(self):
         node_list = [self._get_node()]
         node_properties = {"cpus": "1",
