@@ -217,7 +217,7 @@ Creating flavors
 
 The ``setup-flavors`` command line utility creates flavors in Nova -- either using
 the nodes that have been registered to provide a distinct set of hardware that
-is provisioned, or by specifing the set of flavors that should be created.
+is provisioned, or by specifying the set of flavors that should be created.
 
  .. note::
 
