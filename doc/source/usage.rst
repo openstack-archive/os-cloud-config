@@ -155,7 +155,7 @@ with a CIDR of ``192.0.2.0/24``, a metadata server and gateway of ``192.0.2.1``,
 and will allocate DHCP leases in the range of ``192.0.2.2`` to ``192.0.2.20``, as
 well as adding a route for ``169.254.169.254/32``.
 
-setup-neutron also supports datacentre networks that require 802.1Q VLAN tags::
+setup-neutron also supports datacenter networks that require 802.1Q VLAN tags::
 
     setup-neutron -n /tmp/ctlplane-dc
 
@@ -217,7 +217,7 @@ Creating flavors
 
 The ``setup-flavors`` command line utility creates flavors in Nova -- either using
 the nodes that have been registered to provide a distinct set of hardware that
-is provisioned, or by specifing the set of flavors that should be created.
+is provisioned, or by specifying the set of flavors that should be created.
 
  .. note::
 
