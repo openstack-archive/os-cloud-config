@@ -58,6 +58,7 @@ class NodesTest(base.TestCase):
         node["ipmi_target_address"] = "0x41"
         node["ipmi_target_channel"] = "1"
         node["ipmi_local_address"] = "0"
+        node["ipmi_priv_level"] = "OPERATOR"
         expected = {"ipmi_address": "foo.bar",
                     "ipmi_username": "test",
                     "ipmi_password": "random",
@@ -67,6 +68,7 @@ class NodesTest(base.TestCase):
                     "ipmi_target_address": "0x41",
                     "ipmi_target_channel": "1",
                     "ipmi_local_address": "0",
+                    "ipmi_priv_level": "OPERATOR",
                     }
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
