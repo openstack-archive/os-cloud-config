@@ -25,71 +25,117 @@ from os_cloud_config import glance
 LOG = logging.getLogger(__name__)
 
 
-def _extract_driver_info(node):
+def _ipmi_driver_info(node):
+    driver_info = {"ipmi_address": node["pm_addr"],
+                   "ipmi_username": node["pm_user"],
+                   "ipmi_password": node["pm_password"]}
+    for params in ('ipmi_bridging', 'ipmi_transit_address',
+                   'ipmi_transit_channel', 'ipmi_target_address',
+                   'ipmi_target_channel', 'ipmi_local_address'):
+        if node.get(params):
+            driver_info[params] = node[params]
+    return driver_info
+
+
+def _pxe_drac_driver_info(node):
+    driver_info = {"drac_host": node["pm_addr"],
+                   "drac_username": node["pm_user"],
+                   "drac_password": node["pm_password"]}
+    return driver_info
+
+
+def _pxe_ssh_driver_info(node):
+    if "pm_virt_type" not in node:
+        node["pm_virt_type"] = "virsh"
+    driver_info = {"ssh_address": node["pm_addr"],
+                   "ssh_username": node["pm_user"],
+                   "ssh_key_contents": node["pm_password"],
+                   "ssh_virt_type": node["pm_virt_type"]}
+    return driver_info
+
+
+def _pxe_ilo_driver_info(node):
+    driver_info = {"ilo_address": node["pm_addr"],
+                   "ilo_username": node["pm_user"],
+                   "ilo_password": node["pm_password"]}
+    return driver_info
+
+
+def _pxe_iboot_driver_info(node):
+    driver_info = {"iboot_address": node["pm_addr"],
+                   "iboot_username": node["pm_user"],
+                   "iboot_password": node["pm_password"]}
+    # iboot_relay_id and iboot_port are optional
+    if "pm_relay_id" in node:
+        driver_info["iboot_relay_id"] = node["pm_relay_id"]
+    if "pm_port" in node:
+        driver_info["iboot_port"] = node["pm_port"]
+    return driver_info
+
+
+def _fake_pxe_driver_info(node):
     driver_info = {}
-    if "ipmi" in node["pm_type"]:
-        driver_info = {"ipmi_address": node["pm_addr"],
-                       "ipmi_username": node["pm_user"],
-                       "ipmi_password": node["pm_password"]}
-        for params in ('ipmi_bridging', 'ipmi_transit_address',
-                       'ipmi_transit_channel', 'ipmi_target_address',
-                       'ipmi_target_channel', 'ipmi_local_address'):
-            if node.get(params):
-                driver_info[params] = node[params]
-    elif node["pm_type"] == "pxe_drac":
-        driver_info = {"drac_host": node["pm_addr"],
-                       "drac_username": node["pm_user"],
-                       "drac_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_ssh":
-        if "pm_virt_type" not in node:
-            node["pm_virt_type"] = "virsh"
-        driver_info = {"ssh_address": node["pm_addr"],
-                       "ssh_username": node["pm_user"],
-                       "ssh_key_contents": node["pm_password"],
-                       "ssh_virt_type": node["pm_virt_type"]}
-    elif node["pm_type"] == "pxe_ilo":
-        driver_info = {"ilo_address": node["pm_addr"],
-                       "ilo_username": node["pm_user"],
-                       "ilo_password": node["pm_password"]}
-    elif node["pm_type"] == "pxe_iboot":
-        driver_info = {"iboot_address": node["pm_addr"],
-                       "iboot_username": node["pm_user"],
-                       "iboot_password": node["pm_password"]}
-        # iboot_relay_id and iboot_port are optional
-        if "pm_relay_id" in node:
-            driver_info["iboot_relay_id"] = node["pm_relay_id"]
-        if "pm_port" in node:
-            driver_info["iboot_port"] = node["pm_port"]
-    elif node["pm_type"] == "fake_pxe":
-        # The fake_pxe driver doesn't need any credentials since there's
-        # no power management
-        pass
-    elif node["pm_type"] == "pxe_ucs":
-        driver_info = {"ucs_hostname": node["pm_addr"],
-                       "ucs_username": node["pm_user"],
-                       "ucs_password": node["pm_password"],
-                       "ucs_service_profile": node["pm_service_profile"]}
-    elif node["pm_type"] == "pxe_irmc":
-        driver_info = {"irmc_address": node["pm_addr"],
-                       "irmc_username": node["pm_user"],
-                       "irmc_password": node["pm_password"]}
-        # irmc_port, irmc_auth_method, irmc_client_timeout, and
-        # irmc_sensor_method are optional
-        if "pm_port" in node:
-            driver_info["irmc_port"] = node["pm_port"]
-        if "pm_auth_method" in node:
-            driver_info["irmc_auth_method"] = node["pm_auth_method"]
-        if "pm_client_timeout" in node:
-            driver_info["irmc_client_timeout"] = node["pm_client_timeout"]
-        if "pm_sensor_method" in node:
-            driver_info["irmc_sensor_method"] = node["pm_sensor_method"]
-    else:
-        raise ValueError("Unknown pm_type: %s" % node["pm_type"])
+    # The fake_pxe driver doesn't need any credentials since there's
+    # no power management
+    return driver_info
+
+
+def _pxe_ucs_driver_info(node):
+    driver_info = {"ucs_hostname": node["pm_addr"],
+                   "ucs_username": node["pm_user"],
+                   "ucs_password": node["pm_password"],
+                   "ucs_service_profile": node["pm_service_profile"]}
+    return driver_info
+
+
+def _pxe_irmc_driver_info(node):
+    driver_info = {"irmc_address": node["pm_addr"],
+                   "irmc_username": node["pm_user"],
+                   "irmc_password": node["pm_password"]}
+    # irmc_port, irmc_auth_method, irmc_client_timeout, and
+    # irmc_sensor_method are optional
+    if "pm_port" in node:
+        driver_info["irmc_port"] = node["pm_port"]
+    if "pm_auth_method" in node:
+        driver_info["irmc_auth_method"] = node["pm_auth_method"]
+    if "pm_client_timeout" in node:
+        driver_info["irmc_client_timeout"] = node["pm_client_timeout"]
+    if "pm_sensor_method" in node:
+        driver_info["irmc_sensor_method"] = node["pm_sensor_method"]
+    return driver_info
+
+
+def _associate_deploy_kr_info(driver_info, node):
     if "pxe" in node["pm_type"]:
         if "kernel_id" in node:
             driver_info["deploy_kernel"] = node["kernel_id"]
         if "ramdisk_id" in node:
             driver_info["deploy_ramdisk"] = node["ramdisk_id"]
+    return driver_info
+
+
+def _extract_driver_info(node):
+    driver_info = {}
+    dirver_info_set = {"pxe_drac": _pxe_drac_driver_info,
+                       "pxe_ssh": _pxe_ssh_driver_info,
+                       "pxe_ilo": _pxe_ilo_driver_info,
+                       "pxe_iboot": _pxe_iboot_driver_info,
+                       "fake_pxe": _fake_pxe_driver_info,
+                       "pxe_ucs": _pxe_ucs_driver_info,
+                       "pxe_irmc": _pxe_irmc_driver_info}
+
+    def _get_driver_info(node):
+        pm_type = node["pm_type"]
+        if "ipmi" in pm_type:
+            return _ipmi_driver_info(node)
+        else:
+            if pm_type in dirver_info_set:
+                return dirver_info_set.get(pm_type)(node)
+            else:
+                raise ValueError("Unknown pm_type: %s" % node["pm_type"])
+
+    driver_info = _get_driver_info(node)
+    driver_info = _associate_deploy_kr_info(driver_info, node)
     return driver_info
 
 
