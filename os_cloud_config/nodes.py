@@ -31,7 +31,8 @@ def _ipmi_driver_info(node):
                    "ipmi_password": node["pm_password"]}
     for params in ('ipmi_bridging', 'ipmi_transit_address',
                    'ipmi_transit_channel', 'ipmi_target_address',
-                   'ipmi_target_channel', 'ipmi_local_address'):
+                   'ipmi_target_channel', 'ipmi_local_address',
+                   'ipmi_priv_level'):
         if node.get(params):
             driver_info[params] = node[params]
     return driver_info
