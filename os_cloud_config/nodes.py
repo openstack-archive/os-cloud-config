@@ -88,7 +88,7 @@ def _pxe_ucs_driver_info(node):
     return driver_info
 
 
-def _pxe_irmc_driver_info(node):
+def _common_irmc_driver_info(node):
     driver_info = {"irmc_address": node["pm_addr"],
                    "irmc_username": node["pm_user"],
                    "irmc_password": node["pm_password"]}
@@ -102,6 +102,17 @@ def _pxe_irmc_driver_info(node):
         driver_info["irmc_client_timeout"] = node["pm_client_timeout"]
     if "pm_sensor_method" in node:
         driver_info["irmc_sensor_method"] = node["pm_sensor_method"]
+    return driver_info
+
+
+def _pxe_irmc_driver_info(node):
+    return _common_irmc_driver_info(node)
+
+
+def _iscsi_irmc_driver_info(node):
+    driver_info = _common_irmc_driver_info(node)
+    # irmc_deploy_iso is also required for iscsi_irmc
+    driver_info["irmc_deploy_iso"] = node["pm_deploy_iso"]
     return driver_info
 
 
@@ -122,7 +133,8 @@ def _extract_driver_info(node):
                        "pxe_iboot": _pxe_iboot_driver_info,
                        "fake_pxe": _fake_pxe_driver_info,
                        "pxe_ucs": _pxe_ucs_driver_info,
-                       "pxe_irmc": _pxe_irmc_driver_info}
+                       "pxe_irmc": _pxe_irmc_driver_info,
+                       "iscsi_irmc": _iscsi_irmc_driver_info}
 
     def _get_driver_info(node):
         pm_type = node["pm_type"]
