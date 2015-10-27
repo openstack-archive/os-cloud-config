@@ -183,6 +183,16 @@ class NodesTest(base.TestCase):
                     "irmc_sensor_method": "ipmitool"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_iscsi_irmc(self):
+        node = self._get_node()
+        node["pm_type"] = "iscsi_irmc"
+        node["pm_deploy_iso"] = "deploy.iso"
+        expected = {"irmc_address": "foo.bar",
+                    "irmc_username": "test",
+                    "irmc_password": "random",
+                    "irmc_deploy_iso": "deploy.iso"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_pxe_ipmi_with_kernel_ramdisk(self):
         node = self._get_node()
         node["pm_type"] = "pxe_ipmi"
