@@ -67,7 +67,7 @@ SERVICES = {
         'type': 'computev3',
         'path': '/v3',
         'port': 8774,
-        'name': 'nova',
+        'name': 'novav3',
         'ssl_port': 13774,
     },
     'ceilometer': {
