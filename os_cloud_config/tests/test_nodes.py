@@ -195,6 +195,12 @@ class NodesTest(base.TestCase):
                     "deploy_ramdisk": "ramdisk-foo"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_wol(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_wol"
+        expected = {"wol_host": "foo.bar"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_unknown_type(self):
         node = self._get_node()
         node["pm_type"] = "unknown_type"

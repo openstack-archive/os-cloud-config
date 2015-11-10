@@ -105,6 +105,13 @@ def _pxe_irmc_driver_info(node):
     return driver_info
 
 
+def _pxe_wol_driver_info(node):
+    driver_info = {"wol_host": node["pm_addr"]}
+    if "pm_port" in node:
+        driver_info["wol_port"] = node["pm_port"]
+    return driver_info
+
+
 def _associate_deploy_kr_info(driver_info, node):
     if "pxe" in node["pm_type"]:
         if "kernel_id" in node:
@@ -122,7 +129,8 @@ def _extract_driver_info(node):
                        "pxe_iboot": _pxe_iboot_driver_info,
                        "fake_pxe": _fake_pxe_driver_info,
                        "pxe_ucs": _pxe_ucs_driver_info,
-                       "pxe_irmc": _pxe_irmc_driver_info}
+                       "pxe_irmc": _pxe_irmc_driver_info,
+                       "pxe_wol": _pxe_wol_driver_info}
 
     def _get_driver_info(node):
         pm_type = node["pm_type"]
