@@ -142,6 +142,8 @@ def _extract_driver_info(node):
                        "pxe_ucs": _pxe_ucs_driver_info,
                        "pxe_irmc": _pxe_irmc_driver_info,
                        "iscsi_irmc": _iscsi_irmc_driver_info,
+                       # agent_irmc and iscsi_irmc share the same driver info
+                       "agent_irmc": _iscsi_irmc_driver_info,
                        "pxe_wol": _pxe_wol_driver_info}
 
     def _get_driver_info(node):
