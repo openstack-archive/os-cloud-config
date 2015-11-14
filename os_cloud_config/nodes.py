@@ -116,6 +116,12 @@ def _iscsi_irmc_driver_info(node):
     return driver_info
 
 
+def _agent_irmc_driver_info(node):
+    driver_info = _common_irmc_driver_info(node)
+    driver_info["irmc_deploy_iso"] = node["pm_deploy_iso"]
+    return driver_info
+
+
 def _pxe_wol_driver_info(node):
     driver_info = {"wol_host": node["pm_addr"]}
     if "pm_port" in node:
@@ -142,6 +148,7 @@ def _extract_driver_info(node):
                        "pxe_ucs": _pxe_ucs_driver_info,
                        "pxe_irmc": _pxe_irmc_driver_info,
                        "iscsi_irmc": _iscsi_irmc_driver_info,
+                       "agent_irmc": _iscsi_irmc_driver_info,
                        "pxe_wol": _pxe_wol_driver_info}
 
     def _get_driver_info(node):
