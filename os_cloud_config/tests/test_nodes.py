@@ -15,7 +15,12 @@
 
 import collections
 
-from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+# NOTE(bnemec): Retain compatibility with ironicclient code from both before
+# and after the removal of the openstack.common package.
+try:
+    from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+except ImportError:
+    from ironicclient.common.apiclient import exceptions as ironicexp
 import mock
 from testtools import matchers
 

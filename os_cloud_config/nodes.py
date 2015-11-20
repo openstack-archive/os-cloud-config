@@ -16,7 +16,12 @@
 import logging
 import time
 
-from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+# NOTE(bnemec): Retain compatibility with ironicclient code from both before
+# and after the removal of the openstack.common package.
+try:
+    from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+except ImportError:
+    from ironicclient.common.apiclient import exceptions as ironicexp
 import six
 
 from os_cloud_config.cmd.utils import _clients as clients
