@@ -15,7 +15,7 @@
 
 import collections
 
-from ironicclient.openstack.common.apiclient import exceptions as ironicexp
+from ironicclient import exc as ironicexp
 import mock
 from testtools import matchers
 
