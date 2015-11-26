@@ -352,9 +352,10 @@ def _register_endpoint(keystone, service, data, region=None):
         port=public_port,
         path=path)
 
-    admin_uri = 'http://{host}:{port}{path}'.format(
-        host=internal_host,
-        port=data.get('admin_port', port),
+    admin_uri = '{protocol}://{host}:{port}{path}'.format(
+        protocol=public_protocol,
+        host=public_host or internal_host,
+        port=data.get('admin_port', public_port),
         path=data.get('admin_path', path))
 
     name = data.get('name', service)
