@@ -279,7 +279,7 @@ class KeystoneTest(base.TestCase):
             'region',
             self.client.services.create.return_value.id,
             'https://192.0.0.4:1234/v2/$(tenant_id)s',
-            'http://192.0.0.3:8774/v2/$(tenant_id)s',
+            'http://192.0.0.4:8774/v2/$(tenant_id)s',
             'http://192.0.0.3:8774/v2/$(tenant_id)s')
 
     @mock.patch('os_cloud_config.keystone._create_service')
