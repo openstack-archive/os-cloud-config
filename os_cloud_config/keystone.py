@@ -128,7 +128,7 @@ SERVICES = {
 
 def initialize(host, admin_token, admin_email, admin_password,
                region='regionOne', ssl=None, public=None, user='root',
-               timeout=600, poll_interval=10, pki_setup=True):
+               timeout=600, poll_interval=10, pki_setup=True, admin=None):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -143,20 +143,22 @@ def initialize(host, admin_token, admin_email, admin_password,
     :param timeout: Total seconds to wait for keystone to be running
     :param poll_interval: Seconds to wait between keystone poll attempts
     :param pki_setup: Boolean for running pki_setup conditionally
+    :param admin: ip/hostname to use as the admin endpoint, if the
+        default is not suitable
     """
 
-    keystone_v2 = _create_admin_client_v2(host, admin_token, public)
-    keystone_v3 = _create_admin_client_v3(host, admin_token, ssl, public)
+    keystone_v2 = _create_admin_client_v2(host, admin_token)
+    keystone_v3 = _create_admin_client_v3(host, admin_token, ssl)
 
     _create_roles(keystone_v2, timeout, poll_interval)
     _create_tenants(keystone_v2)
     _create_admin_user(keystone_v2, admin_email, admin_password)
     _grant_admin_user_roles(keystone_v3)
-    _create_keystone_endpoint(keystone_v2, host, region, ssl, public)
+    _create_keystone_endpoint(keystone_v2, host, region, ssl, public, admin)
     if pki_setup:
         print("PKI initialization in init-keystone is deprecated and will be "
               "removed.")
-        _perform_pki_initialization(public or host, user)
+        _perform_pki_initialization(host, user)
 
 
 def initialize_for_swift(host, admin_token, ssl=None, public=None):
@@ -459,7 +461,7 @@ def _create_tenants(keystone):
     _create_tenant(keystone, 'service')
 
 
-def _create_keystone_endpoint(keystone, host, region, ssl, public):
+def _create_keystone_endpoint(keystone, host, region, ssl, public, admin):
     """Create keystone endpoint in Keystone.
 
     :param keystone: keystone v2 client
@@ -468,6 +470,8 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public):
     :param ssl: ip/hostname to use as the ssl endpoint, if required
     :param public: ip/hostname to use as the public endpoint, if default is
         not suitable
+    :param admin: ip/hostname to use as the admin endpoint, if the
+        default is not suitable
     """
     LOG.debug('Create keystone public endpoint')
     service = _create_service(keystone, 'keystone', 'identity',
@@ -477,8 +481,10 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public):
         public_url = 'https://%s:13000/v2.0' % ssl
     elif public:
         public_url = 'http://%s:5000/v2.0' % public
-    _create_endpoint(keystone, region, service.id, public_url,
-                     'http://%s:35357/v2.0' % host,
+    admin_url = 'http://%s:35357/v2.0' % host
+    if admin:
+        admin_url = 'http://%s:35357/v2.0' % admin
+    _create_endpoint(keystone, region, service.id, public_url, admin_url,
                      'http://%s:5000/v2.0' % host)
 
 
