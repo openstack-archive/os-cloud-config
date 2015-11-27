@@ -478,7 +478,7 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public):
     elif public:
         public_url = 'http://%s:5000/v2.0' % public
     _create_endpoint(keystone, region, service.id, public_url,
-                     'http://%s:35357/v2.0' % host,
+                     'http://%s:35357/v2.0' % public,
                      'http://%s:5000/v2.0' % host)
 
 
