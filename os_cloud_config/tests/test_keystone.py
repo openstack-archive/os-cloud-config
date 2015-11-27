@@ -22,15 +22,17 @@ from os_cloud_config.tests import base
 
 class KeystoneTest(base.TestCase):
 
-    def assert_endpoint(self, host, region='regionOne', public_endpoint=None):
+    def assert_endpoint(self, host, region='regionOne', public_endpoint=None,
+                        admin_endpoint=None):
         self.client.services.create.assert_called_once_with(
             'keystone', 'identity', description='Keystone Identity Service')
         if public_endpoint is None:
             public_endpoint = 'http://%s:5000/v2.0' % host
+        if admin_endpoint is None:
+            admin_endpoint = 'http://%s:35357/v2.0' % host
         self.client.endpoints.create.assert_called_once_with(
             region, self.client.services.create.return_value.id,
-            public_endpoint, 'http://%s:35357/v2.0' % host,
-            'http://192.0.0.3:5000/v2.0')
+            public_endpoint, admin_endpoint, 'http://192.0.0.3:5000/v2.0')
 
     def assert_calls_in_grant_admin_user_roles(self):
         self.client_v3.roles.list.assert_has_calls([mock.call(name='admin')])
@@ -221,6 +223,34 @@ class KeystoneTest(base.TestCase):
             'keystone.internal')
         public_endpoint = 'https://keystone.example.com:13000/v2.0'
         self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint)
+
+    def test_create_keystone_endpoint_public_and_admin(self):
+        self._patch_client()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
+        keystone._create_keystone_endpoint(
+            self.client, '192.0.0.3', 'regionOne', None, 'keystone.public',
+            'keystone.admin')
+        public_endpoint = 'http://keystone.public:5000/v2.0'
+        admin_endpoint = 'http://keystone.admin:35357/v2.0'
+        self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint,
+                             admin_endpoint=admin_endpoint)
+
+    def test_create_keystone_endpoint_ssl_and_public_and_admin(self):
+        self._patch_client()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
+        keystone._create_keystone_endpoint(
+            self.client, '192.0.0.3', 'regionOne', 'keystone.example.com',
+            'keystone.public', 'keystone.admin')
+        public_endpoint = 'https://keystone.example.com:13000/v2.0'
+        admin_endpoint = 'http://keystone.admin:35357/v2.0'
+        self.assert_endpoint('192.0.0.3', public_endpoint=public_endpoint,
+                             admin_endpoint=admin_endpoint)
 
     def test_create_keystone_endpoint_region(self):
         self._patch_client()
