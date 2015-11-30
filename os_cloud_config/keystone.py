@@ -150,8 +150,8 @@ def initialize(host, admin_token, admin_email, admin_password,
         default is not suitable
     """
 
-    keystone_v2 = _create_admin_client_v2(host, admin_token, public)
-    keystone_v3 = _create_admin_client_v3(host, admin_token, ssl, public)
+    keystone_v2 = _create_admin_client_v2(host, admin_token)
+    keystone_v3 = _create_admin_client_v3(host, admin_token, ssl)
 
     _create_roles(keystone_v2, timeout, poll_interval)
     _create_tenants(keystone_v2)
@@ -162,7 +162,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     if pki_setup:
         print("PKI initialization in init-keystone is deprecated and will be "
               "removed.")
-        _perform_pki_initialization(public or host, user)
+        _perform_pki_initialization(host, user)
 
 
 def initialize_for_swift(host, admin_token, ssl=None, public=None):
