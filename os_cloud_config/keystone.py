@@ -95,7 +95,7 @@ SERVICES = {
         'path': '/v1/AUTH_%(tenant_id)s',
         'admin_path': '/v1',
         'port': 8080,
-        'ssl_port': 13080,
+        'ssl_port': 13808,
     },
     'horizon': {
         'description': 'OpenStack Dashboard',
