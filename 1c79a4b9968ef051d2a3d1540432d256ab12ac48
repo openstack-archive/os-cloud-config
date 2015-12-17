@@ -1,0 +1,13 @@
+Code-Review+1: Dan Sneddon <dsneddon@redhat.com>
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Code-Review+1: Brad P. Crochet <brad@redhat.com>
+Code-Review+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Workflow+1: Giulio Fidente <gfidente@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 17 Dec 2015 18:33:27 +0000
+Reviewed-on: https://review.openstack.org/250875
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
