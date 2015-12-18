@@ -1,0 +1,10 @@
+Code-Review+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Workflow+1: Derek Higgins <derekh@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 18 Dec 2015 12:02:26 +0000
+Reviewed-on: https://review.openstack.org/251466
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
