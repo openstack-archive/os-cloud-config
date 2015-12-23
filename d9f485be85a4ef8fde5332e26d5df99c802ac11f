@@ -1,0 +1,10 @@
+Code-Review+2: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: Clint Adams <clint@gcfm.net>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 23 Dec 2015 16:22:12 +0000
+Reviewed-on: https://review.openstack.org/247624
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
