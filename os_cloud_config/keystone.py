@@ -18,7 +18,7 @@ import logging
 import subprocess
 import time
 
-from keystoneclient.openstack.common.apiclient import exceptions
+from keystoneclient import exceptions
 import keystoneclient.v2_0.client as ksclient_v2
 import keystoneclient.v3.client as ksclient_v3
 from six.moves.urllib.parse import urlparse
