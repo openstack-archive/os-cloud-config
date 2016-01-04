@@ -1,0 +1,10 @@
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 04 Jan 2016 23:00:27 +0000
+Reviewed-on: https://review.openstack.org/231613
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
