@@ -52,3 +52,12 @@ class CloudConfigException(Exception):
 
 class MissingEnvironment(CloudConfigException):
     message = "Required environment variables are not set."
+
+
+class InvalidNode(ValueError):
+    """Node data is invalid."""
+
+    def __init__(self, message, node=None):
+        message = 'Invalid node data: %s' % message
+        self.node = node
+        super(InvalidNode, self).__init__(message)
