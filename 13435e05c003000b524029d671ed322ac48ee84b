@@ -1,0 +1,10 @@
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Code-Review+1: Gael Chamoulaud <gchamoul@redhat.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 04 Jan 2016 15:17:16 +0000
+Reviewed-on: https://review.openstack.org/233230
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
