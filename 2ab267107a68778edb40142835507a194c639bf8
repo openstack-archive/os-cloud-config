@@ -1,0 +1,13 @@
+Code-Review+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+1: Monty Taylor <mordred@inaugust.com>
+Code-Review+1: Jamie Lennox <jamielennox@gmail.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 08 Jan 2016 00:20:07 +0000
+Reviewed-on: https://review.openstack.org/261802
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
