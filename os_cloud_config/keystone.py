@@ -74,6 +74,7 @@ SERVICES = {
         'description': 'Ceilometer Service',
         'type': 'metering',
         'port': 8777,
+        'ssl_port': 13777,
     },
     'cinder': {
         'description': 'Cinder Volume Service',
