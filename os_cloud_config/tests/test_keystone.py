@@ -297,6 +297,26 @@ class KeystoneTest(base.TestCase):
             self.client, '192.0.0.3', 'regionTwo', None, None, None, None)
         self.assert_endpoint('192.0.0.3', region='regionTwo')
 
+    def test_create_keystone_endpoint_ipv6(self):
+        self._patch_client()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
+        keystone._create_keystone_endpoint(
+            self.client, '2001:db8:fd00:1000:f816:3eff:fec2:8e7c',
+            'regionOne',
+            None,
+            '2001:db8:fd00:1000:f816:3eff:fec2:8e7d',
+            '2001:db8:fd00:1000:f816:3eff:fec2:8e7e',
+            '2001:db8:fd00:1000:f816:3eff:fec2:8e7f')
+        self.assert_endpoint(
+            '[2001:db8:fd00:1000:f816:3eff:fec2:8e7c]',
+            region='regionOne',
+            public_endpoint='http://[2001:db8:fd00:1000:f816:3eff:fec2:8e7d]:5000/v2.0',
+            admin_endpoint='http://[2001:db8:fd00:1000:f816:3eff:fec2:8e7e]:35357/v2.0',
+            internal_endpoint='http://[2001:db8:fd00:1000:f816:3eff:fec2:8e7f]:5000/v2.0')
+
     @mock.patch('time.sleep')
     def test_create_roles_retry(self, sleep):
         self._patch_client()
