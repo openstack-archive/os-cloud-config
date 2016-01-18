@@ -297,6 +297,27 @@ class KeystoneTest(base.TestCase):
             self.client, '192.0.0.3', 'regionTwo', None, None, None, None)
         self.assert_endpoint('192.0.0.3', region='regionTwo')
 
+    def test_create_keystone_endpoint_ipv6(self):
+        self._patch_client()
+
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
+        keystone._create_keystone_endpoint(
+            self.client, '2001:db8:fd00:1000:f816:3eff:fec2:8e7c',
+            'regionOne',
+            None,
+            '2001:db8:fd00:1000:f816:3eff:fec2:8e7d',
+            '2001:db8:fd00:1000:f816:3eff:fec2:8e7e',
+            '2001:db8:fd00:1000:f816:3eff:fec2:8e7f')
+        pe = 'http://[2001:db8:fd00:1000:f816:3eff:fec2:8e7d]:5000/v2.0'
+        ae = 'http://[2001:db8:fd00:1000:f816:3eff:fec2:8e7e]:35357/v2.0'
+        ie = 'http://[2001:db8:fd00:1000:f816:3eff:fec2:8e7f]:5000/v2.0'
+        self.assert_endpoint(
+            '[2001:db8:fd00:1000:f816:3eff:fec2:8e7c]',
+            region='regionOne', public_endpoint=pe, admin_endpoint=ae,
+            internal_endpoint=ie)
+
     @mock.patch('time.sleep')
     def test_create_roles_retry(self, sleep):
         self._patch_client()
@@ -346,6 +367,47 @@ class KeystoneTest(base.TestCase):
             'https://192.0.0.4:1234/v2/$(tenant_id)s',
             'http://192.0.0.3:8774/v2/$(tenant_id)s',
             'http://192.0.0.3:8774/v2/$(tenant_id)s')
+
+    def test_setup_endpoints_ipv6(self):
+        self.client = mock.MagicMock()
+        self.client.users.find.side_effect = ksclient_v2.exceptions.NotFound()
+        self.client.services.findall.return_value = []
+        self.client.endpoints.findall.return_value = []
+
+        keystone.setup_endpoints(
+            {'nova': {'password': 'pass', 'type': 'compute',
+                      'ssl_port': 1234}},
+            public_host='2001:db8:fd00:1000:f816:3eff:fec2:8e7c',
+            region='region', client=self.client,
+            os_auth_url='https://[2001:db8:fd00:1000:f816:3eff:fec2:8e7c]')
+
+        self.client.users.find.assert_called_once_with(name='nova')
+        self.client.tenants.find.assert_called_once_with(name='service')
+        self.client.roles.find.assert_called_once_with(name='admin')
+        self.client.services.findall.assert_called_once_with(type='compute')
+        self.client.endpoints.findall.assert_called_once_with(
+            publicurl='https://[2001:db8:fd00:1000:f816:3eff:fec2:8e7c]'
+                      ':1234/v2/$(tenant_id)s')
+
+        self.client.users.create.assert_called_once_with(
+            'nova', 'pass',
+            tenant_id=self.client.tenants.find.return_value.id,
+            email='email=nobody@example.com')
+
+        self.client.roles.add_user_role.assert_called_once_with(
+            self.client.users.create.return_value,
+            self.client.roles.find.return_value,
+            self.client.tenants.find.return_value)
+
+        self.client.services.create.assert_called_once_with(
+            'nova', 'compute', description='Nova Compute Service')
+        ipv6_addr = '2001:db8:fd00:1000:f816:3eff:fec2:8e7c'
+        self.client.endpoints.create.assert_called_once_with(
+            'region',
+            self.client.services.create.return_value.id,
+            'https://[%s]:1234/v2/$(tenant_id)s' % ipv6_addr,
+            'http://[%s]:8774/v2/$(tenant_id)s' % ipv6_addr,
+            'http://[%s]:8774/v2/$(tenant_id)s' % ipv6_addr)
 
     @mock.patch('os_cloud_config.keystone._create_service')
     def test_create_ssl_endpoint_no_ssl_port(self, mock_create_service):
