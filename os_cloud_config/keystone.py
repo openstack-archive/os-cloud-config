@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import logging
+import socket
 import subprocess
 import time
 
@@ -343,6 +344,16 @@ def setup_endpoints(endpoints, public_host=None, region=None, client=None,
         _register_endpoint(client, service, conf, region)
 
 
+def is_valid_ipv6_address(address):
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+    except socket.error:  # not a valid address
+        return False
+    except TypeError:  # Not a string, e.g. None
+        return False
+    return True
+
+
 def _register_endpoint(keystone, service, data, region=None):
     """Create single service endpoint in Keystone.
 
@@ -353,11 +364,15 @@ def _register_endpoint(keystone, service, data, region=None):
     """
     path = data.get('path', '/')
     internal_host = data.get('internal_host')
+    if is_valid_ipv6_address(internal_host):
+        internal_host = '[{host}]'.format(host=internal_host)
     port = data.get('port')
     internal_uri = 'http://{host}:{port}{path}'.format(
         host=internal_host, port=port, path=path)
 
     public_host = data.get('public_host')
+    if is_valid_ipv6_address(public_host):
+        public_host = '[{host}]'.format(host=public_host)
     public_protocol = 'http'
     public_port = port
     if public_host and 'ssl_port' in data:
@@ -495,6 +510,18 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public, admin,
     LOG.debug('Create keystone public endpoint')
     service = _create_service(keystone, 'keystone', 'identity',
                               description='Keystone Identity Service')
+
+    if is_valid_ipv6_address(host):
+        host = '[{host}]'.format(host=host)
+    if is_valid_ipv6_address(ssl):
+        ssl = '[{host}]'.format(host=ssl)
+    if is_valid_ipv6_address(public):
+        public = '[{host}]'.format(host=public)
+    if is_valid_ipv6_address(admin):
+        admin = '[{host}]'.format(host=admin)
+    if is_valid_ipv6_address(internal):
+        internal = '[{host}]'.format(host=internal)
+
     public_url = 'http://%s:5000/v2.0' % host
     if ssl:
         public_url = 'https://%s:13000/v2.0' % ssl
