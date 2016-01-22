@@ -1,0 +1,10 @@
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+2: Giulio Fidente <gfidente@redhat.com>
+Workflow+1: Giulio Fidente <gfidente@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 22 Jan 2016 14:11:24 +0000
+Reviewed-on: https://review.openstack.org/269254
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
