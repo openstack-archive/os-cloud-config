@@ -76,6 +76,11 @@ SERVICES = {
         'type': 'metering',
         'port': 8777,
     },
+    'aodh': {
+        'description': 'Aodh Service',
+        'type': 'alarming',
+        'port': 8042,
+    },
     'cinder': {
         'description': 'Cinder Volume Service',
         'type': 'volume',
