@@ -77,6 +77,18 @@ SERVICES = {
         'port': 8777,
         'ssl_port': 13777,
     },
+    'gnocchi': {
+        'description': 'OpenStack Metric Service',
+        'type': 'metric',
+        'port': 8041,
+        'ssl_port': 13041,
+    },
+    'aodh': {
+        'description': 'OpenStack Alarming Service',
+        'type': 'alarming',
+        'port': 8042,
+        'ssl_port': 13042,
+    },
     'cinder': {
         'description': 'Cinder Volume Service',
         'type': 'volume',
