@@ -77,6 +77,18 @@ SERVICES = {
         'port': 8777,
         'ssl_port': 13777,
     },
+    'gnocchi': {
+        'description': 'OpenStack Metric Service',
+        'type': 'metric',
+        'port': 8041,
+        'ssl_port': 13041,
+    },
+    'aodh': {
+        'description': 'OpenStack Alarming Service',
+        'type': 'alarming',
+        'port': 8042,
+        'ssl_port': 13042,
+    },
     'cinder': {
         'description': 'Cinder Volume Service',
         'type': 'volume',
@@ -424,7 +436,7 @@ def _create_user_for_service(keystone, name, password):
 
         admin_role = keystone.roles.find(name='admin')
         keystone.roles.add_user_role(user, admin_role, service_tenant)
-        if name == 'ceilometer':
+        if name in ['ceilometer', 'gnocchi']:
             reselleradmin_role = keystone.roles.find(name='ResellerAdmin')
             keystone.roles.add_user_role(user, reselleradmin_role,
                                          service_tenant)
