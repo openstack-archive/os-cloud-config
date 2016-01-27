@@ -1,0 +1,10 @@
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Workflow+1: Derek Higgins <derekh@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 27 Jan 2016 10:43:04 +0000
+Reviewed-on: https://review.openstack.org/270376
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
