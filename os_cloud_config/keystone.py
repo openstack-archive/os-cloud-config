@@ -444,7 +444,10 @@ def _create_admin_client_v2(host, admin_token, public=None):
     """
     # It may not be readily obvious that admin v2 is never available
     # via https. The SSL parameter is just the DNS name to use.
-    admin_url = 'http://%s:35357/v2.0' % (public or host)
+    keystone_host = public or host
+    if is_valid_ipv6_address(keystone_host):
+        keystone_host = '[{host}]'.format(host=keystone_host)
+    admin_url = 'http://%s:35357/v2.0' % (keystone_host)
     return ksclient_v2.Client(endpoint=admin_url, token=admin_token)
 
 
@@ -457,10 +460,13 @@ def _create_admin_client_v3(host, admin_token, ssl=None, public=None):
     :param public: ip/hostname to use as the public endpoint, if default is
         not suitable
     """
+    keystone_host = public or host
+    if is_valid_ipv6_address(keystone_host):
+        keystone_host = '[{host}]'.format(host=keystone_host)
     # TODO(bnemec): This should respect the ssl parameter, but right now we
     # don't support running the admin endpoint behind ssl.  Once that is
     # fixed, this should use ssl when available.
-    admin_url = '%s://%s:35357/v3' % ('http', public or host)
+    admin_url = '%s://%s:35357/v3' % ('http', keystone_host)
     return ksclient_v3.Client(endpoint=admin_url, token=admin_token)
 
 
