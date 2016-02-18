@@ -221,6 +221,22 @@ class NodesTest(base.TestCase):
         expected = {"wol_host": "foo.bar"}
         self.assertEqual(expected, nodes._extract_driver_info(node))
 
+    def test_extract_driver_info_pxe_amt(self):
+        node = self._get_node()
+        node["pm_type"] = "pxe_amt"
+        expected = {"amt_address": "foo.bar",
+                    "amt_username": "test",
+                    "amt_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
+    def test_extract_driver_info_amt_agent(self):
+        node = self._get_node()
+        node["pm_type"] = "amt_agent"
+        expected = {"amt_address": "foo.bar",
+                    "amt_username": "test",
+                    "amt_password": "random"}
+        self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_extract_driver_info_unknown_type(self):
         node = self._get_node()
         node["pm_type"] = "unknown_type"
