@@ -184,6 +184,13 @@ DRIVER_INFO = {
             'pm_addr': 'wol_host',
             'pm_port': 'wol_port',
         }),
+    '.*_pxe': DriverInfo(
+        'pxe',
+        mapping={
+            'pm_addr': 'amt_hostname',
+            'pm_user': 'amt_username',
+            'pm_password': 'amt_password',
+        }),
     'fake(|_pxe|_agent)': DriverInfo('fake', mapping={}),
 }
 
