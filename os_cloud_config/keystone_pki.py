@@ -162,7 +162,7 @@ def generate_certs_into_json(jsonfile, seed):
         signing_key_name = 'signing_key'
         signing_cert_name = 'signing_certificate'
     else:
-        parent = 'parameters'
+        parent = 'parameter_defaults'
         ca_cert_name = 'KeystoneCACertificate'
         signing_key_name = 'KeystoneSigningKey'
         signing_cert_name = 'KeystoneSigningCertificate'

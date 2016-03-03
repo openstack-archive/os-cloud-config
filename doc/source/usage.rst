@@ -104,7 +104,7 @@ which Keystone uses for signing authentication tokens.
   That adds following values into ``overcloud-env.json`` file::
 
     {
-      "parameters": {
+      "parameter_defaults": {
         "KeystoneSigningKey": "some_key",
         "KeystoneSigningCertificate": "some_cert",
         "KeystoneCACertificate": "some_cert"
