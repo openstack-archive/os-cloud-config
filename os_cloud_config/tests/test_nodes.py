@@ -38,7 +38,7 @@ class NodesTest(base.TestCase):
         register_func.side_effect = [return_node, ironicexp.Conflict]
         seen = nodes._register_list_of_nodes(register_func, {}, None,
                                              nodes_list, False, 'servicehost',
-                                             None, None)
+                                             None, None, None)
         self.assertEqual(seen, set(nodes_list))
 
     def test_extract_driver_info_ipmi(self):
@@ -458,6 +458,20 @@ class NodesTest(base.TestCase):
                                                    name='node1',
                                                    properties=node_properties,
                                                    driver_info={})
+
+    def test_register_ironic_node_initial_state_available(self):
+        node = self._get_node()
+        client = mock.MagicMock()
+        nodes.register_ironic_node('service_host', node, client=client,
+                                   initial_state="available")
+        assert client.node.set_provision_state.call_count == 2
+
+    def test_register_ironic_node_initial_state_enroll(self):
+        node = self._get_node()
+        client = mock.MagicMock()
+        nodes.register_ironic_node('service_host', node, client=client,
+                                   initial_state="enroll")
+        assert client.node.set_provision_state.call_count == 1
 
     def test_register_ironic_node_update_int_values(self):
         node = self._get_node()

@@ -161,7 +161,8 @@ def _extract_driver_info(node):
     return driver_info
 
 
-def register_ironic_node(service_host, node, client=None, blocking=True):
+def register_ironic_node(service_host, node, client=None, blocking=True,
+                         initial_state="available"):
     mapping = {'cpus': 'cpu',
                'memory_mb': 'memory',
                'local_gb': 'disk',
@@ -200,6 +201,14 @@ def register_ironic_node(service_host, node, client=None, blocking=True):
         else:
             LOG.debug('Service unavailable after 60 tries, giving up.')
         raise ironicexp.ServiceUnavailable()
+
+    try:
+        client.node.set_provision_state(ironic_node.uuid, "manage")
+        if initial_state == "available":
+            client.node.set_provision_state(ironic_node.uuid, "provide")
+    except Exception:
+        # XXX error handling goes here
+        pass
 
     for mac in node["mac"]:
         client.port.create(address=mac, node_uuid=ironic_node.uuid)
@@ -265,7 +274,7 @@ def _get_node_id(node, node_map):
 
 
 def _update_or_register_ironic_node(service_host, node, node_map, client=None,
-                                    blocking=True):
+                                    blocking=True, initial_state="available"):
     node_uuid = _get_node_id(node, node_map)
     massage_map = {'cpu': '/properties/cpus',
                    'memory': '/properties/memory_mb',
@@ -339,7 +348,8 @@ def _clean_up_extra_nodes(seen, client, remove=False):
 
 
 def _register_list_of_nodes(register_func, node_map, client, nodes_list,
-                            blocking, service_host, kernel_id, ramdisk_id):
+                            blocking, service_host, kernel_id, ramdisk_id,
+                            initial_state):
     seen = set()
     for node in nodes_list:
         if kernel_id:
@@ -350,7 +360,8 @@ def _register_list_of_nodes(register_func, node_map, client, nodes_list,
                 node['ramdisk_id'] = ramdisk_id
         try:
             new_node = register_func(service_host, node, node_map,
-                                     client=client, blocking=blocking)
+                                     client=client, blocking=blocking,
+                                     initial_state=initial_state)
             seen.add(new_node)
         except ironicexp.Conflict:
             LOG.debug("Could not update node, moving to next host")
@@ -360,7 +371,8 @@ def _register_list_of_nodes(register_func, node_map, client, nodes_list,
 
 def register_all_nodes(service_host, nodes_list, client=None, remove=False,
                        blocking=True, keystone_client=None, glance_client=None,
-                       kernel_name=None, ramdisk_name=None):
+                       kernel_name=None, ramdisk_name=None,
+                       initial_state="available"):
     LOG.debug('Registering all nodes.')
     if client is None:
         LOG.warn('Creating ironic client inline is deprecated, please '
@@ -378,5 +390,6 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False,
             glance_client, kernel_name, ramdisk_name)
     seen = _register_list_of_nodes(register_func, node_map, client,
                                    nodes_list, blocking, service_host,
-                                   glance_ids['kernel'], glance_ids['ramdisk'])
+                                   glance_ids['kernel'], glance_ids['ramdisk'],
+                                   initial_state)
     _clean_up_extra_nodes(seen, client, remove=remove)
