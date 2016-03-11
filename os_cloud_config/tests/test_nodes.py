@@ -264,7 +264,9 @@ class NodesTest(base.TestCase):
                            "cpu_arch": "amd64",
                            "capabilities": "num_nics:6"}
         ironic = mock.MagicMock()
-        nodes.register_all_nodes('servicehost', node_list, client=ironic)
+        node_uuid = ironic.node.create.return_value.uuid
+        ids = nodes.register_all_nodes('servicehost', node_list, client=ironic)
+        self.assertEqual({node_uuid}, ids)
         pxe_node_driver_info = {"ssh_address": "foo.bar",
                                 "ssh_username": "test",
                                 "ssh_key_contents": "random",
@@ -273,7 +275,7 @@ class NodesTest(base.TestCase):
                              name='node1',
                              driver_info=pxe_node_driver_info,
                              properties=node_properties)
-        port_call = mock.call(node_uuid=ironic.node.create.return_value.uuid,
+        port_call = mock.call(node_uuid=node_uuid,
                               address='aaa')
         power_off_call = mock.call(ironic.node.create.return_value.uuid, 'off')
         ironic.node.create.assert_has_calls([pxe_node, mock.ANY])

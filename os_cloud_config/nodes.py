@@ -380,3 +380,4 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False,
                                    nodes_list, blocking, service_host,
                                    glance_ids['kernel'], glance_ids['ramdisk'])
     _clean_up_extra_nodes(seen, client, remove=remove)
+    return seen
