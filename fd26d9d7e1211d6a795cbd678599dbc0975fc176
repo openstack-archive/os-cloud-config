@@ -1,0 +1,10 @@
+Code-Review+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Workflow+1: James Slagle <jslagle@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sat, 19 Mar 2016 18:19:09 +0000
+Reviewed-on: https://review.openstack.org/272110
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
