@@ -25,6 +25,11 @@ from os_cloud_config import glance
 LOG = logging.getLogger(__name__)
 
 
+# This module is no longer used by TripleO! If you feel like changing one of
+# the functions below or adding a new one, please apply your change to
+# tripleo_common.utils.nodes in the tripleo-common repo.
+
+
 def _ipmi_driver_info(node):
     driver_info = {"ipmi_address": node["pm_addr"],
                    "ipmi_username": node["pm_user"],
@@ -361,6 +366,9 @@ def _register_list_of_nodes(register_func, node_map, client, nodes_list,
 def register_all_nodes(service_host, nodes_list, client=None, remove=False,
                        blocking=True, keystone_client=None, glance_client=None,
                        kernel_name=None, ramdisk_name=None):
+    LOG.warning('Using register_all_nodes from os-cloud-config is deprecated, '
+                'please use the same function from tripleo_common.utils.nodes')
+
     LOG.debug('Registering all nodes.')
     if client is None:
         LOG.warn('Creating ironic client inline is deprecated, please '
