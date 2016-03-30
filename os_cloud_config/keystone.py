@@ -155,7 +155,8 @@ SERVICES = {
 def initialize(host, admin_token, admin_email, admin_password,
                region='regionOne', ssl=None, public=None, user='root',
                timeout=600, poll_interval=10, pki_setup=True, admin=None,
-               internal=None):
+               internal=None, public_port=None, admin_port=None,
+               internal_port=None):
     """Perform post-heat initialization of Keystone.
 
     :param host: ip/hostname of node where Keystone is running
@@ -174,6 +175,12 @@ def initialize(host, admin_token, admin_email, admin_password,
         default is not suitable
     :param internal: ip/hostname to use as the internal endpoint, if the
         default is not suitable
+    :param public_port: port to be used for the public endpoint, if default is
+        not suitable
+    :param admin_port: port to be used for the admin endpoint, if default is
+        not suitable
+    :param internal_port: port to be used for the internal endpoint, if
+        default is not suitable
     """
 
     keystone_v2 = _create_admin_client_v2(host, admin_token)
@@ -184,7 +191,7 @@ def initialize(host, admin_token, admin_email, admin_password,
     _create_admin_user(keystone_v2, admin_email, admin_password)
     _grant_admin_user_roles(keystone_v3)
     _create_keystone_endpoint(keystone_v2, host, region, ssl, public, admin,
-                              internal)
+                              internal, public_port, admin_port, internal_port)
     if pki_setup:
         print("PKI initialization in init-keystone is deprecated and will be "
               "removed.")
@@ -508,7 +515,8 @@ def _create_tenants(keystone):
 
 
 def _create_keystone_endpoint(keystone, host, region, ssl, public, admin,
-                              internal):
+                              internal, public_port=None, admin_port=None,
+                              internal_port=None):
     """Create keystone endpoint in Keystone.
 
     :param keystone: keystone v2 client
@@ -520,6 +528,12 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public, admin,
     :param admin: ip/hostname to use as the admin endpoint, if the
         default is not suitable
     :param internal: ip/hostname to use as the internal endpoint, if the
+        default is not suitable
+    :param public_port: port to be used for the public endpoint, if default is
+        not suitable
+    :param admin_port: port to be used for the admin endpoint, if default is
+        not suitable
+    :param internal_port: port to be used for the internal endpoint, if
         default is not suitable
     """
     LOG.debug('Create keystone public endpoint')
@@ -537,19 +551,27 @@ def _create_keystone_endpoint(keystone, host, region, ssl, public, admin,
     if is_valid_ipv6_address(internal):
         internal = '[{host}]'.format(host=internal)
 
-    public_url = 'http://%s:5000/v2.0' % host
+    url_template = '{proto}://{host}:{port}/v2.0'
+    public_url = url_template.format(proto='http', host=host,
+                                     port=public_port or 5000)
     if ssl:
-        public_url = 'https://%s:13000/v2.0' % ssl
+        public_url = url_template.format(proto='https', host=ssl,
+                                         port=public_port or 13000)
     elif public:
-        public_url = 'http://%s:5000/v2.0' % public
+        public_url = url_template.format(proto='http', host=public,
+                                         port=public_port or 5000)
 
-    admin_url = 'http://%s:35357/v2.0' % host
+    admin_url = url_template.format(proto='http', host=host,
+                                    port=admin_port or 35357)
     if admin:
-        admin_url = 'http://%s:35357/v2.0' % admin
+        admin_url = url_template.format(proto='http', host=admin,
+                                        port=admin_port or 35357)
 
-    internal_url = 'http://%s:5000/v2.0' % host
+    internal_url = url_template.format(proto='http', host=host,
+                                       port=internal_port or 5000)
     if internal:
-        internal_url = 'http://%s:5000/v2.0' % internal
+        internal_url = url_template.format(proto='http', host=internal,
+                                           port=internal_port or 5000)
 
     _create_endpoint(keystone, region, service.id, public_url, admin_url,
                      internal_url)
