@@ -347,7 +347,7 @@ class KeystoneTest(base.TestCase):
         self.client.roles.find.assert_called_once_with(name='admin')
         self.client.services.findall.assert_called_once_with(type='compute')
         self.client.endpoints.findall.assert_called_once_with(
-            publicurl='https://192.0.0.4:1234/v2/$(tenant_id)s')
+            publicurl='https://192.0.0.4:1234/v2.1/$(tenant_id)s')
 
         self.client.users.create.assert_called_once_with(
             'nova', 'pass',
@@ -364,9 +364,9 @@ class KeystoneTest(base.TestCase):
         self.client.endpoints.create.assert_called_once_with(
             'region',
             self.client.services.create.return_value.id,
-            'https://192.0.0.4:1234/v2/$(tenant_id)s',
-            'http://192.0.0.3:8774/v2/$(tenant_id)s',
-            'http://192.0.0.3:8774/v2/$(tenant_id)s')
+            'https://192.0.0.4:1234/v2.1/$(tenant_id)s',
+            'http://192.0.0.3:8774/v2.1/$(tenant_id)s',
+            'http://192.0.0.3:8774/v2.1/$(tenant_id)s')
 
     def test_setup_endpoints_ipv6(self):
         self.client = mock.MagicMock()
@@ -387,7 +387,7 @@ class KeystoneTest(base.TestCase):
         self.client.services.findall.assert_called_once_with(type='compute')
         self.client.endpoints.findall.assert_called_once_with(
             publicurl='https://[2001:db8:fd00:1000:f816:3eff:fec2:8e7c]'
-                      ':1234/v2/$(tenant_id)s')
+                      ':1234/v2.1/$(tenant_id)s')
 
         self.client.users.create.assert_called_once_with(
             'nova', 'pass',
@@ -405,9 +405,9 @@ class KeystoneTest(base.TestCase):
         self.client.endpoints.create.assert_called_once_with(
             'region',
             self.client.services.create.return_value.id,
-            'https://[%s]:1234/v2/$(tenant_id)s' % ipv6_addr,
-            'http://[%s]:8774/v2/$(tenant_id)s' % ipv6_addr,
-            'http://[%s]:8774/v2/$(tenant_id)s' % ipv6_addr)
+            'https://[%s]:1234/v2.1/$(tenant_id)s' % ipv6_addr,
+            'http://[%s]:8774/v2.1/$(tenant_id)s' % ipv6_addr,
+            'http://[%s]:8774/v2.1/$(tenant_id)s' % ipv6_addr)
 
     @mock.patch('os_cloud_config.keystone._create_service')
     def test_create_ssl_endpoint_no_ssl_port(self, mock_create_service):
