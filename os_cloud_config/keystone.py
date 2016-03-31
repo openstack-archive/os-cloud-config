@@ -59,16 +59,8 @@ SERVICES = {
     'nova': {
         'description': 'Nova Compute Service',
         'type': 'compute',
-        'path': '/v2/$(tenant_id)s',
+        'path': '/v2.1/$(tenant_id)s',
         'port': 8774,
-        'ssl_port': 13774,
-    },
-    'novav3': {
-        'description': 'Nova Compute Service v3',
-        'type': 'computev3',
-        'path': '/v3',
-        'port': 8774,
-        'name': 'nova',
         'ssl_port': 13774,
     },
     'ceilometer': {
