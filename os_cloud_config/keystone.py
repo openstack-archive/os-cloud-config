@@ -59,7 +59,7 @@ SERVICES = {
     'nova': {
         'description': 'Nova Compute Service',
         'type': 'compute',
-        'path': '/v2/$(tenant_id)s',
+        'path': '/v2.1/$(tenant_id)s',
         'port': 8774,
         'ssl_port': 13774,
     },
