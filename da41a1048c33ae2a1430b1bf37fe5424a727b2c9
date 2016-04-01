@@ -1,0 +1,9 @@
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Workflow+1: James Slagle <jslagle@redhat.com>
+Code-Review+1: Anil Vashistha <anil.vashistha@ericsson.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 01 Apr 2016 15:42:23 +0000
+Reviewed-on: https://review.openstack.org/299874
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
