@@ -1,0 +1,13 @@
+Code-Review+1: Shu Muto <shu-mutou@rf.jp.nec.com>
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: melissaml <ma.lei@99cloud.net>
+Code-Review+2: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+1: venkatamahesh <venkatamaheshkotha@gmail.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 22 Apr 2016 14:09:10 +0000
+Reviewed-on: https://review.openstack.org/264481
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
