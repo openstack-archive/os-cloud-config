@@ -371,16 +371,16 @@ def register_all_nodes(service_host, nodes_list, client=None, remove=False,
 
     LOG.debug('Registering all nodes.')
     if client is None:
-        LOG.warn('Creating ironic client inline is deprecated, please '
-                 'pass the client as parameter.')
+        LOG.warning('Creating ironic client inline is deprecated, please '
+                    'pass the client as parameter.')
         client = clients.get_ironic_client()
     register_func = _update_or_register_ironic_node
     node_map = _populate_node_mapping(client)
     glance_ids = {'kernel': None, 'ramdisk': None}
     if kernel_name and ramdisk_name:
         if glance_client is None:
-            LOG.warn('Creating glance client inline is deprecated, please '
-                     'pass the client as a parameter.')
+            LOG.warning('Creating glance client inline is deprecated, please '
+                        'pass the client as a parameter.')
             client = clients.get_glance_client()
         glance_ids = glance.create_or_find_kernel_and_ramdisk(
             glance_client, kernel_name, ramdisk_name)

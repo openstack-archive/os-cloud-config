@@ -23,12 +23,14 @@ LOG = logging.getLogger(__name__)
 def initialize_neutron(network_desc, neutron_client=None,
                        keystone_client=None):
     if not neutron_client:
-        LOG.warn('Creating neutron client inline is deprecated, please pass '
-                 'the client as parameter.')
+        LOG.warning(
+            'Creating neutron client inline is deprecated, please pass '
+            'the client as parameter.')
         neutron_client = clients.get_neutron_client()
     if not keystone_client:
-        LOG.warn('Creating keystone client inline is deprecated, please pass '
-                 'the client as parameter.')
+        LOG.warning(
+            'Creating keystone client inline is deprecated, please pass '
+            'the client as parameter.')
         keystone_client = clients.get_keystone_client()
 
     admin_tenant = _get_admin_tenant_id(keystone_client)

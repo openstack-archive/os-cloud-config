@@ -199,7 +199,7 @@ def initialize_for_swift(host, admin_token, ssl=None, public=None):
     :param public: ip/hostname to use as the public endpoint, if the default
         is not suitable
     """
-    LOG.warn('This function is deprecated.')
+    LOG.warning('This function is deprecated.')
 
     keystone = _create_admin_client_v2(host, admin_token, public)
 
@@ -339,8 +339,8 @@ def setup_endpoints(endpoints, public_host=None, region=None, client=None,
     }
 
     if not client:
-        LOG.warn('Creating client inline is deprecated, please pass '
-                 'the client as parameter.')
+        LOG.warning('Creating client inline is deprecated, please pass '
+                    'the client as parameter.')
         client = clients.get_keystone_client(
             os_username, os_password, os_tenant_name, os_auth_url)
 
