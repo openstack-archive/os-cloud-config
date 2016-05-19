@@ -35,6 +35,13 @@ SERVICES = {
         'port': 8004,
         'ssl_port': 13004,
     },
+    'heatcfn': {
+        'description': 'Heat CloudFormation Service',
+        'type': 'cloudformation',
+        'path': '/v1',
+        'port': 8000,
+        'ssl_port': 13005,
+    },
     'neutron': {
         'description': 'Neutron Service',
         'type': 'network',
