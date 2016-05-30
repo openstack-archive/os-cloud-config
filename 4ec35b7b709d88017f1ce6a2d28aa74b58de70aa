@@ -1,0 +1,9 @@
+Code-Review+1: Swapnil Kulkarni (coolsvap) <me@coolsvap.net>
+Code-Review+2: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Workflow+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 30 May 2016 07:20:58 +0000
+Reviewed-on: https://review.openstack.org/313748
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
