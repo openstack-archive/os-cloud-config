@@ -1,0 +1,8 @@
+Code-Review+2: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Workflow+1: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 31 May 2016 04:51:05 +0000
+Reviewed-on: https://review.openstack.org/322994
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
