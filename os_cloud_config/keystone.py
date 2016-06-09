@@ -147,6 +147,12 @@ SERVICES = {
         'type': 'database',
         'path': '/v1.0/%(tenant_id)s',
         'port': 8779
+    },
+    'congress': {
+        'description': 'Congress Service',
+        'type': 'policy',
+        'path': '/',
+        'port': 1789
     }
 }
 
