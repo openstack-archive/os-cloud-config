@@ -23,7 +23,7 @@ from keystoneclient.v2_0 import client as ksclient
 from keystoneclient.v3 import client as ks3client
 from neutronclient.neutron import client as neutronclient
 from novaclient.extension import Extension
-from novaclient.v2 import client as novav11client
+from novaclient import client as novav2client
 from novaclient.v2.contrib import baremetal
 
 LOG = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 def get_nova_bm_client(username, password, tenant_name, auth_url, cacert=None):
     LOG.debug('Creating nova client.')
     baremetal_extension = Extension('baremetal', baremetal)
-    return novav11client.Client(username,
+    return novav2client.Client("2", username,
                                 password,
                                 tenant_name,
                                 auth_url,
