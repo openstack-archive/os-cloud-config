@@ -65,7 +65,7 @@ class KeystoneTest(base.TestCase):
         self.assert_endpoint('192.0.0.3')
 
         check_call_mock.assert_called_once_with(
-            ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
+            ["ssh", "-o" "StrictHostKeyChecking=no", "-tt", "-l", "root",
              "192.0.0.3", "sudo", "keystone-manage", "pki_setup",
              "--keystone-user",
              "$(getent passwd | grep '^keystone' | cut -d: -f1)",
@@ -125,7 +125,7 @@ class KeystoneTest(base.TestCase):
         self.assert_calls_in_grant_admin_user_roles()
 
         check_call_mock.assert_called_once_with(
-            ["ssh", "-o" "StrictHostKeyChecking=no", "-t", "-l", "root",
+            ["ssh", "-o" "StrictHostKeyChecking=no", "-tt", "-l", "root",
              "192.0.0.3", "sudo", "keystone-manage", "pki_setup",
              "--keystone-user",
              "$(getent passwd | grep '^keystone' | cut -d: -f1)",
