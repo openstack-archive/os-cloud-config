@@ -581,7 +581,7 @@ def _perform_pki_initialization(host, user):
 
     :param host: ip/hostname of node where Keystone is running
     """
-    subprocess.check_call(["ssh", "-o" "StrictHostKeyChecking=no", "-t",
+    subprocess.check_call(["ssh", "-o" "StrictHostKeyChecking=no", "-tt",
                            "-l", user, host, "sudo", "keystone-manage",
                            "pki_setup", "--keystone-user",
                            "$(getent passwd | grep '^keystone' | cut -d: -f1)",
