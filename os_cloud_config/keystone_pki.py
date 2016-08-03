@@ -137,24 +137,25 @@ def create_and_write_ca_and_signing_pairs(directory):
     _write_pki_file(path.join(directory, 'signing_cert.pem'), signing_cert_pem)
 
 
-def generate_certs_into_json(jsonfile, seed):
+def generate_certs_into_json(jsonfile=None, seed=None):
     """Create and write out CA certificate and signing certificate/key.
 
     Generate CA certificate, signing certificate and signing key and
     add them into a JSON file. If key/certs already exist in JSON file, no
     change is done.
 
-    :param jsonfile: JSON file where certs and key will be written
+    :param jsonfile: JSON file where certs and key will be written if ommitted
+                     the json data is returned from the function
     :type  jsonfile: string
     :param seed: JSON file for seed machine has different structure. Different
                  key/certs names and different parent node are used
     :type  seed: boolean
     """
-    if os.path.isfile(jsonfile):
-        with open(jsonfile) as json_fd:
-            all_data = json.load(json_fd)
-    else:
-        all_data = {}
+    all_data = {}
+    if jsonfile:
+        if os.path.isfile(jsonfile):
+            with open(jsonfile) as json_fd:
+                all_data = json.load(json_fd)
 
     if seed:
         parent = 'keystone'
@@ -180,9 +181,12 @@ def generate_certs_into_json(jsonfile, seed):
         parent_node.update({ca_cert_name: ca_cert_pem,
                             signing_key_name: signing_key_pem,
                             signing_cert_name: signing_cert_pem})
-        with open(jsonfile, 'w') as json_fd:
-            json.dump(all_data, json_fd, sort_keys=True)
-            LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))
+        if jsonfile:
+            with open(jsonfile, 'w') as json_fd:
+                json.dump(all_data, json_fd, sort_keys=True)
+                LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))
+        else:
+            return json.dumps(all_data, sort_keys=True)
     else:
         LOG.info("Key/certs are already present in '%s', skipping.",
                  path.abspath(jsonfile))
