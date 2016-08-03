@@ -137,24 +137,20 @@ def create_and_write_ca_and_signing_pairs(directory):
     _write_pki_file(path.join(directory, 'signing_cert.pem'), signing_cert_pem)
 
 
-def generate_certs_into_json(jsonfile, seed):
-    """Create and write out CA certificate and signing certificate/key.
+def generate_certs(seed, current_certs=None):
+    """Create CA certificate and signing certificate/key.
 
-    Generate CA certificate, signing certificate and signing key and
-    add them into a JSON file. If key/certs already exist in JSON file, no
-    change is done.
+    Generate CA certificate, signing certificate and signing key and add
+    return them in a dictionary. If no updates are required, None is returned.
 
-    :param jsonfile: JSON file where certs and key will be written
-    :type  jsonfile: string
     :param seed: JSON file for seed machine has different structure. Different
                  key/certs names and different parent node are used
     :type  seed: boolean
+    :param current_certs: A dictionary containing the existing certs, if this
+                          is provided it will be updated, otherwise a new dict
+                          will be created
     """
-    if os.path.isfile(jsonfile):
-        with open(jsonfile) as json_fd:
-            all_data = json.load(json_fd)
-    else:
-        all_data = {}
+    all_data = current_certs or {}
 
     if seed:
         parent = 'keystone'
@@ -180,6 +176,31 @@ def generate_certs_into_json(jsonfile, seed):
         parent_node.update({ca_cert_name: ca_cert_pem,
                             signing_key_name: signing_key_pem,
                             signing_cert_name: signing_cert_pem})
+        return all_data
+
+
+def generate_certs_into_json(jsonfile, seed):
+    """Create and write out CA certificate and signing certificate/key.
+
+    Generate CA certificate, signing certificate and signing key and
+    add them into a JSON file. If key/certs already exist in JSON file, no
+    change is done.
+
+    :param jsonfile: JSON file where certs and key will be written
+    :type  jsonfile: string
+    :param seed: JSON file for seed machine has different structure. Different
+                 key/certs names and different parent node are used
+    :type  seed: boolean
+    """
+    if os.path.isfile(jsonfile):
+        with open(jsonfile) as json_fd:
+            all_data = json.load(json_fd)
+    else:
+        all_data = {}
+
+    all_data = generate_certs(seed, all_data)
+
+    if all_data is not None:
         with open(jsonfile, 'w') as json_fd:
             json.dump(all_data, json_fd, sort_keys=True)
             LOG.debug("Wrote key/certs into '%s'.", path.abspath(jsonfile))

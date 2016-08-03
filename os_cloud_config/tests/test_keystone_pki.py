@@ -140,3 +140,34 @@ class KeystonePKITest(base.TestCase):
 
         keystone_pki.generate_certs_into_json('/jsonfile', False)
         mock_json_dump.assert_not_called()
+
+    @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
+    @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
+    def test_generate_certs_into_dict(self, create_signing, create_ca):
+        create_ca.return_value = ('mock_ca_key', 'mock_ca_cert')
+        create_signing.return_value = ('mock_signing_key', 'mock_signing_cert')
+
+        self.assertEqual(keystone_pki.generate_certs(False), {
+            'parameter_defaults': {
+                'KeystoneCACertificate': 'mock_ca_cert',
+                'KeystoneSigningCertificate': 'mock_signing_cert',
+                'KeystoneSigningKey': 'mock_signing_key'
+            }})
+
+    @mock.patch('os_cloud_config.keystone_pki.create_ca_pair')
+    @mock.patch('os_cloud_config.keystone_pki.create_signing_pair')
+    def test_generate_certs_into_dict_with_existing(self, create_signing,
+                                                    create_ca):
+        create_ca.return_value = ('mock_ca_key', 'mock_ca_cert')
+        create_signing.return_value = ('mock_signing_key', 'mock_signing_cert')
+
+        env = {
+            'parameter_defaults': {
+                'KeystoneCACertificate': 'mock_ca_cert_old',
+                'KeystoneSigningCertificate': 'mock_signing_cert_old',
+                'KeystoneSigningKey': 'mock_signing_key_old'
+            }
+        }
+
+        result = keystone_pki.generate_certs(False, env)
+        self.assertEqual(result, None)
