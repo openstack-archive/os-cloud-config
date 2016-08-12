@@ -1,0 +1,10 @@
+Code-Review+1: Miles Gould <mgould@redhat.com>
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Code-Review+2: Emilien Macchi <emilien@redhat.com>
+Workflow+1: Emilien Macchi <emilien@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 12 Aug 2016 15:48:36 +0000
+Reviewed-on: https://review.openstack.org/327449
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
