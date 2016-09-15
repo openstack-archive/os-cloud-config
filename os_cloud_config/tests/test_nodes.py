@@ -129,7 +129,7 @@ class NodesTest(base.TestCase):
         node = self._get_node()
         node["pm_type"] = "pxe_ucs"
         node["pm_service_profile"] = "foo_profile"
-        expected = {"ucs_hostname": "foo.bar",
+        expected = {"ucs_address": "foo.bar",
                     "ucs_username": "test",
                     "ucs_password": "random",
                     "ucs_service_profile": "foo_profile"}
