@@ -1,0 +1,9 @@
+Code-Review+2: Emilien Macchi <emilien@redhat.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 16 Nov 2016 00:39:06 +0000
+Reviewed-on: https://review.openstack.org/381141
+Project: openstack/os-cloud-config
+Branch: refs/heads/stable/newton
