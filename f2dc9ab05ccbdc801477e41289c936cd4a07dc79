@@ -1,0 +1,10 @@
+Code-Review+1: Rushi Agrawal <rushi.openstack@gmail.com>
+Code-Review+1: Dirk Mueller <dirk@dmllr.de>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sat, 03 Dec 2016 14:34:07 +0000
+Reviewed-on: https://review.openstack.org/345854
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
