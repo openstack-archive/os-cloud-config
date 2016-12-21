@@ -142,7 +142,8 @@ def _extract_driver_info(node):
     driver_info_map = {"pxe_drac": _pxe_drac_driver_info,
                        "pxe_ssh": _pxe_ssh_driver_info,
                        "pxe_ilo": _pxe_ilo_driver_info,
-                       "pxe_iboot": _pxe_iboot_driver_info,
+                       "pxe_iboot_iscsi": _pxe_iboot_driver_info,
+                       "pxe_iboot_agent": _pxe_iboot_driver_info,
                        "fake_pxe": _fake_pxe_driver_info,
                        "pxe_ucs": _pxe_ucs_driver_info,
                        "pxe_irmc": _pxe_irmc_driver_info,
@@ -236,7 +237,7 @@ def _populate_node_mapping(client):
         elif node_details.driver == 'pxe_drac':
             pm_addr = node_details.driver_info['drac_host']
             node_map['pm_addr'][pm_addr] = node['uuid']
-        elif node_details.driver == 'pxe_iboot':
+        elif node_details.driver in ('pxe_iboot_iscsi', 'pxe_iboot_agent'):
             iboot_addr = node_details.driver_info['iboot_address']
             if "iboot_port" in node_details.driver_info:
                 iboot_addr += (':%s' %
@@ -256,7 +257,7 @@ def _get_node_id(node, node_map):
         for mac in node['mac']:
             if mac.lower() in node_map['mac']:
                 return node_map['mac'][mac.lower()]
-    elif node['pm_type'] == 'pxe_iboot':
+    elif node['pm_type'] in ('pxe_iboot_iscsi', 'pxe_iboot_agent'):
         iboot_addr = node["pm_addr"]
         if "pm_port" in node:
             iboot_addr += ':%s' % node["pm_port"]
