@@ -99,7 +99,7 @@ class NodesTest(base.TestCase):
 
     def test_extract_driver_info_pxe_iboot(self):
         node = self._get_node()
-        node["pm_type"] = "pxe_iboot"
+        node["pm_type"] = "pxe_iboot_iscsi"
         expected = {"iboot_address": "foo.bar",
                     "iboot_username": "test",
                     "iboot_password": "random"}
@@ -107,7 +107,7 @@ class NodesTest(base.TestCase):
 
     def test_extract_driver_info_pxe_iboot_with_pm_relay_id(self):
         node = self._get_node()
-        node["pm_type"] = "pxe_iboot"
+        node["pm_type"] = "pxe_iboot_iscsi"
         node["pm_relay_id"] = "pxe_iboot_id"
         expected = {"iboot_address": "foo.bar",
                     "iboot_username": "test",
@@ -117,7 +117,7 @@ class NodesTest(base.TestCase):
 
     def test_extract_driver_info_pxe_iboot_with_pm_port(self):
         node = self._get_node()
-        node["pm_type"] = "pxe_iboot"
+        node["pm_type"] = "pxe_iboot_iscsi"
         node["pm_port"] = "8080"
         expected = {"iboot_address": "foo.bar",
                     "iboot_username": "test",
