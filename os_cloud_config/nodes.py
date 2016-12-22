@@ -86,7 +86,7 @@ def _fake_pxe_driver_info(node):
 
 
 def _pxe_ucs_driver_info(node):
-    driver_info = {"ucs_hostname": node["pm_addr"],
+    driver_info = {"ucs_address": node["pm_addr"],
                    "ucs_username": node["pm_user"],
                    "ucs_password": node["pm_password"],
                    "ucs_service_profile": node["pm_service_profile"]}
