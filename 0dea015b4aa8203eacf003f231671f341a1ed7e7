@@ -1,0 +1,9 @@
+Code-Review+2: Emilien Macchi <emilien@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Workflow+1: James Slagle <jslagle@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 22 Dec 2016 23:11:30 +0000
+Reviewed-on: https://review.openstack.org/413336
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
