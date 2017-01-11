@@ -78,6 +78,19 @@ def _pxe_iboot_driver_info(node):
     return driver_info
 
 
+def _pxe_libvirt_driver_info(node):
+    # TODO(lucasagomes): ssh_key_filename is also supported by this driver
+    # and should be added later.
+    driver_info = {}
+    if "pm_addr" in node:
+        driver_info["libvirt_uri"] = node["pm_addr"]
+    if "pm_user" in node:
+        driver_info["sasl_username"] = node["pm_user"]
+    if "pm_password" in node:
+        driver_info["sasl_password"] = node["pm_password"]
+    return driver_info
+
+
 def _fake_pxe_driver_info(node):
     driver_info = {}
     # The fake_pxe driver doesn't need any credentials since there's
@@ -150,7 +163,9 @@ def _extract_driver_info(node):
                        "iscsi_irmc": _iscsi_irmc_driver_info,
                        # agent_irmc and iscsi_irmc share the same driver info
                        "agent_irmc": _iscsi_irmc_driver_info,
-                       "pxe_wol": _pxe_wol_driver_info}
+                       "pxe_wol": _pxe_wol_driver_info,
+                       "pxe_libvirt_iscsi": _pxe_libvirt_driver_info,
+                       "pxe_libvirt_agent": _pxe_libvirt_driver_info}
 
     def _get_driver_info(node):
         pm_type = node["pm_type"]
@@ -225,7 +240,8 @@ def _populate_node_mapping(client):
     nodes = [n.to_dict() for n in client.node.list()]
     for node in nodes:
         node_details = client.node.get(node['uuid'])
-        if node_details.driver in ('pxe_ssh', 'fake_pxe'):
+        if node_details.driver in ('pxe_ssh', 'fake_pxe', 'pxe_libvirt_iscsi',
+                                   'pxe_libvirt_agent'):
             for port in client.node.list_ports(node['uuid']):
                 node_map['mac'][port.address] = node['uuid']
         elif 'ipmi' in node_details.driver:
@@ -253,7 +269,8 @@ def _populate_node_mapping(client):
 
 
 def _get_node_id(node, node_map):
-    if node['pm_type'] in ('pxe_ssh', 'fake_pxe'):
+    if node['pm_type'] in ('pxe_ssh', 'fake_pxe', 'pxe_libvirt_iscsi',
+                           'pxe_libvirt_agent'):
         for mac in node['mac']:
             if mac.lower() in node_map['mac']:
                 return node_map['mac'][mac.lower()]
@@ -297,6 +314,10 @@ def _update_or_register_ironic_node(service_host, node, node_map, client=None,
         massage_map.update({'pm_addr': '/driver_info/irmc_address',
                             'pm_user': '/driver_info/irmc_username',
                             'pm_password': '/driver_info/irmc_password'})
+    elif 'libvirt' in node['pm_type']:
+        massage_map.update({'pm_addr': '/driver_info/libvirt_uri',
+                            'pm_user': '/driver_info/sasl_username',
+                            'pm_password': '/driver_info/sasl_password'})
 
     if "name" in node:
         massage_map.update({'name': '/name'})

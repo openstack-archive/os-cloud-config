@@ -226,6 +226,15 @@ class NodesTest(base.TestCase):
         node["pm_type"] = "unknown_type"
         self.assertRaises(ValueError, nodes._extract_driver_info, node)
 
+    def test_extract_driver_info_pxe_libvirt(self):
+        node = self._get_node()
+        for pm_type in ("pxe_libvirt_iscsi", "pxe_libvirt_agent"):
+            node["pm_type"] = pm_type
+            expected = {"libvirt_uri": "foo.bar",
+                        "sasl_username": "test",
+                        "sasl_password": "random"}
+            self.assertEqual(expected, nodes._extract_driver_info(node))
+
     def test_register_all_nodes_ironic_no_hw_stats(self):
         node_list = [self._get_node()]
 
