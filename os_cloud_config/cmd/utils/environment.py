@@ -13,11 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import logging.config
 import os
-import sys
 
+import os_cloud_config
 from os_cloud_config import exception
 
 
@@ -42,14 +40,4 @@ def _add_logging_arguments(parser):
 
 
 def _configure_logging(args):
-    if args.log_config:
-        logging.config.fileConfig(args.log_config,
-                                  disable_existing_loggers=False)
-    else:
-        format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        date_format = '%Y-%m-%d %H:%M:%S'
-        log_level = logging.DEBUG if args.debug else logging.INFO
-        logging.basicConfig(datefmt=date_format,
-                            format=format,
-                            level=log_level,
-                            stream=sys.stdout)
+    os_cloud_config.configure_logging(args)

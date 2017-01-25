@@ -6,6 +6,11 @@
 Welcome to os-cloud-config's documentation!
 ========================================================
 
+.. warning::
+
+  os-cloud-config is DEPRECATED in the Ocata release and will be removed in
+  Pike.
+
 Contents:
 
 .. toctree::
