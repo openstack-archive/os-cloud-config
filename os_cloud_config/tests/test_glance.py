@@ -16,7 +16,7 @@
 import collections
 import tempfile
 
-from glanceclient.openstack.common.apiclient import exceptions
+from glanceclient import exc
 import mock
 import testtools
 
@@ -41,7 +41,7 @@ class GlanceTest(base.TestCase):
 
     def test_raise_exception_kernel(self):
         client = mock.MagicMock()
-        client.images.find.side_effect = exceptions.NotFound
+        client.images.find.side_effect = exc.HTTPNotFound
         message = "Kernel image not found in Glance, and no path specified."
         with testtools.ExpectedException(ValueError, message):
             glance.create_or_find_kernel_and_ramdisk(client, 'bm-kernel',
@@ -50,7 +50,7 @@ class GlanceTest(base.TestCase):
     def test_raise_exception_ramdisk(self):
         client = mock.MagicMock()
         client.images.find.side_effect = (self.image('aaa'),
-                                          exceptions.NotFound)
+                                          exc.HTTPNotFound)
         message = "Ramdisk image not found in Glance, and no path specified."
         with testtools.ExpectedException(ValueError, message):
             glance.create_or_find_kernel_and_ramdisk(client, 'bm-kernel',
@@ -58,7 +58,7 @@ class GlanceTest(base.TestCase):
 
     def test_skip_missing_no_kernel(self):
         client = mock.MagicMock()
-        client.images.find.side_effect = (exceptions.NotFound,
+        client.images.find.side_effect = (exc.HTTPNotFound,
                                           self.image('bbb'))
         expected = {'kernel': None, 'ramdisk': 'bbb'}
         ids = glance.create_or_find_kernel_and_ramdisk(
@@ -68,7 +68,7 @@ class GlanceTest(base.TestCase):
     def test_skip_missing_no_ramdisk(self):
         client = mock.MagicMock()
         client.images.find.side_effect = (self.image('aaa'),
-                                          exceptions.NotFound)
+                                          exc.HTTPNotFound)
         expected = {'kernel': 'aaa', 'ramdisk': None}
         ids = glance.create_or_find_kernel_and_ramdisk(
             client, 'bm-kernel', 'bm-ramdisk', skip_missing=True)
@@ -76,7 +76,7 @@ class GlanceTest(base.TestCase):
 
     def test_skip_missing_kernel_and_ramdisk(self):
         client = mock.MagicMock()
-        client.images.find.side_effect = exceptions.NotFound
+        client.images.find.side_effect = exc.HTTPNotFound
         expected = {'kernel': None, 'ramdisk': None}
         ids = glance.create_or_find_kernel_and_ramdisk(
             client, 'bm-kernel', 'bm-ramdisk', skip_missing=True)
@@ -84,7 +84,7 @@ class GlanceTest(base.TestCase):
 
     def test_create_kernel_and_ramdisk(self):
         client = mock.MagicMock()
-        client.images.find.side_effect = exceptions.NotFound
+        client.images.find.side_effect = exc.HTTPNotFound
         client.images.create.side_effect = (self.image('aaa'),
                                             self.image('zzz'))
         expected = {'kernel': 'aaa', 'ramdisk': 'zzz'}

@@ -16,7 +16,7 @@
 import collections
 import logging
 
-from glanceclient.openstack.common.apiclient import exceptions
+from glanceclient import exc
 
 LOG = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def _upload_file(glanceclient, name, path, disk_format, type_name,
     image_tuple = collections.namedtuple('image', ['id'])
     try:
         image = glanceclient.images.find(name=name, disk_format=disk_format)
-    except exceptions.NotFound:
+    except exc.HTTPNotFound:
         if path:
             image = glanceclient.images.create(
                 name=name, disk_format=disk_format, is_public=True,
