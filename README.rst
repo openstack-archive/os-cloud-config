@@ -1,3 +1,8 @@
+.. warning::
+
+  os-cloud-config is DEPRECATED in the Ocata release and will be removed in
+  Pike.
+
 ========================
 Team and repository tags
 ========================
