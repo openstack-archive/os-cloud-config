@@ -1,0 +1,8 @@
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Emilien Macchi <emilien@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 27 Jan 2017 02:05:43 +0000
+Reviewed-on: https://review.openstack.org/425396
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
