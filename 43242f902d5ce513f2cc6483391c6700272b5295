@@ -1,0 +1,9 @@
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 08 Mar 2017 19:08:51 +0000
+Reviewed-on: https://review.openstack.org/431681
+Project: openstack/os-cloud-config
+Branch: refs/heads/stable/ocata
