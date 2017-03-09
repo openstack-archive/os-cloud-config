@@ -1,0 +1,10 @@
+Code-Review+1: Dirk Mueller <dirk@dmllr.de>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 09 Mar 2017 22:27:01 +0000
+Reviewed-on: https://review.openstack.org/413313
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
