@@ -1,7 +1,0 @@
-[run]
-branch = True
-source = os_cloud_config
-omit = os_cloud_config/tests/*,os_cloud_config/openstack/*
-
-[report]
-ignore_errors = True
