@@ -1,0 +1,17 @@
+Code-Review+1: Ana Krivokapic <akrivoka@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+1: Luke Hinds <lhinds@redhat.com>
+Code-Review+1: arkady kanevsky <arkady_kanevsky@dell.com>
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+1: Bogdan Dobrelya <bdobreli@redhat.com>
+Code-Review+1: Andreas Jaeger <jaegerandi@gmail.com>
+Code-Review+2: Juan Antonio Osorio Robles <jaosorior@redhat.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Workflow+1: Steven Hardy <shardy@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 04 Apr 2017 12:41:54 +0000
+Reviewed-on: https://review.openstack.org/450946
+Project: openstack/os-cloud-config
+Branch: refs/heads/master
